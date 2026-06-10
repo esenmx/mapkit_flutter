@@ -1,0 +1,28 @@
+PODS:
+  - Flutter (1.0.0)
+  - integration_test (0.0.1):
+    - Flutter
+  - mapkit_flutter (0.1.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - mapkit_flutter (from `.symlinks/plugins/mapkit_flutter/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
+  mapkit_flutter:
+    :path: ".symlinks/plugins/mapkit_flutter/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  mapkit_flutter: 191ed368ae50dc1e4096251567770632c737a5ae
+
+PODFILE CHECKSUM: be4e2944d77ce60ac343268fbf242e6b4b653409
+
+COCOAPODS: 1.16.2

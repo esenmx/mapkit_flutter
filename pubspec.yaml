@@ -1,0 +1,33 @@
+name: mapkit_flutter
+description: MapKit for Flutter. Display MKMapView on iOS, iPadOS, and macCatalyst with annotations, overlays, clustering, look-around, tile overlays, and modern MapKit configurations.
+version: 0.1.0
+homepage: https://github.com/esenmx/mapkit_flutter
+repository: https://github.com/esenmx/mapkit_flutter
+issue_tracker: https://github.com/esenmx/mapkit_flutter/issues
+topics:
+  - maps
+  - ios
+  - apple
+  - mapkit
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.17.0
+
+dev_dependencies:
+  checks: ^0.3.1
+  flutter_test:
+    sdk: flutter
+  pigeon: ^27.1.0
+  very_good_analysis: ^10.2.0
+
+flutter:
+  plugin:
+    platforms:
+      ios:
+        pluginClass: MapKitPlugin

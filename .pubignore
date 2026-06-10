@@ -1,0 +1,12 @@
+# Pub packaging exclusions — pub falls back to non-git file listing in some
+# environments, which skips dot-dirs but packs build artifacts. Mirror the
+# publish-relevant .gitignore entries here.
+build/
+coverage/
+pubspec.lock
+.dart_tool/
+example/build/
+example/.dart_tool/
+example/ios/Pods/
+example/ios/.symlinks/
+example/ios/Flutter/ephemeral/

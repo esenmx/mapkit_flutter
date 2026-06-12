@@ -2,7 +2,7 @@
 
 ## 0.1.1
 
-- Docs: corrected platform support claims — the plugin supports iOS only (removed iPadOS / macCatalyst mentions from README, pubspec, and podspec).
+- Corrected supported platforms.
 
 ## 0.1.0
 

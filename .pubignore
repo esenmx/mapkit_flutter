@@ -10,3 +10,5 @@ example/.dart_tool/
 example/ios/Pods/
 example/ios/.symlinks/
 example/ios/Flutter/ephemeral/
+ios/mapkit_flutter/.build/
+ios/mapkit_flutter/.swiftpm/

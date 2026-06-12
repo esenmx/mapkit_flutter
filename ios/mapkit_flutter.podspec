@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'mapkit_flutter'
-  s.version          = '0.1.1'
+  s.version          = '0.2.0'
   s.summary          = 'MapKit for Flutter.'
   s.description      = <<-DESC
 Display MKMapView as a Flutter platform view on iOS,
@@ -14,7 +14,7 @@ MapKit configurations (iOS 17+).
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Mehmet Esen' => 'mehmetesen@proton.me' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*.swift'
+  s.source_files = 'mapkit_flutter/Sources/mapkit_flutter/**/*.swift'
   s.dependency 'Flutter'
   s.frameworks = 'MapKit', 'CoreLocation'
 

@@ -3,8 +3,9 @@
 // Regenerate after editing:
 //   dart run pigeon --input pigeons/messages.dart
 //
-// Generated files (`lib/src/messages.g.dart`, `ios/Classes/messages.g.swift`)
-// are checked in and must not be hand-edited.
+// Generated files (`lib/src/messages.g.dart`,
+// `ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift`) are checked in
+// and must not be hand-edited.
 //
 // Naming: every type here carries a `Platform` prefix — including enums that
 // the public API re-exports via `typedef` (e.g. `MKUserTrackingMode =
@@ -23,7 +24,7 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/messages.g.dart',
-    swiftOut: 'ios/Classes/messages.g.swift',
+    swiftOut: 'ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift',
     swiftOptions: SwiftOptions(errorClassName: 'MapKitHostError'),
     dartPackageName: 'mapkit_flutter',
   ),

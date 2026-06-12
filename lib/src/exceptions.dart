@@ -45,9 +45,8 @@ final class MapKitDisposedException extends MapKitException {
 }
 
 /// Thrown when an `MKMapView` is built on a non-iOS platform. `mapkit_flutter`
-/// wraps MapKit, which exists only on iOS / iPadOS / macCatalyst, so there
-/// is no cross-platform fallback — this surfaces loudly instead of silently
-/// rendering an empty box.
+/// wraps Apple's MapKit, so there is no cross-platform fallback — this
+/// surfaces loudly instead of silently rendering an empty box.
 final class MapKitUnsupportedPlatformException extends MapKitException {
   const MapKitUnsupportedPlatformException(this.platform)
     : super('mapkit_flutter is iOS-only; MKMapView cannot render here.');

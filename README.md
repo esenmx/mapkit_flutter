@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/mapkit_flutter.svg)](https://pub.dev/packages/mapkit_flutter)
 
-MapKit for Flutter. Wraps `MKMapView` as a Flutter platform view on iOS, iPadOS, and macCatalyst, with annotations, overlays, clustering, Look Around, tile overlays, and the modern `MKMapConfiguration` family.
+MapKit for Flutter. Wraps `MKMapView` as a Flutter platform view on iOS, with annotations, overlays, clustering, Look Around, tile overlays, and the modern `MKMapConfiguration` family.
 
 **Every public type carries Apple's exact MapKit symbol name** — `MKMapCamera`, `MKCoordinateRegion`, `MKPolyline`, `CLLocationCoordinate2D`. If you (or your coding agent) know MapKit, you already know this API. The `MK` namespace also means zero import collisions with `google_maps_flutter`, `mapbox_maps_flutter`, or `flutter_map` in mixed-platform code — no `as mk` prefixes needed.
 

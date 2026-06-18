@@ -3,7 +3,7 @@ import Flutter
 import Foundation
 import MapKit
 
-class FlutterMapView: MKMapView, UIGestureRecognizerDelegate, @preconcurrency CLLocationManagerDelegate {
+class FlutterMapView: MKMapView, UIGestureRecognizerDelegate, CLLocationManagerDelegate {
     weak var flutterApi: MapKitFlutterApi?
 
     /// Camera handed over before the first layout pass; re-applied once the

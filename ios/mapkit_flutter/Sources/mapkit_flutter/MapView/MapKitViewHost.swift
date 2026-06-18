@@ -6,7 +6,7 @@ import MapKit
 /// `MapKitHostApi`, mirroring `MKMapView`'s imperative surface
 /// (setCamera/setRegion/setCenter, camera/region reads, conversions).
 @MainActor
-public class MapKitViewHost: NSObject, @preconcurrency FlutterPlatformView, MapKitHostApi {
+public class MapKitViewHost: NSObject, @preconcurrency FlutterPlatformView, @preconcurrency MapKitHostApi {
     var contentView: UIView
     var mapView: FlutterMapView
     var registrar: FlutterPluginRegistrar
@@ -250,7 +250,7 @@ extension MapKitViewHost {
         snapshotOptions.size = self.mapView.frame.size
         snapshotOptions.scale = UIScreen.main.scale
         snapshotOptions.showsBuildings = options.showsBuildings
-        snapshotOptions.showsPointsOfInterest = options.showsPointsOfInterest
+        snapshotOptions.pointOfInterestFilter = options.showsPointsOfInterest ? .includingAll : .excludingAll
 
         let snapshotter = MKMapSnapshotter(options: snapshotOptions)
         let snapshot = try await snapshotter.start()

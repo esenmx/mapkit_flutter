@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'mapkit_flutter'
-  s.version          = '0.2.0'
+  s.version          = '0.2.1'
   s.summary          = 'MapKit for Flutter.'
   s.description      = <<-DESC
 Display MKMapView as a Flutter platform view on iOS,

@@ -27,7 +27,7 @@ import 'package:mapkit_flutter/src/mk_polyline.dart';
 /// properties they are on `MKMapView`. Content is declarative: [annotations]
 /// and overlay sets diff on rebuild.
 ///
-/// iOS-only. Building this widget on any other platform throws a
+/// iOS and macOS only. Building this widget on any other platform throws a
 /// [MapKitUnsupportedPlatformException] rather than degrading silently.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapview
 final class MKMapView extends StatefulWidget {
@@ -165,15 +165,22 @@ final class _MKMapViewState extends State<MKMapView>
   Widget build(BuildContext context) {
     if (widget.debugControllerFactory != null) return const SizedBox.expand();
 
-    if (defaultTargetPlatform != TargetPlatform.iOS) {
-      throw MapKitUnsupportedPlatformException(defaultTargetPlatform);
-    }
-    return UiKitView(
-      viewType: 'dev.mapkit.flutter/map_view',
-      onPlatformViewCreated: _onPlatformViewCreated,
-      gestureRecognizers: widget.gestureRecognizers,
-      creationParamsCodec: const StandardMessageCodec(),
-    );
+    const viewType = 'dev.mapkit.flutter/map_view';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => UiKitView(
+        viewType: viewType,
+        onPlatformViewCreated: _onPlatformViewCreated,
+        gestureRecognizers: widget.gestureRecognizers,
+        creationParamsCodec: const StandardMessageCodec(),
+      ),
+      TargetPlatform.macOS => AppKitView(
+        viewType: viewType,
+        onPlatformViewCreated: _onPlatformViewCreated,
+        gestureRecognizers: widget.gestureRecognizers,
+        creationParamsCodec: const StandardMessageCodec(),
+      ),
+      _ => throw MapKitUnsupportedPlatformException(defaultTargetPlatform),
+    };
   }
 
   void _onPlatformViewCreated(int id) =>

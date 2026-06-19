@@ -56,12 +56,13 @@ void main() {
   }
 
   group('platform guard', () {
-    testWidgets('throws MapKitUnsupportedPlatformException off iOS', (
-      tester,
-    ) async {
-      await tester.pumpWidget(const MKMapView(initialCamera: sampleCamera));
-      check(tester.takeException()).isA<MapKitUnsupportedPlatformException>();
-    });
+    testWidgets(
+      'throws MapKitUnsupportedPlatformException off Apple platforms',
+      (tester) async {
+        await tester.pumpWidget(const MKMapView(initialCamera: sampleCamera));
+        check(tester.takeException()).isA<MapKitUnsupportedPlatformException>();
+      },
+    );
   });
 
   group('initialize', () {
@@ -151,6 +152,37 @@ void main() {
       check(toChange).length.equals(1);
       check(toChange.single.id).equals('a');
       check(idsToRemove).isEmpty();
+    });
+
+    testWidgets('an icon-only restyle routes to toChange with the new tint', (
+      tester,
+    ) async {
+      MKPointAnnotation marker(Color tint) => MKPointAnnotation(
+        id: const MKAnnotationId('a'),
+        coordinate: applePark,
+        icon: MKAnnotationIcon.marker(markerTintColor: tint),
+      );
+
+      await tester.pumpWidget(
+        map(annotations: {marker(const Color(0xFF3F51B5))}),
+      );
+      await tester.pump();
+
+      // Same id and coordinate; only the marker tint changes — the in-place
+      // update path the 0.2.2 marker-restyle fix depends on.
+      await tester.pumpWidget(
+        map(annotations: {marker(const Color(0xFFFF5722))}),
+      );
+      await tester.pump();
+
+      host.expectCalls(['initialize', 'updateAnnotations']);
+      final (toAdd, toChange, idsToRemove) = host.calls
+          .expectLastArgs<AnnotationUpdate>('updateAnnotations');
+      check(toAdd).isEmpty();
+      check(idsToRemove).isEmpty();
+      check(toChange).length.equals(1);
+      check(toChange.single.id).equals('a');
+      check(toChange.single.icon.markerTintArgb).equals(0xFFFF5722);
     });
 
     testWidgets('routes each overlay kind to its own update call', (

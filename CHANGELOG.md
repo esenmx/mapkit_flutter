@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- Added macOS support (Look Around stays iOS-only).
+- Annotations now restyle correctly on in-place update and view reuse, including marker ↔ custom-image swaps.
+
 ## 0.2.1
 
 - Silenced iOS build warnings for cleaner integration.

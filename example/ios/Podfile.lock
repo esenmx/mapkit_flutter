@@ -2,13 +2,14 @@ PODS:
   - Flutter (1.0.0)
   - integration_test (0.0.1):
     - Flutter
-  - mapkit_flutter (0.1.1):
+  - mapkit_flutter (0.2.2):
     - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
-  - mapkit_flutter (from `.symlinks/plugins/mapkit_flutter/ios`)
+  - mapkit_flutter (from `.symlinks/plugins/mapkit_flutter/darwin`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -16,12 +17,12 @@ EXTERNAL SOURCES:
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
   mapkit_flutter:
-    :path: ".symlinks/plugins/mapkit_flutter/ios"
+    :path: ".symlinks/plugins/mapkit_flutter/darwin"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  mapkit_flutter: fa52ba028060e606622f2d11e2f8ad5508aefe78
+  mapkit_flutter: b3e0c2297ea5e914cfdd5a8a9bb604d8fccec3d5
 
 PODFILE CHECKSUM: be4e2944d77ce60ac343268fbf242e6b4b653409
 

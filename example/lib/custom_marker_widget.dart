@@ -19,7 +19,11 @@ Widget customMarkerWidget({required String label, required Color color}) {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white, width: 2),
           boxShadow: const [
-            BoxShadow(color: Colors.black38, blurRadius: 4, offset: Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black38,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Row(

@@ -46,8 +46,11 @@ class PinStyle {
   final String? subtitle;
 
   /// Advance `markerTintColor` to the next palette entry (wraps).
-  PinStyle withNextTint() =>
-      PinStyle(tint: _next(tintPalette, tint), glyph: glyph, subtitle: subtitle);
+  PinStyle withNextTint() => PinStyle(
+    tint: _next(tintPalette, tint),
+    glyph: glyph,
+    subtitle: subtitle,
+  );
 
   /// Advance the SF Symbol glyph to the next palette entry (wraps).
   PinStyle withNextGlyph() => PinStyle(

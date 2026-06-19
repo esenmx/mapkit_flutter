@@ -43,7 +43,10 @@ void main() {
         MKPointAnnotation(
           id: id,
           coordinate: applePark,
-          icon: MKAnnotationIcon.marker(markerTintColor: tint, systemImage: glyph),
+          icon: MKAnnotationIcon.marker(
+            markerTintColor: tint,
+            systemImage: glyph,
+          ),
           title: 'Restyle',
           subtitle: subtitle,
         );
@@ -79,7 +82,9 @@ void main() {
 
     // Remove, then re-add the same id with new styling — the dequeue-reuse path.
     await pump(const {});
-    await pump({marker(tint: Colors.pink, glyph: 'heart.fill', subtitle: 'reused')});
+    await pump({
+      marker(tint: Colors.pink, glyph: 'heart.fill', subtitle: 'reused'),
+    });
 
     // Selection still round-trips on the reused, restyled annotation.
     await controller!.showCallout(id);

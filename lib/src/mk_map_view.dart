@@ -122,8 +122,8 @@ final class MKMapView extends StatefulWidget {
 
   /// Replaces the platform view with an injected controller so widget tests
   /// can drive the full diff pipeline against a fake host API. When set,
-  /// `build` renders a plain box instead of a `UiKitView` and skips the
-  /// iOS-only platform check.
+  /// `build` renders a plain box instead of a `UiKitView`/`AppKitView` and
+  /// skips the platform check.
   @visibleForTesting
   final MKMapViewController Function(MKMapViewEventSink sink)?
   debugControllerFactory;

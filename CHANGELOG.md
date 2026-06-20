@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- Docs: correct lingering iOS-only references to iOS + macOS; add `macos` topic.
+
 ## 0.3.0
 
 - Added macOS support (Look Around stays iOS-only).

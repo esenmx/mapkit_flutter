@@ -14,7 +14,7 @@ MapKit for Flutter. Wraps `MKMapView` as a Flutter platform view on iOS and macO
 flutter pub add mapkit_flutter
 ```
 
-Add to `ios/Runner/Info.plist` if you set `showsUserLocation: true`:
+Add to `ios/Runner/Info.plist` (on macOS, `macos/Runner/Info.plist` plus the Location sandbox entitlement) if you set `showsUserLocation: true`:
 
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>

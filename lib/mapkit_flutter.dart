@@ -1,7 +1,7 @@
 /// MapKit for Flutter.
 ///
-/// iOS-only plugin that wraps `MKMapView` as a Flutter platform view. Every
-/// public type carries Apple's exact MapKit symbol name (`MKMapCamera`,
+/// iOS and macOS plugin that wraps `MKMapView` as a Flutter platform view.
+/// Every public type carries Apple's exact MapKit symbol name (`MKMapCamera`,
 /// `MKPolyline`, `CLLocationCoordinate2D`…), so the API reads like MapKit and
 /// never collides with google_maps_flutter / mapbox_maps_flutter in
 /// mixed-platform code.

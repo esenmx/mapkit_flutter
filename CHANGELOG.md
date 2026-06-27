@@ -2,7 +2,11 @@
 
 ## 0.3.1
 
-- Docs: correct lingering iOS-only references to iOS + macOS; add `macos` topic.
+- Performance: Refactored annotation dequeuing to use generic reuse identifiers, enabling proper MapKit view recycling.
+- Fix: Preserved selection state (callouts) when swapping marker/image types in-place.
+- Fix: Repaired overlay tap containment tests for circles and polygons which were failing on unrendered local paths.
+- Build: Added strict compiler flags (`-warnings-as-errors`, `-strict-concurrency=complete`) and resolved iOS/macOS platform optionality discrepancies.
+- Docs: Correct lingering iOS-only references to iOS + macOS; add `macos` topic.
 
 ## 0.3.0
 

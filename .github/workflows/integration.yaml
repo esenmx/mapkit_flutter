@@ -27,12 +27,46 @@ jobs:
       # through a single simulator session; the per-app teardown then races the
       # next launch and the run intermittently reports a spurious non-zero exit
       # ("N-1 tests passed" + exit 1) or hangs. One invocation per file gives
-      # each test a clean app lifecycle and a reliable exit code.
+      # each test a clean app lifecycle.
+      #
+      # Even per-file, `flutter test` can fail in teardown with the test itself
+      # green: the device-kill shutdown hook deletes the `flutter_tools.XXX`
+      # temp tree, then host finalization throws `PathNotFoundException` deleting
+      # the now-gone `flutter_test_listener` child, which corrupts the reporter
+      # (surfaces as "No tests were found" / exit 79). The on-device result is
+      # always printed first — a passing test prints "✅ <name>", a failing one
+      # "❌". So a file passes when the device reported ✅ with no failure marker,
+      # regardless of the host exit code; retries cover genuinely transient
+      # build/boot flakes.
       - name: Run integration tests
         working-directory: example
         run: |
+          set -o pipefail
+          run_one() {
+            local test="$1" out
+            out="$(mktemp)"
+            if flutter test "$test" -d 'iPhone 16' 2>&1 | tee "$out"; then
+              return 0
+            fi
+            if grep -q '✅' "$out" && ! grep -q '❌' "$out" \
+                && ! grep -qiE 'some tests failed' "$out"; then
+              echo "::warning::$test passed on-device; ignoring flutter_tools teardown flake"
+              return 0
+            fi
+            return 1
+          }
           for test in integration_test/*_test.dart; do
             echo "::group::$test"
-            flutter test "$test" -d 'iPhone 16'
-            echo "::endgroup::"
+            for attempt in 1 2 3; do
+              if run_one "$test"; then
+                echo "::endgroup::"
+                break
+              elif [ "$attempt" -eq 3 ]; then
+                echo "::error::$test failed after 3 attempts"
+                echo "::endgroup::"
+                exit 1
+              else
+                echo "::warning::$test attempt $attempt failed; retrying"
+              fi
+            done
           done

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+
+- Fix: Per-object tap callbacks (annotation/polyline/polygon/circle) refresh on callback-only rebuilds.
+- Fix: Toggling `onCalloutTap` propagates to the native callout.
+- Fix: Guard polyline tap hit-testing against an empty coordinate list.
+
 ## 0.3.2
 
 - Docs: Updated scaffolder skill (`tool/skills/flutter-mapkit-scaffold/SKILL.md`) to document overlay tap interactions and macOS snapshot limitations.

@@ -167,6 +167,9 @@ public extension MKPolyline {
     }
 
     private func distanceOf(pt: MKMapPoint, toMultipPoint multiPoint: MKMultiPoint) -> Double {
+        // A line needs at least one segment; fewer than two points has no
+        // distance and `0..<(pointCount - 1)` would trap for an empty line.
+        guard multiPoint.pointCount > 1 else { return Double(MAXFLOAT) }
         var distance: Double = Double(MAXFLOAT)
         for n in 0..<multiPoint.pointCount - 1 {
             let ptA = multiPoint.points()[n]

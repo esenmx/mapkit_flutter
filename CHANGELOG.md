@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- Docs: Updated scaffolder skill (`tool/skills/flutter-mapkit-scaffold/SKILL.md`) to document overlay tap interactions and macOS snapshot limitations.
+
 ## 0.3.1
 
 - Performance: Refactored annotation dequeuing to use generic reuse identifiers, enabling proper MapKit view recycling.

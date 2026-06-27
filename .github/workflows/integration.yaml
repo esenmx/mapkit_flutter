@@ -9,12 +9,30 @@ on:
 jobs:
   integration:
     runs-on: macos-15
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - run: cd example && flutter pub get
-      - name: Start iOS simulator
-        run: xcrun simctl boot 'iPhone 16' || true
-      - run: cd example && flutter test integration_test/ -d "iPhone 16"
+          cache: true
+      - run: flutter pub get
+        working-directory: example
+      - name: Boot iOS simulator
+        run: |
+          xcrun simctl boot 'iPhone 16' || true
+          xcrun simctl bootstatus 'iPhone 16'
+      # Run each integration file as its own `flutter test` invocation. The
+      # directory form (`flutter test integration_test/`) pipelines every file
+      # through a single simulator session; the per-app teardown then races the
+      # next launch and the run intermittently reports a spurious non-zero exit
+      # ("N-1 tests passed" + exit 1) or hangs. One invocation per file gives
+      # each test a clean app lifecycle and a reliable exit code.
+      - name: Run integration tests
+        working-directory: example
+        run: |
+          for test in integration_test/*_test.dart; do
+            echo "::group::$test"
+            flutter test "$test" -d 'iPhone 16'
+            echo "::endgroup::"
+          done

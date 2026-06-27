@@ -299,6 +299,37 @@ void main() {
       check(tapCount).equals(1);
     });
 
+    testWidgets('annotation tap fires the latest closure after a rebuild', (
+      tester,
+    ) async {
+      MKMapViewController? controller;
+      var fired = '';
+      MKPointAnnotation tappable(String tag) => MKPointAnnotation(
+        id: const MKAnnotationId('a'),
+        coordinate: applePark,
+        onTap: () => fired = tag,
+      );
+
+      await tester.pumpWidget(
+        map(
+          annotations: {tappable('first')},
+          onMapCreated: (c) => controller = c,
+        ),
+      );
+      await tester.pump();
+
+      // Visually identical annotation (same id/coordinate/icon), fresh onTap.
+      // The two are `==`-equal, so `setEquals` skips the native update — proven
+      // by no updateAnnotations call — yet the dispatch table must still adopt
+      // the new closure, or the tap would fire stale captured state.
+      await tester.pumpWidget(map(annotations: {tappable('second')}));
+      await tester.pump();
+
+      check(host.callNames).deepEquals(['initialize']);
+      controller!.eventHandler.onAnnotationTap('a');
+      check(fired).equals('second');
+    });
+
     testWidgets('failure events reach the widget callbacks', (tester) async {
       MKMapViewController? controller;
       String? loadError;

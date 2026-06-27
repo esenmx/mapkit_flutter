@@ -58,19 +58,42 @@ void main() {
   });
 
   group('equality', () {
-    test('ignores callbacks, compares declarative fields', () {
-      final a = MKPointAnnotation(
+    test('onTap and drag closure identity does not affect equality', () {
+      MKPointAnnotation withCallbacks() => MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
         onTap: () {},
+        onDragStart: (_) {},
+        onDrag: (_) {},
+        onDragEnd: (_) {},
       );
-      final b = MKPointAnnotation(
+      // Distinct closure instances, identical visuals → equal, so a closure
+      // swap never churns the native recycle path.
+      check(withCallbacks()).equals(withCallbacks());
+      check(withCallbacks().hashCode).equals(withCallbacks().hashCode);
+    });
+
+    test('onCalloutTap presence participates in equality', () {
+      const plain = MKPointAnnotation(
+        id: MKAnnotationId('a'),
+        coordinate: applePark,
+      );
+      final withCallout = MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
-        onTap: () {},
+        onCalloutTap: () {},
       );
-      check(a).equals(b);
-      check(a.hashCode).equals(b.hashCode);
+      // A null↔non-null toggle drives the calloutConsumesTapEvents wire flag,
+      // so it must read as a real change the diff can see...
+      check(withCallout == plain).isFalse();
+      // ...but two distinct non-null handlers stay equal (presence, not
+      // identity), keeping the recycle path quiet on a handler swap.
+      final otherCallout = MKPointAnnotation(
+        id: const MKAnnotationId('a'),
+        coordinate: applePark,
+        onCalloutTap: () {},
+      );
+      check(withCallout).equals(otherCallout);
     });
 
     test('different coordinates compare unequal', () {

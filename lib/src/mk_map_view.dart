@@ -269,6 +269,18 @@ final class _MKMapViewState extends State<MKMapView>
     super.didUpdateWidget(oldWidget);
     final c = _controller;
     if (c == null) return;
+
+    // Refresh the id→object dispatch tables on every rebuild, before the diff
+    // gates below. The models' `==` excludes callbacks (so a closure swap
+    // doesn't trigger a needless native recycle); a rebuild that changes only
+    // an `onTap`/`onDrag*` closure is therefore `setEquals`-equal and skips the
+    // native update — but these tables back inbound event dispatch and must
+    // still pick up the fresh closures, or a tap fires stale captured state.
+    _annotations = {for (final a in widget.annotations) a.id: a};
+    _polylines = {for (final p in widget.polylines) p.id: p};
+    _polygons = {for (final p in widget.polygons) p.id: p};
+    _circles = {for (final o in widget.circles) o.id: o};
+
     if (_configurationChanged(oldWidget)) {
       unawaited(c.updateMapConfiguration(_platformConfiguration()));
     }
@@ -278,7 +290,6 @@ final class _MKMapViewState extends State<MKMapView>
         widget.annotations,
         idOf: (a) => a.id.value,
       );
-      _annotations = {for (final a in widget.annotations) a.id: a};
       unawaited(c.updateAnnotations(updates));
     }
     if (!setEquals(widget.polylines, oldWidget.polylines)) {
@@ -287,7 +298,6 @@ final class _MKMapViewState extends State<MKMapView>
         widget.polylines,
         idOf: (p) => p.id.value,
       );
-      _polylines = {for (final p in widget.polylines) p.id: p};
       unawaited(c.updatePolylines(updates));
     }
     if (!setEquals(widget.polygons, oldWidget.polygons)) {
@@ -296,16 +306,14 @@ final class _MKMapViewState extends State<MKMapView>
         widget.polygons,
         idOf: (p) => p.id.value,
       );
-      _polygons = {for (final p in widget.polygons) p.id: p};
       unawaited(c.updatePolygons(updates));
     }
     if (!setEquals(widget.circles, oldWidget.circles)) {
       final updates = MapObjectUpdates.between(
         oldWidget.circles,
         widget.circles,
-        idOf: (c) => c.id.value,
+        idOf: (o) => o.id.value,
       );
-      _circles = {for (final c in widget.circles) c.id: c};
       unawaited(c.updateCircles(updates));
     }
   }

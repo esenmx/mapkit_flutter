@@ -142,7 +142,11 @@ final class MKPointAnnotation {
       other.isDraggable == isDraggable &&
       other.isHidden == isHidden &&
       other.zPriority == zPriority &&
-      other.clusteringIdentifier == clusteringIdentifier;
+      other.clusteringIdentifier == clusteringIdentifier &&
+      // `onCalloutTap`'s presence drives the native `calloutConsumesTapEvents`
+      // flag, so a null↔non-null toggle is a real change. Closure identity
+      // still isn't compared — that routes through the live dispatch table.
+      (other.onCalloutTap != null) == (onCalloutTap != null);
 
   @override
   int get hashCode => Object.hash(
@@ -157,6 +161,7 @@ final class MKPointAnnotation {
     isHidden,
     zPriority,
     clusteringIdentifier,
+    onCalloutTap != null,
   );
 
   @override

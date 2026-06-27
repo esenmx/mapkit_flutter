@@ -20,10 +20,25 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, CLLocationMa
     fileprivate let locationManager = CLLocationManager()
     private var pendingUserLocationRequest = false
 
+    override init(frame frameRect: CGRect) {
+        super.init(frame: frameRect)
+        registerDefaultAnnotationViews()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        registerDefaultAnnotationViews()
+    }
+
     convenience init() {
         self.init(frame: CGRect.zero)
         self.locationManager.delegate = self
         initialiseTapGestureRecognizers()
+    }
+
+    private func registerDefaultAnnotationViews() {
+        self.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: "FlutterMarkerAnnotationView")
+        self.register(MKAnnotationView.self, forAnnotationViewWithReuseIdentifier: "FlutterCustomAnnotationView")
     }
 
     #if os(iOS)

@@ -74,13 +74,24 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
 
 public extension MKPolygon {
     func contains(coordinate: CLLocationCoordinate2D) -> Bool {
-        let polygonRenderer = MKPolygonRenderer(polygon: self)
-        let currentMapPoint: MKMapPoint = MKMapPoint(coordinate)
-        let polygonViewPoint: CGPoint = polygonRenderer.point(for: currentMapPoint)
-        if polygonRenderer.path == nil {
-          return false
-        } else {
-            return polygonRenderer.path.contains(polygonViewPoint)
+        guard pointCount > 0 else { return false }
+        let path = CGMutablePath()
+        let pts = points()
+        path.move(to: CGPoint(x: pts[0].x, y: pts[0].y))
+        for i in 1..<pointCount {
+            path.addLine(to: CGPoint(x: pts[i].x, y: pts[i].y))
         }
+        path.closeSubpath()
+
+        if let interiorPolygons = self.interiorPolygons {
+            for hole in interiorPolygons {
+                if hole.contains(coordinate: coordinate) {
+                    return false
+                }
+            }
+        }
+
+        let mapPoint = MKMapPoint(coordinate)
+        return path.contains(CGPoint(x: mapPoint.x, y: mapPoint.y))
     }
 }

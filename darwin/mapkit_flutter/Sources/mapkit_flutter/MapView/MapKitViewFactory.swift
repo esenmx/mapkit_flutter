@@ -32,9 +32,15 @@ public class MapKitViewFactory: NSObject, @preconcurrency FlutterPlatformViewFac
     }
     #endif
 
+    #if os(iOS)
     public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
         return FlutterStandardMessageCodec.sharedInstance()
     }
+    #elseif os(macOS)
+    public func createArgsCodec() -> (any FlutterMessageCodec & NSObjectProtocol)? {
+        return FlutterStandardMessageCodec.sharedInstance()
+    }
+    #endif
 }
 
 #if os(macOS)

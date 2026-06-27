@@ -56,36 +56,26 @@ extension MapKitViewHost {
     }
 
     func getAnnotationView(annotation: FlutterAnnotation) -> MKAnnotationView {
-        let identifier: String = annotation.id
-        let dequeued = self.mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-        let oldFlutterAnnotation = dequeued?.annotation as? FlutterAnnotation
         let view: MKAnnotationView
-        if let dequeued, oldFlutterAnnotation?.icon.iconType == annotation.icon.iconType {
-            view = dequeued
-            // A recycled view keeps its previous styling; re-apply the new
-            // icon so a reused pin never shows stale tint/glyph/image.
-            if annotation.icon.isCustomImage {
-                view.image = annotation.icon.image
-            } else if let marker = view as? MKMarkerAnnotationView {
-                self.applyMarkerStyle(marker, annotation.icon)
-            }
-        } else if annotation.icon.isCustomImage {
-            view = getCustomAnnotationView(annotation: annotation, id: identifier)
-        } else {
-            view = getMarkerAnnotationView(annotation: annotation, id: identifier)
-        }
-        view.annotation = annotation
-        view.isHidden = annotation.isHidden
-        view.zPriority = MKAnnotationViewZPriority(rawValue: Float(annotation.zPriority))
         if annotation.icon.isCustomImage {
-            self.initInfoWindow(annotation: annotation, annotationView: view)
+            let customView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterCustomAnnotationView", for: annotation)
+            customView.image = annotation.icon.image
+            self.initInfoWindow(annotation: annotation, annotationView: customView)
             #if os(iOS)
             // Native normalized anchor (`MKAnnotationView.anchorPoint`,
             // iOS-only) replaces the old manual centerOffset math. macOS
             // centers the image on the coordinate by default.
-            view.anchorPoint = annotation.anchorPoint
+            customView.anchorPoint = annotation.anchorPoint
             #endif
+            view = customView
+        } else {
+            let markerView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterMarkerAnnotationView", for: annotation) as! MKMarkerAnnotationView
+            self.applyMarkerStyle(markerView, annotation.icon)
+            view = markerView
         }
+        view.annotation = annotation
+        view.isHidden = annotation.isHidden
+        view.zPriority = MKAnnotationViewZPriority(rawValue: Float(annotation.zPriority))
         view.canShowCallout = true
         view.platformAlpha = CGFloat(annotation.alpha)
         view.isDraggable = annotation.isDraggable
@@ -213,8 +203,12 @@ extension MapKitViewHost {
         // Replace the annotation so the delegate builds a fresh view of the
         // correct kind instead of forcing an image onto a marker view.
         if oldAnnotation.icon.iconType != annotation.icon.iconType {
+            let isSelected = self.isAnnotationSelected(with: annotation.id)
             self.removeAnnotation(id: annotation.id)
             self.addAnnotation(annotation)
+            if isSelected {
+                self.selectAnnotation(with: annotation.id)
+            }
             return
         }
         // Only `coordinate` is KVO-observable on MKAnnotation; the rest are
@@ -272,20 +266,6 @@ extension MapKitViewHost {
         view.glyphTintColor = icon.glyphTint
     }
 
-    private func getMarkerAnnotationView(annotation: FlutterAnnotation, id: String) -> MKMarkerAnnotationView {
-        self.mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: id)
-        let markerAnnotationView = self.mapView.dequeueReusableAnnotationView(withIdentifier: id, for: annotation) as? MKMarkerAnnotationView
-            ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: id)
-        self.applyMarkerStyle(markerAnnotationView, annotation.icon)
-        return markerAnnotationView
-    }
-
-    private func getCustomAnnotationView(annotation: FlutterAnnotation, id: String) -> MKAnnotationView {
-        self.mapView.register(MKAnnotationView.self, forAnnotationViewWithReuseIdentifier: id)
-        let annotationView = self.mapView.dequeueReusableAnnotationView(withIdentifier: id, for: annotation)
-        annotationView.image = annotation.icon.image
-        return annotationView
-    }
 }
 
 #if os(iOS)

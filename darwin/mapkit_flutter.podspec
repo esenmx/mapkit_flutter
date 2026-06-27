@@ -26,5 +26,6 @@ and modern MapKit configurations.
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
     'SWIFT_VERSION' => '5.0',
+    'OTHER_SWIFT_FLAGS' => '-warnings-as-errors -strict-concurrency=complete'
   }
 end

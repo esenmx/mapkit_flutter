@@ -67,14 +67,9 @@ final class FlutterCircle: MKCircle, FlutterOverlay, @unchecked Sendable {
 
 public extension MKCircle {
     func contains(coordinate: CLLocationCoordinate2D) -> Bool {
-        let circleRenderer = MKCircleRenderer(circle: self)
-        let currentMapPoint: MKMapPoint = MKMapPoint(coordinate)
-        let circleViewPoint: CGPoint = circleRenderer.point(for: currentMapPoint)
-        if circleRenderer.path == nil {
-          return false
-        } else {
-            return circleRenderer.path.contains(circleViewPoint)
-        }
+        let center = CLLocation(latitude: self.coordinate.latitude, longitude: self.coordinate.longitude)
+        let tap = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        return center.distance(from: tap) <= self.radius
     }
 }
 

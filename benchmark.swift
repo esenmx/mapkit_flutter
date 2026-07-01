@@ -1,9 +1,6 @@
 import Foundation
 import MapKit
 
-/// Shared abstraction over the vector overlays (polyline, polygon, circle) so a
-/// single CRUD path can manage all of them. Each conformer owns its own
-/// renderer and snapshot drawing.
 protocol FlutterOverlay: MKOverlay {
     var id: String { get }
     var zIndex: Int { get }
@@ -14,10 +11,6 @@ protocol FlutterOverlay: MKOverlay {
 }
 
 extension MKMapView {
-    /// Adds an overlay, using `zIndex` as an ordering hint within its level:
-    /// the overlay lands after every existing Flutter overlay whose zIndex is
-    /// `<=` its own, so equal indices preserve insertion order. The insertion
-    /// index is clamped to the level's array bounds.
     func addFlutterOverlay(_ overlay: any FlutterOverlay) {
         let level = overlay.overlayLevel
         let peers = self.overlays(in: level)
@@ -32,10 +25,6 @@ extension MKMapView {
         }
     }
 
-    /// Applies a pre-diffed overlay update for one kind of overlay, selected
-    /// by `isKind`. The Dart side already computed the add/change/remove sets,
-    /// so a change is just a remove-by-id followed by a re-add — no equality
-    /// re-check needed here.
     func applyOverlayUpdate(
         adding: [any FlutterOverlay],
         changing: [any FlutterOverlay],
@@ -46,14 +35,8 @@ extension MKMapView {
         for overlay in existing where removing.contains(overlay.id) {
             removeOverlay(overlay)
         }
-        var existingById: [String: any FlutterOverlay] = [:]
-        for overlay in existing {
-            if existingById[overlay.id] == nil {
-                existingById[overlay.id] = overlay
-            }
-        }
         for new in changing {
-            if let old = existingById[new.id] {
+            if let old = existing.first(where: { $0.id == new.id }) {
                 removeOverlay(old)
             }
             addFlutterOverlay(new)
@@ -64,11 +47,48 @@ extension MKMapView {
     }
 }
 
-extension PlatformOverlayLevel {
-    var mkLevel: MKOverlayLevel {
-        switch self {
-        case .aboveRoads: return .aboveRoads
-        case .aboveLabels: return .aboveLabels
-        }
+class DummyOverlay: NSObject, MKOverlay, FlutterOverlay {
+    var coordinate: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+    var boundingMapRect: MKMapRect = MKMapRect()
+    var id: String
+    var zIndex: Int = 0
+    var isConsumingTapEvents: Bool = false
+    var overlayLevel: MKOverlayLevel = .aboveRoads
+
+    init(id: String) {
+        self.id = id
+    }
+
+    func makeRenderer() -> MKOverlayRenderer {
+        return MKOverlayRenderer(overlay: self)
+    }
+    func getCAShapeLayer(snapshot: MKMapSnapshotter.Snapshot) -> CAShapeLayer {
+        return CAShapeLayer()
     }
 }
+
+let mapView = MKMapView()
+
+// Populate
+let numOverlays = 5000
+for i in 0..<numOverlays {
+    mapView.addOverlay(DummyOverlay(id: "id_\(i)"))
+}
+
+// Changing overlays
+var changing = [any FlutterOverlay]()
+for i in 0..<numOverlays {
+    changing.append(DummyOverlay(id: "id_\(i)"))
+}
+
+let start = CFAbsoluteTimeGetCurrent()
+
+mapView.applyOverlayUpdate(
+    adding: [],
+    changing: changing,
+    removing: Set<String>(),
+    ofKind: { _ in true }
+)
+
+let end = CFAbsoluteTimeGetCurrent()
+print("Elapsed time: \(end - start) seconds")

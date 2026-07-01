@@ -246,11 +246,15 @@ extension MapKitViewHost {
                 #if os(iOS)
                 view.anchorPoint = annotation.anchorPoint
                 #endif
-                // Rebuild the custom callout so a changed subtitle or anchor
+            }
+            switch view {
+            case let marker as MKMarkerAnnotationView:
+                self.applyMarkerStyle(marker, annotation.icon)
+            default:
+                // The backing FlutterAnnotation could have swapped custom <-> marker;
+                // we have to re-initialize the view's window so the old state
                 // isn't left stale on the live view.
                 self.initInfoWindow(annotation: annotation, annotationView: view)
-            } else if let marker = view as? MKMarkerAnnotationView {
-                self.applyMarkerStyle(marker, annotation.icon)
             }
         }
     }

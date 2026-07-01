@@ -25,6 +25,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     var flutterApi: MapKitFlutterApi
     var currentlySelectedAnnotation: String?
     var tileOverlays: [String: FlutterTileOverlay] = [:]
+    var annotationsById: [String: FlutterAnnotation] = [:]
 
     public init(withFrame frame: CGRect, withRegistrar registrar: FlutterPluginRegistrar, withId id: Int64) {
         let suffix = "\(id)"

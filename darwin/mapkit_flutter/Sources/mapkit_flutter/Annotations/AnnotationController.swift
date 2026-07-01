@@ -91,9 +91,8 @@ extension MapKitViewHost {
     }
 
     func annotationsToChange(_ annotations: [PlatformAnnotation]) {
-        let oldAnnotations: [MKAnnotation] = self.mapView.annotations
         for annotationData in annotations {
-            if let annotationToChange = oldAnnotations.first(where: { ($0 as? FlutterAnnotation)?.id == annotationData.id }) as? FlutterAnnotation {
+            if let annotationToChange = self.getAnnotation(with: annotationData.id) {
                 let newAnnotation = FlutterAnnotation(fromPlatform: annotationData)
                 if annotationToChange != newAnnotation {
                     if !annotationToChange.wasDragged {
@@ -132,11 +131,12 @@ extension MapKitViewHost {
     }
 
     func isAnnotationSelected(with id: String) -> Bool {
-        return self.mapView.selectedAnnotations.contains(where: { annotation in return self.getAnnotation(with: id) == (annotation as? FlutterAnnotation) })
+        return self.mapView.selectedAnnotations.contains(where: { annotation in return (annotation as? FlutterAnnotation)?.id == id })
     }
 
     private func removeAnnotation(id: String) {
         if let flutterAnnotation: FlutterAnnotation = self.getAnnotation(with: id) {
+            self.annotationsById.removeValue(forKey: id)
             self.mapView.removeAnnotation(flutterAnnotation)
         }
     }
@@ -178,7 +178,7 @@ extension MapKitViewHost {
     #endif
 
     private func getAnnotation(with id: String) -> FlutterAnnotation? {
-        return self.mapView.annotations.filter { annotation in return (annotation as? FlutterAnnotation)?.id == id }.first as? FlutterAnnotation
+        return self.annotationsById[id]
     }
 
     private func annotationExists(with id: String) -> Bool {
@@ -193,6 +193,7 @@ extension MapKitViewHost {
         if self.annotationExists(with: annotation.id) {
             self.removeAnnotation(id: annotation.id)
         }
+        self.annotationsById[annotation.id] = annotation
         self.mapView.addAnnotation(annotation)
     }
 
@@ -245,11 +246,18 @@ extension MapKitViewHost {
                 #if os(iOS)
                 view.anchorPoint = annotation.anchorPoint
                 #endif
-                // Rebuild the custom callout so a changed subtitle or anchor
+            }
+            switch view {
+            case let custom as FlutterCustomAnnotationView:
+                // The backing FlutterAnnotation could have swapped custom <-> marker;
+                // we have to re-initialize the view's window so the old state
                 // isn't left stale on the live view.
-                self.initInfoWindow(annotation: annotation, annotationView: view)
-            } else if let marker = view as? MKMarkerAnnotationView {
+                self.initInfoWindow(annotation: annotation, annotationView: custom)
+            case let marker as MKMarkerAnnotationView:
                 self.applyMarkerStyle(marker, annotation.icon)
+                self.initInfoWindow(annotation: annotation, annotationView: marker)
+            default:
+                break
             }
         }
     }

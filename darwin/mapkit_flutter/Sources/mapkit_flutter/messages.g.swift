@@ -121,18 +121,13 @@ enum messagesPigeonInternal {
     case (let lhsDictionary, let rhsDictionary) as ([AnyHashable: Any?], [AnyHashable: Any?]):
       guard lhsDictionary.count == rhsDictionary.count else { return false }
       for (lhsKey, lhsValue) in lhsDictionary {
-        var found = false
-        for (rhsKey, rhsValue) in rhsDictionary {
-          if deepEquals(lhsKey, rhsKey) {
-            if deepEquals(lhsValue, rhsValue) {
-              found = true
-              break
-            } else {
-              return false
-            }
+        if let rhsValue = rhsDictionary[lhsKey] {
+          if !deepEquals(lhsValue, rhsValue) {
+            return false
           }
+        } else {
+          return false
         }
-        if !found { return false }
       }
       return true
 

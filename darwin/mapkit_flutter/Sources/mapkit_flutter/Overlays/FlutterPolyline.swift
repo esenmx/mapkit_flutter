@@ -166,6 +166,21 @@ public extension MKPolyline {
         return distance <= meters(fromPixel: maxMeters, at: coordinate, view: mapView)
     }
 
+    private func closestPointOnSegment(pt: MKMapPoint, ptA: MKMapPoint, ptB: MKMapPoint) -> MKMapPoint {
+        let xDelta: Double = ptB.x - ptA.x
+        let yDelta: Double = ptB.y - ptA.y
+        if xDelta == 0.0 && yDelta == 0.0 {
+            return ptA
+        }
+        let u: Double = ((pt.x - ptA.x) * xDelta + (pt.y - ptA.y) * yDelta) / (xDelta * xDelta + yDelta * yDelta)
+        if u < 0.0 {
+            return ptA
+        } else if u > 1.0 {
+            return ptB
+        }
+        return MKMapPoint(x: ptA.x + u * xDelta, y: ptA.y + u * yDelta)
+    }
+
     private func distanceOf(pt: MKMapPoint, toMultipPoint multiPoint: MKMultiPoint) -> Double {
         // A line needs at least one segment; fewer than two points has no
         // distance and `0..<(pointCount - 1)` would trap for an empty line.
@@ -174,24 +189,11 @@ public extension MKPolyline {
         for n in 0..<multiPoint.pointCount - 1 {
             let ptA = multiPoint.points()[n]
             let ptB = multiPoint.points()[n + 1]
-            let xDelta: Double = ptB.x - ptA.x
-            let yDelta: Double = ptB.y - ptA.y
-            if xDelta == 0.0 && yDelta == 0.0 {
+            if ptA.x == ptB.x && ptA.y == ptB.y {
                 // Points must not be equal
                 continue
             }
-            let u: Double = ((pt.x - ptA.x) * xDelta + (pt.y - ptA.y) * yDelta) / (xDelta * xDelta + yDelta * yDelta)
-            var ptClosest: MKMapPoint
-            if u < 0.0 {
-                ptClosest = ptA
-            }
-            else if u > 1.0 {
-                ptClosest = ptB
-            }
-            else {
-                ptClosest = MKMapPoint.init(x: ptA.x + u * xDelta, y: ptA.y + u * yDelta)
-            }
-
+            let ptClosest = closestPointOnSegment(pt: pt, ptA: ptA, ptB: ptB)
             distance = min(distance, ptClosest.distance(to: pt))
         }
         return distance

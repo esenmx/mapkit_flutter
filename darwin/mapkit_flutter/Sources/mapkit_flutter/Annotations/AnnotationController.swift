@@ -132,7 +132,7 @@ extension MapKitViewHost {
     }
 
     func isAnnotationSelected(with id: String) -> Bool {
-        return self.mapView.selectedAnnotations.contains(where: { annotation in return self.getAnnotation(with: id) == (annotation as? FlutterAnnotation) })
+        return self.mapView.selectedAnnotations.contains(where: { annotation in return (annotation as? FlutterAnnotation)?.id == id })
     }
 
     private func removeAnnotation(id: String) {

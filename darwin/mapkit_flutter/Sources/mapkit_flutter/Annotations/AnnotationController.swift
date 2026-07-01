@@ -248,16 +248,13 @@ extension MapKitViewHost {
                 #endif
             }
             switch view {
-            case let custom as FlutterCustomAnnotationView:
+            case let marker as MKMarkerAnnotationView:
+                self.applyMarkerStyle(marker, annotation.icon)
+            default:
                 // The backing FlutterAnnotation could have swapped custom <-> marker;
                 // we have to re-initialize the view's window so the old state
                 // isn't left stale on the live view.
-                self.initInfoWindow(annotation: annotation, annotationView: custom)
-            case let marker as MKMarkerAnnotationView:
-                self.applyMarkerStyle(marker, annotation.icon)
-                self.initInfoWindow(annotation: annotation, annotationView: marker)
-            default:
-                break
+                self.initInfoWindow(annotation: annotation, annotationView: view)
             }
         }
     }

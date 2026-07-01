@@ -46,8 +46,14 @@ extension MKMapView {
         for overlay in existing where removing.contains(overlay.id) {
             removeOverlay(overlay)
         }
+        var existingById: [String: any FlutterOverlay] = [:]
+        for overlay in existing {
+            if existingById[overlay.id] == nil {
+                existingById[overlay.id] = overlay
+            }
+        }
         for new in changing {
-            if let old = existing.first(where: { $0.id == new.id }) {
+            if let old = existingById[new.id] {
                 removeOverlay(old)
             }
             addFlutterOverlay(new)

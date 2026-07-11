@@ -7,6 +7,9 @@ import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 
+/// Type definition for MKPolygonId.
+///
+/// See: https://developer.apple.com/documentation/mapkit/mkpolygonid
 typedef MKPolygonId = MapItemId<MKPolygon>;
 
 /// A filled, closed shape defined by an outer ring of [coordinates], with
@@ -16,6 +19,9 @@ typedef MKPolygonId = MapItemId<MKPolygon>;
 /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
 @immutable
 final class MKPolygon {
+  /// Creates a new MKPolygon object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
   const MKPolygon({
     required this.id,
     required this.coordinates,
@@ -30,13 +36,27 @@ final class MKPolygon {
     this.onTap,
   });
 
+  /// The id property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/id
   final MKPolygonId id;
+
+  /// The coordinates property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/coordinates
   final List<CLLocationCoordinate2D> coordinates;
 
   /// Rings cut out of the filled shape (`MKPolygon.interiorPolygons`).
   final List<List<CLLocationCoordinate2D>> interiorPolygons;
 
+  /// The fillColor property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/fillcolor
   final Color fillColor;
+
+  /// The strokeColor property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/strokecolor
   final Color strokeColor;
 
   /// Stroke width in points (`lineWidth`).
@@ -46,14 +66,27 @@ final class MKPolygon {
   /// overlay z-index; ties resolve by insertion.
   final int zIndex;
 
+  /// The isHidden property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ishidden
   final bool isHidden;
+
+  /// The consumeTapEvents property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/consumetapevents
   final bool consumeTapEvents;
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level;
 
+  /// The onTap property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ontap
   final VoidCallback? onTap;
 
+  /// Creates a new With object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   MKPolygon copyWith({
     List<CLLocationCoordinate2D>? coordinates,
     List<List<CLLocationCoordinate2D>>? interiorPolygons,
@@ -80,6 +113,9 @@ final class MKPolygon {
   );
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformPolygon toPlatform() => PlatformPolygon(
     id: id.value,
     coordinates: coordinates.map((c) => c.toPlatform()).toList(),

@@ -7,6 +7,9 @@ import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 
+/// Type definition for MKPolylineId.
+///
+/// See: https://developer.apple.com/documentation/mapkit/mkpolylineid
 typedef MKPolylineId = MapItemId<MKPolyline>;
 
 /// A connected sequence of line segments through geographical [coordinates],
@@ -56,7 +59,14 @@ final class MKPolyline {
     this.onTap,
   }) : isGeodesic = true;
 
+  /// The id property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/id
   final MKPolylineId id;
+
+  /// The coordinates property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/coordinates
   final List<CLLocationCoordinate2D> coordinates;
 
   /// Whether segments follow great-circle paths (`MKGeodesicPolyline`).
@@ -73,6 +83,9 @@ final class MKPolyline {
   /// joins, mirrored here.
   final CGLineCap lineCap;
 
+  /// The lineJoin property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/linejoin
   final CGLineJoin lineJoin;
 
   /// Alternating dash/gap lengths in points (`lineDashPattern`), e.g.
@@ -85,19 +98,31 @@ final class MKPolyline {
   /// [strokeColor]. Requires at least two colors.
   final List<Color> gradientColors;
 
+  /// The isHidden property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/ishidden
   final bool isHidden;
 
   /// Flutter-side insertion-order hint between overlays. MapKit has no
   /// overlay z-index; ties resolve by insertion.
   final int zIndex;
 
+  /// The consumeTapEvents property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/consumetapevents
   final bool consumeTapEvents;
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level;
 
+  /// The onTap property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/ontap
   final VoidCallback? onTap;
 
+  /// Creates a new With object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   MKPolyline copyWith({
     List<CLLocationCoordinate2D>? coordinates,
     Color? strokeColor,
@@ -128,6 +153,9 @@ final class MKPolyline {
   );
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformPolyline toPlatform() => PlatformPolyline(
     id: id.value,
     coordinates: coordinates.map((c) => c.toPlatform()).toList(),

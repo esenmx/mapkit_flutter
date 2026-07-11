@@ -206,6 +206,9 @@ final class MKMapViewController {
   // ------------------------- Internal mutations -------------------------
 
   @internal
+  /// Initializes the map view.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapviewcontroller/initialize
   Future<void> initialize({
     required MKMapCamera initialCamera,
     required PlatformMapConfiguration configuration,
@@ -227,10 +230,16 @@ final class MKMapViewController {
   );
 
   @internal
+  /// Creates a new MapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updateMapConfiguration(PlatformMapConfiguration configuration) =>
       _enqueue(() => _host.updateMapConfiguration(configuration));
 
   @internal
+  /// Creates a new Annotations object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updateAnnotations(MapObjectUpdates<MKPointAnnotation> updates) =>
       _enqueue(
         () => _host.updateAnnotations(
@@ -241,6 +250,9 @@ final class MKMapViewController {
       );
 
   @internal
+  /// Creates a new Polylines object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updatePolylines(MapObjectUpdates<MKPolyline> updates) =>
       _enqueue(
         () => _host.updatePolylines(
@@ -251,6 +263,9 @@ final class MKMapViewController {
       );
 
   @internal
+  /// Creates a new Polygons object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updatePolygons(MapObjectUpdates<MKPolygon> updates) => _enqueue(
     () => _host.updatePolygons(
       updates.toAdd.map((p) => p.toPlatform()).toList(),
@@ -260,6 +275,9 @@ final class MKMapViewController {
   );
 
   @internal
+  /// Creates a new Circles object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updateCircles(MapObjectUpdates<MKCircle> updates) => _enqueue(
     () => _host.updateCircles(
       updates.toAdd.map((c) => c.toPlatform()).toList(),

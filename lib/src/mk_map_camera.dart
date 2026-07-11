@@ -11,6 +11,9 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
 @immutable
 final class MKMapCamera {
+  /// Creates a new MKMapCamera object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
   const MKMapCamera({
     required this.centerCoordinate,
     required this.distance,
@@ -19,6 +22,9 @@ final class MKMapCamera {
   }) : assert(distance > 0, 'distance must be > 0 meters');
 
   @internal
+  /// Creates a new MKMapCamera object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
   factory MKMapCamera.fromPlatform(PlatformMapCamera p) => MKMapCamera(
     centerCoordinate: .fromPlatform(p.centerCoordinate),
     distance: p.distance,
@@ -43,6 +49,9 @@ final class MKMapCamera {
     pitch: pitch,
   );
 
+  /// The centerCoordinate property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera/centercoordinate
   final CLLocationCoordinate2D centerCoordinate;
 
   /// `MKMapCamera.centerCoordinateDistance` — meters between the camera and
@@ -63,6 +72,9 @@ final class MKMapCamera {
 
   static double _log2(double x) => log(x) / 0.6931471805599453;
 
+  /// Creates a new With object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   MKMapCamera copyWith({
     CLLocationCoordinate2D? centerCoordinate,
     double? distance,
@@ -76,6 +88,9 @@ final class MKMapCamera {
   );
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformMapCamera toPlatform() => PlatformMapCamera(
     centerCoordinate: centerCoordinate.toPlatform(),
     distance: distance,

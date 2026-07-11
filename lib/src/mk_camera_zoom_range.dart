@@ -10,6 +10,9 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkmapview/camerazoomrange
 @immutable
 final class MKCameraZoomRange {
+  /// Creates a new MKCameraZoomRange object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcamerazoomrange
   const MKCameraZoomRange({
     this.minCenterCoordinateDistance,
     this.maxCenterCoordinateDistance,
@@ -20,10 +23,20 @@ final class MKCameraZoomRange {
          'minCenterCoordinateDistance must be <= maxCenterCoordinateDistance',
        );
 
+  /// The minCenterCoordinateDistance property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcamerazoomrange/mincentercoordinatedistance
   final double? minCenterCoordinateDistance;
+
+  /// The maxCenterCoordinateDistance property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcamerazoomrange/maxcentercoordinatedistance
   final double? maxCenterCoordinateDistance;
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCameraZoomRange toPlatform() => PlatformCameraZoomRange(
     minCenterCoordinateDistance: minCenterCoordinateDistance,
     maxCenterCoordinateDistance: maxCenterCoordinateDistance,

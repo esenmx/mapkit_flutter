@@ -7,6 +7,9 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
 @immutable
 final class MKCoordinateSpan {
+  /// Creates a new MKCoordinateSpan object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
   const MKCoordinateSpan({
     required this.latitudeDelta,
     required this.longitudeDelta,
@@ -14,16 +17,29 @@ final class MKCoordinateSpan {
        assert(longitudeDelta >= 0, 'longitudeDelta must be >= 0');
 
   @internal
+  /// Creates a new MKCoordinateSpan object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
   factory MKCoordinateSpan.fromPlatform(PlatformCoordinateSpan p) =>
       MKCoordinateSpan(
         latitudeDelta: p.latitudeDelta,
         longitudeDelta: p.longitudeDelta,
       );
 
+  /// The latitudeDelta property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/latitudedelta
   final double latitudeDelta;
+
+  /// The longitudeDelta property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/longitudedelta
   final double longitudeDelta;
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCoordinateSpan toPlatform() => PlatformCoordinateSpan(
     latitudeDelta: latitudeDelta,
     longitudeDelta: longitudeDelta,

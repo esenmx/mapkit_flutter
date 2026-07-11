@@ -21,6 +21,9 @@ sealed class MKMapConfiguration {
 /// Roads-and-labels base map (`MKStandardMapConfiguration`).
 /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration
 final class MKStandardMapConfiguration extends MKMapConfiguration {
+  /// Creates a new MKStandardMapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration
   const MKStandardMapConfiguration({
     super.elevationStyle = .flat,
     this.emphasisStyle = .standard,
@@ -31,7 +34,14 @@ final class MKStandardMapConfiguration extends MKMapConfiguration {
   /// Label and feature emphasis; `standard` maps to Apple's `.default`.
   final MKMapEmphasisStyle emphasisStyle;
 
+  /// The pointOfInterestFilter property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/pointofinterestfilter
   final MKPointOfInterestFilter pointOfInterestFilter;
+
+  /// The showsTraffic property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/showstraffic
   final bool showsTraffic;
 
   @override
@@ -60,13 +70,23 @@ final class MKStandardMapConfiguration extends MKMapConfiguration {
 /// (`MKHybridMapConfiguration`).
 /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration
 final class MKHybridMapConfiguration extends MKMapConfiguration {
+  /// Creates a new MKHybridMapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration
   const MKHybridMapConfiguration({
     super.elevationStyle = .flat,
     this.pointOfInterestFilter = .includingAll,
     this.showsTraffic = false,
   });
 
+  /// The pointOfInterestFilter property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration/pointofinterestfilter
   final MKPointOfInterestFilter pointOfInterestFilter;
+
+  /// The showsTraffic property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration/showstraffic
   final bool showsTraffic;
 
   @override
@@ -89,6 +109,9 @@ final class MKHybridMapConfiguration extends MKMapConfiguration {
 /// Satellite imagery with no labels (`MKImageryMapConfiguration`).
 /// See: https://developer.apple.com/documentation/mapkit/mkimagerymapconfiguration
 final class MKImageryMapConfiguration extends MKMapConfiguration {
+  /// Creates a new MKImageryMapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkimagerymapconfiguration
   const MKImageryMapConfiguration({super.elevationStyle = .flat});
 
   @override

@@ -32,36 +32,7 @@ extension MKMapView {
         }
     }
 
-    /// Applies a pre-diffed overlay update for one kind of overlay, selected
-    /// by `isKind`. The Dart side already computed the add/change/remove sets,
-    /// so a change is just a remove-by-id followed by a re-add — no equality
-    /// re-check needed here.
-    func applyOverlayUpdate(
-        adding: [any FlutterOverlay],
-        changing: [any FlutterOverlay],
-        removing: Set<String>,
-        ofKind isKind: (MKOverlay) -> Bool
-    ) {
-        let existing = overlays.filter(isKind).compactMap { $0 as? any FlutterOverlay }
-        for overlay in existing where removing.contains(overlay.id) {
-            removeOverlay(overlay)
-        }
-        var existingById: [String: any FlutterOverlay] = [:]
-        for overlay in existing {
-            if existingById[overlay.id] == nil {
-                existingById[overlay.id] = overlay
-            }
-        }
-        for new in changing {
-            if let old = existingById[new.id] {
-                removeOverlay(old)
-            }
-            addFlutterOverlay(new)
-        }
-        for new in adding {
-            addFlutterOverlay(new)
-        }
-    }
+
 }
 
 extension PlatformOverlayLevel {

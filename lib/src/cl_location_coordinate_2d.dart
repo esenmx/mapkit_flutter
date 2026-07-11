@@ -14,6 +14,9 @@ typedef Coordinate = CLLocationCoordinate2D;
 /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
 @immutable
 final class CLLocationCoordinate2D {
+  /// Creates a new CLLocationCoordinate2D object.
+  ///
+  /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
   const CLLocationCoordinate2D({
     required double latitude,
     required double longitude,
@@ -23,13 +26,26 @@ final class CLLocationCoordinate2D {
        longitude = (longitude + 180.0) % 360.0 - 180.0;
 
   @internal
+  /// Creates a new CLLocationCoordinate2D object.
+  ///
+  /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
   factory CLLocationCoordinate2D.fromPlatform(PlatformCoordinate p) =>
       CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude);
 
+  /// The latitude property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final double latitude;
+
+  /// The longitude property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final double longitude;
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCoordinate toPlatform() =>
       PlatformCoordinate(latitude: latitude, longitude: longitude);
 

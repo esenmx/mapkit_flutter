@@ -9,16 +9,29 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
 @immutable
 final class MKCoordinateRegion {
+  /// Creates a new MKCoordinateRegion object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
   const MKCoordinateRegion({required this.center, required this.span});
 
   @internal
+  /// Creates a new MKCoordinateRegion object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
   factory MKCoordinateRegion.fromPlatform(PlatformCoordinateRegion p) =>
       MKCoordinateRegion(
         center: .fromPlatform(p.center),
         span: .fromPlatform(p.span),
       );
 
+  /// The center property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/center
   final CLLocationCoordinate2D center;
+
+  /// The span property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/span
   final MKCoordinateSpan span;
 
   /// Smallest region that contains all given [coordinates].
@@ -64,6 +77,9 @@ final class MKCoordinateRegion {
   }
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCoordinateRegion toPlatform() => PlatformCoordinateRegion(
     center: center.toPlatform(),
     span: span.toPlatform(),

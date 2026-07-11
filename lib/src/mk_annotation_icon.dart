@@ -68,6 +68,9 @@ final class MKAnnotationIcon {
   final Uint8List? _imageBytes;
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformAnnotationIcon toPlatform() => PlatformAnnotationIcon(
     type: _type,
     markerTintArgb: _markerTintColor?.toARGB32(),

@@ -40,6 +40,9 @@ sealed class MapKitException implements Exception {
 /// Thrown when a method is called on a controller whose map view has already
 /// been disposed.
 final class MapKitDisposedException extends MapKitException {
+  /// Creates a new MapKitDisposedException object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const MapKitDisposedException()
     : super('The MKMapViewController has been disposed.');
 }
@@ -49,6 +52,9 @@ final class MapKitDisposedException extends MapKitException {
 /// wraps Apple's MapKit, so there is no cross-platform fallback — this
 /// surfaces loudly instead of silently rendering an empty box.
 final class MapKitUnsupportedPlatformException extends MapKitException {
+  /// Creates a new MapKitUnsupportedPlatformException object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const MapKitUnsupportedPlatformException(this.platform)
     : super(
         'mapkit_flutter supports iOS and macOS only; '
@@ -68,6 +74,9 @@ final class MapKitUnsupportedPlatformException extends MapKitException {
 /// A failure reported by the native MapKit layer. Carries the original
 /// platform [code] and [details] for diagnostics.
 final class MapKitPlatformException extends MapKitException {
+  /// Creates a new MapKitPlatformException object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const MapKitPlatformException({
     required this.code,
     required String message,

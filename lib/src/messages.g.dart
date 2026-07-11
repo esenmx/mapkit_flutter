@@ -10,9 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:meta/meta.dart' show immutable, protected, visibleForTesting;
 
 Object? _extractReplyValueOrThrow(
-  List<Object?>? replyList,
-  String channelName, {
-  required bool isNullValid,
+    List<Object?>? replyList,
+    String channelName, {
+    required bool isNullValid,
 }) {
   if (replyList == null) {
     throw PlatformException(
@@ -34,11 +34,8 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
-List<Object?> wrapResponse({
-  Object? result,
-  PlatformException? error,
-  bool empty = false,
-}) {
+
+List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty = false}) {
   if (empty) {
     return <Object?>[];
   }
@@ -47,7 +44,6 @@ List<Object?> wrapResponse({
   }
   return <Object?>[error.code, error.message, error.details];
 }
-
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -60,9 +56,8 @@ bool _deepEquals(Object? a, Object? b) {
   }
   if (a is List && b is List) {
     return a.length == b.length &&
-        a.indexed.every(
-          ((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]),
-        );
+        a.indexed
+            .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
   }
   if (a is Map && b is Map) {
     if (a.length != b.length) {
@@ -123,32 +118,60 @@ int _deepHash(Object? value) {
   return value.hashCode;
 }
 
-enum PlatformMapKind { standard, hybrid, imagery }
+
+enum PlatformMapKind {
+  standard,
+  hybrid,
+  imagery,
+}
 
 /// Label and feature emphasis on the standard map
 /// (`MKStandardMapConfiguration.EmphasisStyle`).
 ///
 /// `standard` maps to Apple's `.default` — `default` is a Dart reserved word.
 /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/emphasisstyle
-enum PlatformMapEmphasisStyle { standard, muted }
+enum PlatformMapEmphasisStyle {
+  standard,
+  muted,
+}
 
 /// Flat versus realistic 3-D terrain (`MKMapConfiguration.ElevationStyle`).
 /// See: https://developer.apple.com/documentation/mapkit/mkmapconfiguration/elevationstyle
-enum PlatformMapElevationStyle { flat, realistic }
+enum PlatformMapElevationStyle {
+  flat,
+  realistic,
+}
 
 /// How the map camera follows the user's location (`MKUserTrackingMode`).
 /// See: https://developer.apple.com/documentation/mapkit/mkusertrackingmode
-enum PlatformUserTrackingMode { none, follow, followWithHeading }
+enum PlatformUserTrackingMode {
+  none,
+  follow,
+  followWithHeading,
+}
 
 /// Stroke end-cap style for an `MKPolyline` (`CGLineCap`).
 /// See: https://developer.apple.com/documentation/coregraphics/cglinecap
-enum PlatformLineCap { butt, round, square }
+enum PlatformLineCap {
+  butt,
+  round,
+  square,
+}
 
 /// Stroke join style between `MKPolyline` segments (`CGLineJoin`).
 /// See: https://developer.apple.com/documentation/coregraphics/cglinejoin
-enum PlatformLineJoin { miter, round, bevel }
+enum PlatformLineJoin {
+  miter,
+  round,
+  bevel,
+}
 
-enum PlatformPOIMode { none, all, including, excluding }
+enum PlatformPOIMode {
+  none,
+  all,
+  including,
+  excluding,
+}
 
 /// Vertical placement of an overlay relative to the base map's own labels and
 /// roads (`MKOverlayLevel`).
@@ -156,7 +179,6 @@ enum PlatformPOIMode { none, all, including, excluding }
 enum PlatformOverlayLevel {
   /// Drawn above roads but below map labels (POIs, place names). Default.
   aboveRoads,
-
   /// Drawn above everything, including labels.
   aboveLabels,
 }
@@ -214,22 +236,30 @@ enum PlatformMapFeatureOptions {
   physicalFeatures,
 }
 
-enum PlatformAnnotationIconType { marker, image }
+enum PlatformAnnotationIconType {
+  marker,
+  image,
+}
 
 class PlatformCoordinate {
-  PlatformCoordinate({required this.latitude, required this.longitude});
+  PlatformCoordinate({
+    required this.latitude,
+    required this.longitude,
+  });
 
   double latitude;
 
   double longitude;
 
   List<Object?> _toList() {
-    return <Object?>[latitude, longitude];
+    return <Object?>[
+      latitude,
+      longitude,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformCoordinate decode(Object result) {
     result as List<Object?>;
@@ -248,8 +278,7 @@ class PlatformCoordinate {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(latitude, other.latitude) &&
-        _deepEquals(longitude, other.longitude);
+    return _deepEquals(latitude, other.latitude) && _deepEquals(longitude, other.longitude);
   }
 
   @override
@@ -273,12 +302,14 @@ class PlatformCoordinateSpan {
   double longitudeDelta;
 
   List<Object?> _toList() {
-    return <Object?>[latitudeDelta, longitudeDelta];
+    return <Object?>[
+      latitudeDelta,
+      longitudeDelta,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformCoordinateSpan decode(Object result) {
     result as List<Object?>;
@@ -297,8 +328,7 @@ class PlatformCoordinateSpan {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(latitudeDelta, other.latitudeDelta) &&
-        _deepEquals(longitudeDelta, other.longitudeDelta);
+    return _deepEquals(latitudeDelta, other.latitudeDelta) && _deepEquals(longitudeDelta, other.longitudeDelta);
   }
 
   @override
@@ -312,19 +342,24 @@ class PlatformCoordinateSpan {
 }
 
 class PlatformCoordinateRegion {
-  PlatformCoordinateRegion({required this.center, required this.span});
+  PlatformCoordinateRegion({
+    required this.center,
+    required this.span,
+  });
 
   PlatformCoordinate center;
 
   PlatformCoordinateSpan span;
 
   List<Object?> _toList() {
-    return <Object?>[center, span];
+    return <Object?>[
+      center,
+      span,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformCoordinateRegion decode(Object result) {
     result as List<Object?>;
@@ -337,8 +372,7 @@ class PlatformCoordinateRegion {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! PlatformCoordinateRegion ||
-        other.runtimeType != runtimeType) {
+    if (other is! PlatformCoordinateRegion || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
@@ -375,12 +409,16 @@ class PlatformMapCamera {
   double pitch;
 
   List<Object?> _toList() {
-    return <Object?>[centerCoordinate, distance, heading, pitch];
+    return <Object?>[
+      centerCoordinate,
+      distance,
+      heading,
+      pitch,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformMapCamera decode(Object result) {
     result as List<Object?>;
@@ -401,10 +439,7 @@ class PlatformMapCamera {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(centerCoordinate, other.centerCoordinate) &&
-        _deepEquals(distance, other.distance) &&
-        _deepEquals(heading, other.heading) &&
-        _deepEquals(pitch, other.pitch);
+    return _deepEquals(centerCoordinate, other.centerCoordinate) && _deepEquals(distance, other.distance) && _deepEquals(heading, other.heading) && _deepEquals(pitch, other.pitch);
   }
 
   @override
@@ -418,23 +453,31 @@ class PlatformMapCamera {
 }
 
 class PlatformPoint {
-  PlatformPoint({required this.x, required this.y});
+  PlatformPoint({
+    required this.x,
+    required this.y,
+  });
 
   double x;
 
   double y;
 
   List<Object?> _toList() {
-    return <Object?>[x, y];
+    return <Object?>[
+      x,
+      y,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformPoint decode(Object result) {
     result as List<Object?>;
-    return PlatformPoint(x: result[0]! as double, y: result[1]! as double);
+    return PlatformPoint(
+      x: result[0]! as double,
+      y: result[1]! as double,
+    );
   }
 
   @override
@@ -500,8 +543,7 @@ class PlatformAnnotationIcon {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformAnnotationIcon decode(Object result) {
     result as List<Object?>;
@@ -524,12 +566,7 @@ class PlatformAnnotationIcon {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(type, other.type) &&
-        _deepEquals(markerTintArgb, other.markerTintArgb) &&
-        _deepEquals(glyphText, other.glyphText) &&
-        _deepEquals(glyphSystemImage, other.glyphSystemImage) &&
-        _deepEquals(glyphTintArgb, other.glyphTintArgb) &&
-        _deepEquals(imageBytes, other.imageBytes);
+    return _deepEquals(type, other.type) && _deepEquals(markerTintArgb, other.markerTintArgb) && _deepEquals(glyphText, other.glyphText) && _deepEquals(glyphSystemImage, other.glyphSystemImage) && _deepEquals(glyphTintArgb, other.glyphTintArgb) && _deepEquals(imageBytes, other.imageBytes);
   }
 
   @override
@@ -604,8 +641,7 @@ class PlatformAnnotation {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformAnnotation decode(Object result) {
     result as List<Object?>;
@@ -635,19 +671,7 @@ class PlatformAnnotation {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(id, other.id) &&
-        _deepEquals(coordinate, other.coordinate) &&
-        _deepEquals(icon, other.icon) &&
-        _deepEquals(title, other.title) &&
-        _deepEquals(subtitle, other.subtitle) &&
-        _deepEquals(calloutConsumesTapEvents, other.calloutConsumesTapEvents) &&
-        _deepEquals(alpha, other.alpha) &&
-        _deepEquals(anchorPointX, other.anchorPointX) &&
-        _deepEquals(anchorPointY, other.anchorPointY) &&
-        _deepEquals(isDraggable, other.isDraggable) &&
-        _deepEquals(isHidden, other.isHidden) &&
-        _deepEquals(zPriority, other.zPriority) &&
-        _deepEquals(clusteringIdentifier, other.clusteringIdentifier);
+    return _deepEquals(id, other.id) && _deepEquals(coordinate, other.coordinate) && _deepEquals(icon, other.icon) && _deepEquals(title, other.title) && _deepEquals(subtitle, other.subtitle) && _deepEquals(calloutConsumesTapEvents, other.calloutConsumesTapEvents) && _deepEquals(alpha, other.alpha) && _deepEquals(anchorPointX, other.anchorPointX) && _deepEquals(anchorPointY, other.anchorPointY) && _deepEquals(isDraggable, other.isDraggable) && _deepEquals(isHidden, other.isHidden) && _deepEquals(zPriority, other.zPriority) && _deepEquals(clusteringIdentifier, other.clusteringIdentifier);
   }
 
   @override
@@ -725,8 +749,7 @@ class PlatformPolyline {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformPolyline decode(Object result) {
     result as List<Object?>;
@@ -756,19 +779,7 @@ class PlatformPolyline {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(id, other.id) &&
-        _deepEquals(coordinates, other.coordinates) &&
-        _deepEquals(strokeColorArgb, other.strokeColorArgb) &&
-        _deepEquals(lineWidth, other.lineWidth) &&
-        _deepEquals(lineCap, other.lineCap) &&
-        _deepEquals(lineJoin, other.lineJoin) &&
-        _deepEquals(isHidden, other.isHidden) &&
-        _deepEquals(consumeTapEvents, other.consumeTapEvents) &&
-        _deepEquals(isGeodesic, other.isGeodesic) &&
-        _deepEquals(level, other.level) &&
-        _deepEquals(zIndex, other.zIndex) &&
-        _deepEquals(lineDashPattern, other.lineDashPattern) &&
-        _deepEquals(gradientColorsArgb, other.gradientColorsArgb);
+    return _deepEquals(id, other.id) && _deepEquals(coordinates, other.coordinates) && _deepEquals(strokeColorArgb, other.strokeColorArgb) && _deepEquals(lineWidth, other.lineWidth) && _deepEquals(lineCap, other.lineCap) && _deepEquals(lineJoin, other.lineJoin) && _deepEquals(isHidden, other.isHidden) && _deepEquals(consumeTapEvents, other.consumeTapEvents) && _deepEquals(isGeodesic, other.isGeodesic) && _deepEquals(level, other.level) && _deepEquals(zIndex, other.zIndex) && _deepEquals(lineDashPattern, other.lineDashPattern) && _deepEquals(gradientColorsArgb, other.gradientColorsArgb);
   }
 
   @override
@@ -831,16 +842,14 @@ class PlatformPolygon {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformPolygon decode(Object result) {
     result as List<Object?>;
     return PlatformPolygon(
       id: result[0]! as String,
       coordinates: (result[1]! as List<Object?>).cast<PlatformCoordinate>(),
-      interiorPolygons: (result[2]! as List<Object?>)
-          .cast<List<PlatformCoordinate>>(),
+      interiorPolygons: (result[2]! as List<Object?>).cast<List<PlatformCoordinate>>(),
       fillColorArgb: result[3]! as int,
       strokeColorArgb: result[4]! as int,
       lineWidth: result[5]! as double,
@@ -860,16 +869,7 @@ class PlatformPolygon {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(id, other.id) &&
-        _deepEquals(coordinates, other.coordinates) &&
-        _deepEquals(interiorPolygons, other.interiorPolygons) &&
-        _deepEquals(fillColorArgb, other.fillColorArgb) &&
-        _deepEquals(strokeColorArgb, other.strokeColorArgb) &&
-        _deepEquals(lineWidth, other.lineWidth) &&
-        _deepEquals(zIndex, other.zIndex) &&
-        _deepEquals(isHidden, other.isHidden) &&
-        _deepEquals(consumeTapEvents, other.consumeTapEvents) &&
-        _deepEquals(level, other.level);
+    return _deepEquals(id, other.id) && _deepEquals(coordinates, other.coordinates) && _deepEquals(interiorPolygons, other.interiorPolygons) && _deepEquals(fillColorArgb, other.fillColorArgb) && _deepEquals(strokeColorArgb, other.strokeColorArgb) && _deepEquals(lineWidth, other.lineWidth) && _deepEquals(zIndex, other.zIndex) && _deepEquals(isHidden, other.isHidden) && _deepEquals(consumeTapEvents, other.consumeTapEvents) && _deepEquals(level, other.level);
   }
 
   @override
@@ -932,8 +932,7 @@ class PlatformCircle {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformCircle decode(Object result) {
     result as List<Object?>;
@@ -960,16 +959,7 @@ class PlatformCircle {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(id, other.id) &&
-        _deepEquals(center, other.center) &&
-        _deepEquals(radius, other.radius) &&
-        _deepEquals(fillColorArgb, other.fillColorArgb) &&
-        _deepEquals(strokeColorArgb, other.strokeColorArgb) &&
-        _deepEquals(lineWidth, other.lineWidth) &&
-        _deepEquals(zIndex, other.zIndex) &&
-        _deepEquals(isHidden, other.isHidden) &&
-        _deepEquals(consumeTapEvents, other.consumeTapEvents) &&
-        _deepEquals(level, other.level);
+    return _deepEquals(id, other.id) && _deepEquals(center, other.center) && _deepEquals(radius, other.radius) && _deepEquals(fillColorArgb, other.fillColorArgb) && _deepEquals(strokeColorArgb, other.strokeColorArgb) && _deepEquals(lineWidth, other.lineWidth) && _deepEquals(zIndex, other.zIndex) && _deepEquals(isHidden, other.isHidden) && _deepEquals(consumeTapEvents, other.consumeTapEvents) && _deepEquals(level, other.level);
   }
 
   @override
@@ -1024,8 +1014,7 @@ class PlatformTileOverlay {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformTileOverlay decode(Object result) {
     result as List<Object?>;
@@ -1050,14 +1039,7 @@ class PlatformTileOverlay {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(id, other.id) &&
-        _deepEquals(urlTemplate, other.urlTemplate) &&
-        _deepEquals(minimumZ, other.minimumZ) &&
-        _deepEquals(maximumZ, other.maximumZ) &&
-        _deepEquals(tileSize, other.tileSize) &&
-        _deepEquals(canReplaceMapContent, other.canReplaceMapContent) &&
-        _deepEquals(alpha, other.alpha) &&
-        _deepEquals(level, other.level);
+    return _deepEquals(id, other.id) && _deepEquals(urlTemplate, other.urlTemplate) && _deepEquals(minimumZ, other.minimumZ) && _deepEquals(maximumZ, other.maximumZ) && _deepEquals(tileSize, other.tileSize) && _deepEquals(canReplaceMapContent, other.canReplaceMapContent) && _deepEquals(alpha, other.alpha) && _deepEquals(level, other.level);
   }
 
   @override
@@ -1071,7 +1053,10 @@ class PlatformTileOverlay {
 }
 
 class PlatformPointOfInterestFilter {
-  PlatformPointOfInterestFilter({required this.mode, required this.categories});
+  PlatformPointOfInterestFilter({
+    required this.mode,
+    required this.categories,
+  });
 
   PlatformPOIMode mode;
 
@@ -1080,34 +1065,33 @@ class PlatformPointOfInterestFilter {
   List<PlatformPointOfInterestCategory> categories;
 
   List<Object?> _toList() {
-    return <Object?>[mode, categories];
+    return <Object?>[
+      mode,
+      categories,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformPointOfInterestFilter decode(Object result) {
     result as List<Object?>;
     return PlatformPointOfInterestFilter(
       mode: result[0]! as PlatformPOIMode,
-      categories: (result[1]! as List<Object?>)
-          .cast<PlatformPointOfInterestCategory>(),
+      categories: (result[1]! as List<Object?>).cast<PlatformPointOfInterestCategory>(),
     );
   }
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! PlatformPointOfInterestFilter ||
-        other.runtimeType != runtimeType) {
+    if (other is! PlatformPointOfInterestFilter || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(mode, other.mode) &&
-        _deepEquals(categories, other.categories);
+    return _deepEquals(mode, other.mode) && _deepEquals(categories, other.categories);
   }
 
   @override
@@ -1132,12 +1116,14 @@ class PlatformCameraZoomRange {
   double? maxCenterCoordinateDistance;
 
   List<Object?> _toList() {
-    return <Object?>[minCenterCoordinateDistance, maxCenterCoordinateDistance];
+    return <Object?>[
+      minCenterCoordinateDistance,
+      maxCenterCoordinateDistance,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformCameraZoomRange decode(Object result) {
     result as List<Object?>;
@@ -1156,14 +1142,7 @@ class PlatformCameraZoomRange {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(
-          minCenterCoordinateDistance,
-          other.minCenterCoordinateDistance,
-        ) &&
-        _deepEquals(
-          maxCenterCoordinateDistance,
-          other.maxCenterCoordinateDistance,
-        );
+    return _deepEquals(minCenterCoordinateDistance, other.minCenterCoordinateDistance) && _deepEquals(maxCenterCoordinateDistance, other.maxCenterCoordinateDistance);
   }
 
   @override
@@ -1258,8 +1237,7 @@ class PlatformMapConfiguration {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformMapConfiguration decode(Object result) {
     result as List<Object?>;
@@ -1278,8 +1256,7 @@ class PlatformMapConfiguration {
       isScrollEnabled: result[11]! as bool,
       isZoomEnabled: result[12]! as bool,
       isPitchEnabled: result[13]! as bool,
-      selectableMapFeatures: (result[14]! as List<Object?>)
-          .cast<PlatformMapFeatureOptions>(),
+      selectableMapFeatures: (result[14]! as List<Object?>).cast<PlatformMapFeatureOptions>(),
       pointOfInterestFilter: result[15] as PlatformPointOfInterestFilter?,
       cameraZoomRange: result[16] as PlatformCameraZoomRange?,
       cameraBoundary: result[17] as PlatformCoordinateRegion?,
@@ -1289,34 +1266,13 @@ class PlatformMapConfiguration {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! PlatformMapConfiguration ||
-        other.runtimeType != runtimeType) {
+    if (other is! PlatformMapConfiguration || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(kind, other.kind) &&
-        _deepEquals(emphasisStyle, other.emphasisStyle) &&
-        _deepEquals(elevationStyle, other.elevationStyle) &&
-        _deepEquals(showsTraffic, other.showsTraffic) &&
-        _deepEquals(showsCompass, other.showsCompass) &&
-        _deepEquals(showsScale, other.showsScale) &&
-        _deepEquals(showsUserLocation, other.showsUserLocation) &&
-        _deepEquals(showsUserTrackingButton, other.showsUserTrackingButton) &&
-        _deepEquals(userTrackingMode, other.userTrackingMode) &&
-        _deepEquals(
-          insetsLayoutMarginsFromSafeArea,
-          other.insetsLayoutMarginsFromSafeArea,
-        ) &&
-        _deepEquals(isRotateEnabled, other.isRotateEnabled) &&
-        _deepEquals(isScrollEnabled, other.isScrollEnabled) &&
-        _deepEquals(isZoomEnabled, other.isZoomEnabled) &&
-        _deepEquals(isPitchEnabled, other.isPitchEnabled) &&
-        _deepEquals(selectableMapFeatures, other.selectableMapFeatures) &&
-        _deepEquals(pointOfInterestFilter, other.pointOfInterestFilter) &&
-        _deepEquals(cameraZoomRange, other.cameraZoomRange) &&
-        _deepEquals(cameraBoundary, other.cameraBoundary);
+    return _deepEquals(kind, other.kind) && _deepEquals(emphasisStyle, other.emphasisStyle) && _deepEquals(elevationStyle, other.elevationStyle) && _deepEquals(showsTraffic, other.showsTraffic) && _deepEquals(showsCompass, other.showsCompass) && _deepEquals(showsScale, other.showsScale) && _deepEquals(showsUserLocation, other.showsUserLocation) && _deepEquals(showsUserTrackingButton, other.showsUserTrackingButton) && _deepEquals(userTrackingMode, other.userTrackingMode) && _deepEquals(insetsLayoutMarginsFromSafeArea, other.insetsLayoutMarginsFromSafeArea) && _deepEquals(isRotateEnabled, other.isRotateEnabled) && _deepEquals(isScrollEnabled, other.isScrollEnabled) && _deepEquals(isZoomEnabled, other.isZoomEnabled) && _deepEquals(isPitchEnabled, other.isPitchEnabled) && _deepEquals(selectableMapFeatures, other.selectableMapFeatures) && _deepEquals(pointOfInterestFilter, other.pointOfInterestFilter) && _deepEquals(cameraZoomRange, other.cameraZoomRange) && _deepEquals(cameraBoundary, other.cameraBoundary);
   }
 
   @override
@@ -1357,8 +1313,7 @@ class PlatformSnapshotOptions {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformSnapshotOptions decode(Object result) {
     result as List<Object?>;
@@ -1379,10 +1334,7 @@ class PlatformSnapshotOptions {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(showsBuildings, other.showsBuildings) &&
-        _deepEquals(showsPointsOfInterest, other.showsPointsOfInterest) &&
-        _deepEquals(showsAnnotations, other.showsAnnotations) &&
-        _deepEquals(showsOverlays, other.showsOverlays);
+    return _deepEquals(showsBuildings, other.showsBuildings) && _deepEquals(showsPointsOfInterest, other.showsPointsOfInterest) && _deepEquals(showsAnnotations, other.showsAnnotations) && _deepEquals(showsOverlays, other.showsOverlays);
   }
 
   @override
@@ -1429,8 +1381,7 @@ class PlatformMapViewCreationParams {
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static PlatformMapViewCreationParams decode(Object result) {
     result as List<Object?>;
@@ -1447,19 +1398,13 @@ class PlatformMapViewCreationParams {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! PlatformMapViewCreationParams ||
-        other.runtimeType != runtimeType) {
+    if (other is! PlatformMapViewCreationParams || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(initialCamera, other.initialCamera) &&
-        _deepEquals(configuration, other.configuration) &&
-        _deepEquals(annotations, other.annotations) &&
-        _deepEquals(polylines, other.polylines) &&
-        _deepEquals(polygons, other.polygons) &&
-        _deepEquals(circles, other.circles);
+    return _deepEquals(initialCamera, other.initialCamera) && _deepEquals(configuration, other.configuration) && _deepEquals(annotations, other.annotations) && _deepEquals(polylines, other.polylines) && _deepEquals(polygons, other.polygons) && _deepEquals(circles, other.circles);
   }
 
   @override
@@ -1472,6 +1417,7 @@ class PlatformMapViewCreationParams {
   }
 }
 
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -1479,85 +1425,85 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    } else if (value is PlatformMapKind) {
+    }    else if (value is PlatformMapKind) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is PlatformMapEmphasisStyle) {
+    }    else if (value is PlatformMapEmphasisStyle) {
       buffer.putUint8(130);
       writeValue(buffer, value.index);
-    } else if (value is PlatformMapElevationStyle) {
+    }    else if (value is PlatformMapElevationStyle) {
       buffer.putUint8(131);
       writeValue(buffer, value.index);
-    } else if (value is PlatformUserTrackingMode) {
+    }    else if (value is PlatformUserTrackingMode) {
       buffer.putUint8(132);
       writeValue(buffer, value.index);
-    } else if (value is PlatformLineCap) {
+    }    else if (value is PlatformLineCap) {
       buffer.putUint8(133);
       writeValue(buffer, value.index);
-    } else if (value is PlatformLineJoin) {
+    }    else if (value is PlatformLineJoin) {
       buffer.putUint8(134);
       writeValue(buffer, value.index);
-    } else if (value is PlatformPOIMode) {
+    }    else if (value is PlatformPOIMode) {
       buffer.putUint8(135);
       writeValue(buffer, value.index);
-    } else if (value is PlatformOverlayLevel) {
+    }    else if (value is PlatformOverlayLevel) {
       buffer.putUint8(136);
       writeValue(buffer, value.index);
-    } else if (value is PlatformPointOfInterestCategory) {
+    }    else if (value is PlatformPointOfInterestCategory) {
       buffer.putUint8(137);
       writeValue(buffer, value.index);
-    } else if (value is PlatformMapFeatureOptions) {
+    }    else if (value is PlatformMapFeatureOptions) {
       buffer.putUint8(138);
       writeValue(buffer, value.index);
-    } else if (value is PlatformAnnotationIconType) {
+    }    else if (value is PlatformAnnotationIconType) {
       buffer.putUint8(139);
       writeValue(buffer, value.index);
-    } else if (value is PlatformCoordinate) {
+    }    else if (value is PlatformCoordinate) {
       buffer.putUint8(140);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCoordinateSpan) {
+    }    else if (value is PlatformCoordinateSpan) {
       buffer.putUint8(141);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCoordinateRegion) {
+    }    else if (value is PlatformCoordinateRegion) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapCamera) {
+    }    else if (value is PlatformMapCamera) {
       buffer.putUint8(143);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPoint) {
+    }    else if (value is PlatformPoint) {
       buffer.putUint8(144);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformAnnotationIcon) {
+    }    else if (value is PlatformAnnotationIcon) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformAnnotation) {
+    }    else if (value is PlatformAnnotation) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolyline) {
+    }    else if (value is PlatformPolyline) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolygon) {
+    }    else if (value is PlatformPolygon) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCircle) {
+    }    else if (value is PlatformCircle) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformTileOverlay) {
+    }    else if (value is PlatformTileOverlay) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPointOfInterestFilter) {
+    }    else if (value is PlatformPointOfInterestFilter) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCameraZoomRange) {
+    }    else if (value is PlatformCameraZoomRange) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapConfiguration) {
+    }    else if (value is PlatformMapConfiguration) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformSnapshotOptions) {
+    }    else if (value is PlatformSnapshotOptions) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapViewCreationParams) {
+    }    else if (value is PlatformMapViewCreationParams) {
       buffer.putUint8(155);
       writeValue(buffer, value.encode());
     } else {
@@ -1594,9 +1540,7 @@ class _PigeonCodec extends StandardMessageCodec {
         return value == null ? null : PlatformOverlayLevel.values[value];
       case 137:
         final value = readValue(buffer) as int?;
-        return value == null
-            ? null
-            : PlatformPointOfInterestCategory.values[value];
+        return value == null ? null : PlatformPointOfInterestCategory.values[value];
       case 138:
         final value = readValue(buffer) as int?;
         return value == null ? null : PlatformMapFeatureOptions.values[value];
@@ -1647,13 +1591,9 @@ class MapKitHostApi {
   /// Constructor for [MapKitHostApi]. The [binaryMessenger] named argument is
   /// available for dependency injection. If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  MapKitHostApi({
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
-           ? '.$messageChannelSuffix'
-           : '';
+  MapKitHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -1663,92 +1603,83 @@ class MapKitHostApi {
   /// Pushes the full initial state immediately after the platform view is
   /// created.
   Future<void> initialize(PlatformMapViewCreationParams params) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.initialize$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.initialize$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[params],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[params]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   /// `MKMapView.setCamera(_:animated:)`.
   Future<void> setCamera(PlatformMapCamera camera, bool animated) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.setCamera$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.setCamera$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[camera, animated],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[camera, animated]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   /// `MKMapView.setRegion(_:animated:)`.
   Future<void> setRegion(PlatformCoordinateRegion region, bool animated) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.setRegion$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.setRegion$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[region, animated],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[region, animated]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   /// `MKMapView.setCenter(_:animated:)`.
   Future<void> setCenter(PlatformCoordinate coordinate, bool animated) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.setCenter$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.setCenter$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[coordinate, animated],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[coordinate, animated]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   /// `MKMapView.camera`.
   Future<PlatformMapCamera> getCamera() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getCamera$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getCamera$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1758,17 +1689,17 @@ class MapKitHostApi {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as PlatformMapCamera;
   }
 
   /// `MKMapView.region`.
   Future<PlatformCoordinateRegion> getRegion() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getRegion$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getRegion$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -1778,317 +1709,272 @@ class MapKitHostApi {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as PlatformCoordinateRegion;
   }
 
   /// `MKMapView.convert(_:toPointTo:)`.
   Future<PlatformPoint?> convertToPoint(PlatformCoordinate coordinate) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.convertToPoint$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.convertToPoint$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[coordinate],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[coordinate]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
     return pigeonVar_replyValue as PlatformPoint?;
   }
 
   /// `MKMapView.convert(_:toCoordinateFrom:)`.
   Future<PlatformCoordinate?> convertToCoordinate(PlatformPoint point) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.convertToCoordinate$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.convertToCoordinate$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[point],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[point]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
     return pigeonVar_replyValue as PlatformCoordinate?;
   }
 
-  Future<void> updateAnnotations(
-    List<PlatformAnnotation> toAdd,
-    List<PlatformAnnotation> toChange,
-    List<String> idsToRemove,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updateAnnotations$pigeonVar_messageChannelSuffix';
+  Future<void> updateAnnotations(List<PlatformAnnotation> toAdd, List<PlatformAnnotation> toChange, List<String> idsToRemove) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updateAnnotations$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[toAdd, toChange, idsToRemove],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[toAdd, toChange, idsToRemove]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
-  Future<void> updatePolylines(
-    List<PlatformPolyline> toAdd,
-    List<PlatformPolyline> toChange,
-    List<String> idsToRemove,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updatePolylines$pigeonVar_messageChannelSuffix';
+  Future<void> updatePolylines(List<PlatformPolyline> toAdd, List<PlatformPolyline> toChange, List<String> idsToRemove) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updatePolylines$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[toAdd, toChange, idsToRemove],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[toAdd, toChange, idsToRemove]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
-  Future<void> updatePolygons(
-    List<PlatformPolygon> toAdd,
-    List<PlatformPolygon> toChange,
-    List<String> idsToRemove,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updatePolygons$pigeonVar_messageChannelSuffix';
+  Future<void> updatePolygons(List<PlatformPolygon> toAdd, List<PlatformPolygon> toChange, List<String> idsToRemove) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updatePolygons$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[toAdd, toChange, idsToRemove],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[toAdd, toChange, idsToRemove]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
-  Future<void> updateCircles(
-    List<PlatformCircle> toAdd,
-    List<PlatformCircle> toChange,
-    List<String> idsToRemove,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updateCircles$pigeonVar_messageChannelSuffix';
+  Future<void> updateCircles(List<PlatformCircle> toAdd, List<PlatformCircle> toChange, List<String> idsToRemove) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updateCircles$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[toAdd, toChange, idsToRemove],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[toAdd, toChange, idsToRemove]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
-  Future<void> updateMapConfiguration(
-    PlatformMapConfiguration configuration,
-  ) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updateMapConfiguration$pigeonVar_messageChannelSuffix';
+  Future<void> updateMapConfiguration(PlatformMapConfiguration configuration) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.updateMapConfiguration$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[configuration],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[configuration]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   Future<void> showCallout(String annotationId) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.showCallout$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.showCallout$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[annotationId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[annotationId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   Future<void> hideCallout(String annotationId) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.hideCallout$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.hideCallout$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[annotationId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[annotationId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   Future<bool> isCalloutShown(String annotationId) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.isCalloutShown$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.isCalloutShown$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[annotationId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[annotationId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as bool;
   }
 
   /// Throws: `snapshot-failed`.
   Future<Uint8List> takeSnapshot(PlatformSnapshotOptions options) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.takeSnapshot$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.takeSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[options],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[options]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as Uint8List;
   }
 
   Future<bool> openLookAround(PlatformCoordinate coordinate) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.openLookAround$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.openLookAround$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[coordinate],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[coordinate]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as bool;
   }
 
   Future<void> addTileOverlay(PlatformTileOverlay overlay) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.addTileOverlay$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.addTileOverlay$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[overlay],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[overlay]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 
   Future<void> removeTileOverlay(String tileOverlayId) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.removeTileOverlay$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.removeTileOverlay$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[tileOverlayId],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[tileOverlayId]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
   }
 }
 
@@ -2104,10 +1990,7 @@ abstract class MapKitFlutterApi {
 
   void onAnnotationTap(String annotationId);
 
-  void onAnnotationDragStart(
-    String annotationId,
-    PlatformCoordinate coordinate,
-  );
+  void onAnnotationDragStart(String annotationId, PlatformCoordinate coordinate);
 
   void onAnnotationDrag(String annotationId, PlatformCoordinate coordinate);
 
@@ -2131,20 +2014,12 @@ abstract class MapKitFlutterApi {
   /// `MKMapViewDelegate.mapView(_:didFailToLocateUserWithError:)`.
   void onDidFailToLocateUser(String error);
 
-  static void setUp(
-    MapKitFlutterApi? api, {
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty
-        ? '.$messageChannelSuffix'
-        : '';
+  static void setUp(MapKitFlutterApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCameraMoveStarted$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCameraMoveStarted$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2154,20 +2029,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCameraMove$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCameraMove$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2179,20 +2050,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCameraIdle$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCameraIdle$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2202,20 +2069,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2227,101 +2090,82 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDragStart$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDragStart$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
           final String arg_annotationId = args[0]! as String;
-          final PlatformCoordinate arg_coordinate =
-              args[1]! as PlatformCoordinate;
+          final PlatformCoordinate arg_coordinate = args[1]! as PlatformCoordinate;
           try {
             api.onAnnotationDragStart(arg_annotationId, arg_coordinate);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDrag$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDrag$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
           final String arg_annotationId = args[0]! as String;
-          final PlatformCoordinate arg_coordinate =
-              args[1]! as PlatformCoordinate;
+          final PlatformCoordinate arg_coordinate = args[1]! as PlatformCoordinate;
           try {
             api.onAnnotationDrag(arg_annotationId, arg_coordinate);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDragEnd$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDragEnd$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
           final String arg_annotationId = args[0]! as String;
-          final PlatformCoordinate arg_coordinate =
-              args[1]! as PlatformCoordinate;
+          final PlatformCoordinate arg_coordinate = args[1]! as PlatformCoordinate;
           try {
             api.onAnnotationDragEnd(arg_annotationId, arg_coordinate);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCalloutTap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCalloutTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2333,20 +2177,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onPolylineTap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onPolylineTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2358,20 +2198,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onPolygonTap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onPolygonTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2383,20 +2219,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCircleTap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onCircleTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2408,72 +2240,58 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onMapTap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onMapTap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final PlatformCoordinate arg_coordinate =
-              args[0]! as PlatformCoordinate;
+          final PlatformCoordinate arg_coordinate = args[0]! as PlatformCoordinate;
           try {
             api.onMapTap(arg_coordinate);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onMapLongPress$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onMapLongPress$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final PlatformCoordinate arg_coordinate =
-              args[0]! as PlatformCoordinate;
+          final PlatformCoordinate arg_coordinate = args[0]! as PlatformCoordinate;
           try {
             api.onMapLongPress(arg_coordinate);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onDidFailLoadingMap$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onDidFailLoadingMap$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2485,20 +2303,16 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onDidFailToLocateUser$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onDidFailToLocateUser$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -2510,10 +2324,8 @@ abstract class MapKitFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }

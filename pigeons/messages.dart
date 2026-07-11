@@ -1,7 +1,7 @@
 // Pigeon schema for the type-safe Dart <-> Swift boundary.
 //
 // Regenerate after editing:
-//   dart run pigeon --input pigeons/messages.dart
+//   dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
 //
 // Generated files (`lib/src/messages.g.dart`,
 // `ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift`) are checked in

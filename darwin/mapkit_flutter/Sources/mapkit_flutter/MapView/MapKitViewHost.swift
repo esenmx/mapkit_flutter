@@ -26,6 +26,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     var currentlySelectedAnnotation: String?
     var tileOverlays: [String: FlutterTileOverlay] = [:]
     var annotationsById: [String: FlutterAnnotation] = [:]
+    private var overlaysById: [String: any FlutterOverlay] = [:]
 
     public init(withFrame frame: CGRect, withRegistrar registrar: FlutterPluginRegistrar, withId id: Int64) {
         let suffix = "\(id)"
@@ -62,9 +63,9 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         self.mapView.apply(configuration: params.configuration)
         self.mapView.setInitialCamera(params.initialCamera)
         self.annotationsToAdd(params.annotations)
-        params.polylines.forEach { self.mapView.addFlutterOverlay(makeStyledPolyline(fromPlatform: $0)) }
-        params.polygons.forEach { self.mapView.addFlutterOverlay(FlutterPolygon(fromPlatform: $0)) }
-        params.circles.forEach { self.mapView.addFlutterOverlay(FlutterCircle(fromPlatform: $0)) }
+        params.polylines.forEach { self.addOverlay(makeStyledPolyline(fromPlatform: $0)) }
+        params.polygons.forEach { self.addOverlay(FlutterPolygon(fromPlatform: $0)) }
+        params.circles.forEach { self.addOverlay(FlutterCircle(fromPlatform: $0)) }
     }
 
     func setCamera(camera: PlatformMapCamera, animated: Bool) throws {
@@ -109,27 +110,24 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     func updatePolylines(toAdd: [PlatformPolyline], toChange: [PlatformPolyline], idsToRemove: [String]) throws {
-        self.mapView.applyOverlayUpdate(
+        self.applyOverlayUpdate(
             adding: toAdd.map { makeStyledPolyline(fromPlatform: $0) },
             changing: toChange.map { makeStyledPolyline(fromPlatform: $0) },
-            removing: Set(idsToRemove),
-            ofKind: { $0 is any StyledPolyline })
+            removing: idsToRemove)
     }
 
     func updatePolygons(toAdd: [PlatformPolygon], toChange: [PlatformPolygon], idsToRemove: [String]) throws {
-        self.mapView.applyOverlayUpdate(
+        self.applyOverlayUpdate(
             adding: toAdd.map(FlutterPolygon.init(fromPlatform:)),
             changing: toChange.map(FlutterPolygon.init(fromPlatform:)),
-            removing: Set(idsToRemove),
-            ofKind: { $0 is FlutterPolygon })
+            removing: idsToRemove)
     }
 
     func updateCircles(toAdd: [PlatformCircle], toChange: [PlatformCircle], idsToRemove: [String]) throws {
-        self.mapView.applyOverlayUpdate(
+        self.applyOverlayUpdate(
             adding: toAdd.map(FlutterCircle.init(fromPlatform:)),
             changing: toChange.map(FlutterCircle.init(fromPlatform:)),
-            removing: Set(idsToRemove),
-            ofKind: { $0 is FlutterCircle })
+            removing: idsToRemove)
     }
 
     func updateMapConfiguration(configuration: PlatformMapConfiguration) throws {
@@ -207,6 +205,28 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     func removeTileOverlay(tileOverlayId: String) throws {
         guard let overlay = tileOverlays.removeValue(forKey: tileOverlayId) else { return }
         self.mapView.removeOverlay(overlay)
+    }
+
+    private func addOverlay(_ overlay: any FlutterOverlay) {
+        self.overlaysById[overlay.id] = overlay
+        self.mapView.addFlutterOverlay(overlay)
+    }
+
+    private func applyOverlayUpdate(adding: [any FlutterOverlay], changing: [any FlutterOverlay], removing: [String]) {
+        for id in removing {
+            if let overlay = self.overlaysById.removeValue(forKey: id) {
+                self.mapView.removeOverlay(overlay)
+            }
+        }
+        for new in changing {
+            if let old = self.overlaysById[new.id] {
+                self.mapView.removeOverlay(old)
+            }
+            self.addOverlay(new)
+        }
+        for new in adding {
+            self.addOverlay(new)
+        }
     }
 }
 

@@ -29,12 +29,18 @@ sealed class MKPointOfInterestFilter {
       ExcludingAllPointsOfInterest();
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformPointOfInterestFilter toPlatform();
 }
 
 /// Shows every point-of-interest category
 /// ([MKPointOfInterestFilter.includingAll]).
 final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
+  /// Creates a new IncludingAllPointsOfInterest object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const IncludingAllPointsOfInterest();
 
   @override
@@ -50,6 +56,9 @@ final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
 
 /// Hides all points of interest ([MKPointOfInterestFilter.excludingAll]).
 final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
+  /// Creates a new ExcludingAllPointsOfInterest object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const ExcludingAllPointsOfInterest();
 
   @override
@@ -65,8 +74,14 @@ final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
 
 /// Shows only the listed [categories].
 final class IncludingPointsOfInterest extends MKPointOfInterestFilter {
+  /// Creates a new IncludingPointsOfInterest object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const IncludingPointsOfInterest(this.categories);
 
+  /// The categories property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final List<MKPointOfInterestCategory> categories;
 
   @override
@@ -84,8 +99,14 @@ final class IncludingPointsOfInterest extends MKPointOfInterestFilter {
 
 /// Shows every category except the listed [categories].
 final class ExcludingPointsOfInterest extends MKPointOfInterestFilter {
+  /// Creates a new ExcludingPointsOfInterest object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   const ExcludingPointsOfInterest(this.categories);
 
+  /// The categories property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final List<MKPointOfInterestCategory> categories;
 
   @override

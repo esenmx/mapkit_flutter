@@ -31,6 +31,9 @@ import 'package:mapkit_flutter/src/mk_polyline.dart';
 /// [MapKitUnsupportedPlatformException] rather than degrading silently.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapview
 final class MKMapView extends StatefulWidget {
+  /// Creates a new MKMapView object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview
   const MKMapView({
     required this.initialCamera,
     super.key,
@@ -70,9 +73,24 @@ final class MKMapView extends StatefulWidget {
   /// The map's base style (`MKMapView.preferredConfiguration`).
   final MKMapConfiguration preferredConfiguration;
 
+  /// The isZoomEnabled property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/iszoomenabled
   final bool isZoomEnabled;
+
+  /// The isScrollEnabled property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/isscrollenabled
   final bool isScrollEnabled;
+
+  /// The isRotateEnabled property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/isrotateenabled
   final bool isRotateEnabled;
+
+  /// The isPitchEnabled property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/ispitchenabled
   final bool isPitchEnabled;
 
   /// Requires `NSLocationWhenInUseUsageDescription` in `Info.plist`.
@@ -81,8 +99,19 @@ final class MKMapView extends StatefulWidget {
   /// `MKMapView.showsUserTrackingButton` (iOS 17).
   final bool showsUserTrackingButton;
 
+  /// The showsCompass property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/showscompass
   final bool showsCompass;
+
+  /// The showsScale property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/showsscale
   final bool showsScale;
+
+  /// The userTrackingMode property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/usertrackingmode
   final MKUserTrackingMode userTrackingMode;
 
   /// Camera distance limits in meters (`MKMapView.cameraZoomRange`).
@@ -96,19 +125,64 @@ final class MKMapView extends StatefulWidget {
   /// (`MKMapView.selectableMapFeatures`).
   final Set<MKMapFeatureOptions> selectableMapFeatures;
 
+  /// The insetsLayoutMarginsFromSafeArea property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/insetslayoutmarginsfromsafearea
   final bool insetsLayoutMarginsFromSafeArea;
 
+  /// The annotations property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/annotations
   final Set<MKPointAnnotation> annotations;
+
+  /// The polylines property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/polylines
   final Set<MKPolyline> polylines;
+
+  /// The polygons property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/polygons
   final Set<MKPolygon> polygons;
+
+  /// The circles property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/circles
   final Set<MKCircle> circles;
 
+  /// The gestureRecognizers property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/gesturerecognizers
   final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
+
+  /// Creates a new Function object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final void Function(MKMapViewController controller)? onMapCreated;
+
+  /// The onCameraMoveStarted property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameramovestarted
   final VoidCallback? onCameraMoveStarted;
+
+  /// Creates a new Function object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final void Function(MKMapCamera camera)? onCameraMove;
+
+  /// The onCameraIdle property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameraidle
   final VoidCallback? onCameraIdle;
+
+  /// Creates a new Function object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final void Function(CLLocationCoordinate2D coordinate)? onTap;
+
+  /// Creates a new Function object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   final void Function(CLLocationCoordinate2D coordinate)? onLongPress;
 
   /// Map content failed to load, e.g. no network

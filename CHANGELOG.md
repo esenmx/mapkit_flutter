@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4
+
+- Performance: Refactored Pigeon deep equality checks for maps to O(N), speeding up Flutter configuration passes.
+- Performance: Overhauled overlay updates to use a true O(1) class-level tracking dictionary (`overlaysById`), eliminating O(N) localized allocation overheads and massively improving performance when animating individual overlays in large collections.
+- Fix: Addressed a Swift "ghost overlay" logic flaw where overlays being simultaneously removed and updated could fall out of sync with the underlying `MKMapView`.
+
 ## 0.3.3
 
 - Fix: Per-object tap callbacks (annotation/polyline/polygon/circle) refresh on callback-only rebuilds.

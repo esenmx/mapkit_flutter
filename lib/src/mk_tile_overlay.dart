@@ -4,6 +4,9 @@ import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 import 'package:meta/meta.dart';
 
+/// Type definition for MKTileOverlayId.
+///
+/// See: https://developer.apple.com/documentation/mapkit/mktileoverlayid
 typedef MKTileOverlayId = MapItemId<MKTileOverlay>;
 
 /// Raster tile overlay drawn over the base map, mirroring
@@ -14,6 +17,9 @@ typedef MKTileOverlayId = MapItemId<MKTileOverlay>;
 /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
 @immutable
 final class MKTileOverlay {
+  /// Creates a new MKTileOverlay object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
   const MKTileOverlay({
     required this.id,
     required this.urlTemplate,
@@ -26,6 +32,9 @@ final class MKTileOverlay {
   }) : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]'),
        assert(minimumZ <= maximumZ, 'minimumZ must be <= maximumZ');
 
+  /// The id property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay/id
   final MKTileOverlayId id;
 
   /// Slippy-map URL template, e.g.
@@ -55,6 +64,9 @@ final class MKTileOverlay {
   final MKOverlayLevel level;
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformTileOverlay toPlatform() => PlatformTileOverlay(
     id: id.value,
     urlTemplate: urlTemplate,

@@ -8,6 +8,9 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotter/options
 @immutable
 final class MKMapSnapshotOptions {
+  /// Creates a new MKMapSnapshotOptions object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotoptions
   const MKMapSnapshotOptions({
     this.showsBuildings = true,
     this.showsPointsOfInterest = true,
@@ -15,7 +18,14 @@ final class MKMapSnapshotOptions {
     this.showsOverlays = true,
   });
 
+  /// The showsBuildings property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotoptions/showsbuildings
   final bool showsBuildings;
+
+  /// The showsPointsOfInterest property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotoptions/showspointsofinterest
   final bool showsPointsOfInterest;
 
   /// Whether the plugin draws the current annotations into the snapshot.
@@ -25,6 +35,9 @@ final class MKMapSnapshotOptions {
   final bool showsOverlays;
 
   @internal
+  /// Creates a new Platform object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
   PlatformSnapshotOptions toPlatform() => PlatformSnapshotOptions(
     showsBuildings: showsBuildings,
     showsPointsOfInterest: showsPointsOfInterest,

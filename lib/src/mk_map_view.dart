@@ -283,22 +283,10 @@ final class _MKMapViewState extends State<MKMapView>
     final (
       PlatformMapKind kind,
       MKMapEmphasisStyle emphasisStyle,
-      showsTraffic,
-      pointOfInterestFilter,
-    ) = switch (widget.preferredConfiguration) {
-      MKStandardMapConfiguration(
-        :final emphasisStyle,
-        :final showsTraffic,
-        :final pointOfInterestFilter,
-      ) =>
-        (.standard, emphasisStyle, showsTraffic, pointOfInterestFilter),
-      MKHybridMapConfiguration(
-        :final showsTraffic,
-        :final pointOfInterestFilter,
-      ) =>
-        (.hybrid, .standard, showsTraffic, pointOfInterestFilter),
-      MKImageryMapConfiguration() => (.imagery, .standard, false, null),
-    };
+      bool showsTraffic,
+      PlatformPointOfInterestFilter? pointOfInterestFilter,
+    ) = widget.preferredConfiguration._platformProperties;
+
     return PlatformMapConfiguration(
       kind: kind,
       emphasisStyle: emphasisStyle,
@@ -315,7 +303,7 @@ final class _MKMapViewState extends State<MKMapView>
       isZoomEnabled: widget.isZoomEnabled,
       isPitchEnabled: widget.isPitchEnabled,
       selectableMapFeatures: widget.selectableMapFeatures.toList(),
-      pointOfInterestFilter: pointOfInterestFilter?.toPlatform(),
+      pointOfInterestFilter: pointOfInterestFilter,
       cameraZoomRange: widget.cameraZoomRange.toPlatform(),
       cameraBoundary: widget.cameraBoundary?.toPlatform(),
     );
@@ -448,4 +436,42 @@ final class _MKMapViewState extends State<MKMapView>
   @override
   void onDidFailToLocateUser(String error) =>
       widget.onDidFailToLocateUser?.call(error);
+}
+
+extension on MKMapConfiguration {
+  (
+    PlatformMapKind,
+    MKMapEmphasisStyle,
+    bool,
+    PlatformPointOfInterestFilter?,
+  )
+  get _platformProperties => switch (this) {
+    MKStandardMapConfiguration(
+      :final emphasisStyle,
+      :final showsTraffic,
+      :final pointOfInterestFilter,
+    ) =>
+      (
+        PlatformMapKind.standard,
+        emphasisStyle,
+        showsTraffic,
+        pointOfInterestFilter.toPlatform(),
+      ),
+    MKHybridMapConfiguration(
+      :final showsTraffic,
+      :final pointOfInterestFilter,
+    ) =>
+      (
+        PlatformMapKind.hybrid,
+        MKMapEmphasisStyle.standard,
+        showsTraffic,
+        pointOfInterestFilter.toPlatform(),
+      ),
+    MKImageryMapConfiguration() => (
+      PlatformMapKind.imagery,
+      MKMapEmphasisStyle.standard,
+      false,
+      null,
+    ),
+  };
 }

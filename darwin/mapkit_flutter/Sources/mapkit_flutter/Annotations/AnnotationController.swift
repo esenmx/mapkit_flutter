@@ -69,7 +69,8 @@ extension MapKitViewHost {
             #endif
             view = customView
         } else {
-            let markerView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterMarkerAnnotationView", for: annotation) as! MKMarkerAnnotationView
+            let markerView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterMarkerAnnotationView", for: annotation) as? MKMarkerAnnotationView
+                ?? MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "FlutterMarkerAnnotationView")
             self.applyMarkerStyle(markerView, annotation.icon)
             view = markerView
         }

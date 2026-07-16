@@ -344,6 +344,15 @@ final class _MKMapViewState extends State<MKMapView>
     final c = _controller;
     if (c == null) return;
 
+    _updateDispatchTables();
+    _updateConfiguration(c, oldWidget);
+    _updateAnnotations(c, oldWidget);
+    _updatePolylines(c, oldWidget);
+    _updatePolygons(c, oldWidget);
+    _updateCircles(c, oldWidget);
+  }
+
+  void _updateDispatchTables() {
     // Refresh the id→object dispatch tables on every rebuild, before the diff
     // gates below. The models' `==` excludes callbacks (so a closure swap
     // doesn't trigger a needless native recycle); a rebuild that changes only
@@ -354,10 +363,15 @@ final class _MKMapViewState extends State<MKMapView>
     _polylines = {for (final p in widget.polylines) p.id: p};
     _polygons = {for (final p in widget.polygons) p.id: p};
     _circles = {for (final o in widget.circles) o.id: o};
+  }
 
+  void _updateConfiguration(MKMapViewController c, MKMapView oldWidget) {
     if (_configurationChanged(oldWidget)) {
       unawaited(c.updateMapConfiguration(_platformConfiguration()));
     }
+  }
+
+  void _updateAnnotations(MKMapViewController c, MKMapView oldWidget) {
     if (!setEquals(widget.annotations, oldWidget.annotations)) {
       final updates = MapObjectUpdates.between(
         oldWidget.annotations,
@@ -366,6 +380,9 @@ final class _MKMapViewState extends State<MKMapView>
       );
       unawaited(c.updateAnnotations(updates));
     }
+  }
+
+  void _updatePolylines(MKMapViewController c, MKMapView oldWidget) {
     if (!setEquals(widget.polylines, oldWidget.polylines)) {
       final updates = MapObjectUpdates.between(
         oldWidget.polylines,
@@ -374,6 +391,9 @@ final class _MKMapViewState extends State<MKMapView>
       );
       unawaited(c.updatePolylines(updates));
     }
+  }
+
+  void _updatePolygons(MKMapViewController c, MKMapView oldWidget) {
     if (!setEquals(widget.polygons, oldWidget.polygons)) {
       final updates = MapObjectUpdates.between(
         oldWidget.polygons,
@@ -382,6 +402,9 @@ final class _MKMapViewState extends State<MKMapView>
       );
       unawaited(c.updatePolygons(updates));
     }
+  }
+
+  void _updateCircles(MKMapViewController c, MKMapView oldWidget) {
     if (!setEquals(widget.circles, oldWidget.circles)) {
       final updates = MapObjectUpdates.between(
         oldWidget.circles,

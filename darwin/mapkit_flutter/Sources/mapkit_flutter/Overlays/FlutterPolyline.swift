@@ -186,9 +186,10 @@ public extension MKPolyline {
         // distance and `0..<(pointCount - 1)` would trap for an empty line.
         guard multiPoint.pointCount > 1 else { return Double(MAXFLOAT) }
         var distance: Double = Double(MAXFLOAT)
+        let points = multiPoint.points()
         for n in 0..<multiPoint.pointCount - 1 {
-            let ptA = multiPoint.points()[n]
-            let ptB = multiPoint.points()[n + 1]
+            let ptA = points[n]
+            let ptB = points[n + 1]
             if ptA.x == ptB.x && ptA.y == ptB.y {
                 // Points must not be equal
                 continue

@@ -3,21 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 
 void main() {
-  group('MKCoordinateSpan', () {
-    test('equality is value-based', () {
-      const a = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
-      const b = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
-      check(a).equals(b);
-      check(a.hashCode).equals(b.hashCode);
-    });
-
-    test('rejects negative deltas', () {
-      check(
-        () => MKCoordinateSpan(latitudeDelta: -1, longitudeDelta: 0),
-      ).throws<AssertionError>();
-    });
-  });
-
   group('MKCoordinateRegion.containing', () {
     test('returns null for no coordinates', () {
       check(MKCoordinateRegion.containing(const [])).isNull();

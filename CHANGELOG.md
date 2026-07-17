@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.5
+
+- Fix: Marker annotation views dequeue with a safe cast and fallback instead of a forced downcast, hardening against a potential native crash.
+- Performance: Hoisted the repeated `points()` accessor out of the polyline hit-testing loop.
+
 ## 0.3.4
 
 - Performance: Refactored Pigeon deep equality checks for maps to O(N), speeding up Flutter configuration passes.

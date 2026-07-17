@@ -462,12 +462,7 @@ final class _MKMapViewState extends State<MKMapView>
 }
 
 extension on MKMapConfiguration {
-  (
-    PlatformMapKind,
-    MKMapEmphasisStyle,
-    bool,
-    PlatformPointOfInterestFilter?,
-  )
+  (PlatformMapKind, MKMapEmphasisStyle, bool, PlatformPointOfInterestFilter?)
   get _platformProperties => switch (this) {
     MKStandardMapConfiguration(
       :final emphasisStyle,

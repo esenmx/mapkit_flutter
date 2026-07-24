@@ -13,9 +13,8 @@ void main() {
       final region = MKCoordinateRegion.containing(const [point]);
       check(region).isNotNull();
       check(region!.center).equals(point);
-      check(
-        region.span,
-      ).equals(const MKCoordinateSpan(latitudeDelta: 0, longitudeDelta: 0));
+      const zeroSpan = MKCoordinateSpan(latitudeDelta: 0, longitudeDelta: 0);
+      check(region.span).equals(zeroSpan);
     });
 
     test('spans the extremes with the midpoint as center', () {
@@ -25,9 +24,8 @@ void main() {
         CLLocationCoordinate2D(latitude: 15, longitude: 25),
       ]);
       check(region).isNotNull();
-      check(
-        region!.center,
-      ).equals(const CLLocationCoordinate2D(latitude: 20, longitude: 30));
+      const mid = CLLocationCoordinate2D(latitude: 20, longitude: 30);
+      check(region!.center).equals(mid);
       check(
         region.span,
       ).equals(const MKCoordinateSpan(latitudeDelta: 20, longitudeDelta: 20));

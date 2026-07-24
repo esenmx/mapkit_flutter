@@ -273,9 +273,8 @@ void main() {
       await tester.pump();
 
       controller!.eventHandler.onMapTap(platformCoord(1, 2));
-      check(
-        tapped,
-      ).equals(const CLLocationCoordinate2D(latitude: 1, longitude: 2));
+      const target = CLLocationCoordinate2D(latitude: 1, longitude: 2);
+      check(tapped).equals(target);
     });
 
     testWidgets('annotation taps reach the matching annotation', (

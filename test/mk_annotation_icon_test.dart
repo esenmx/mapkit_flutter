@@ -46,15 +46,11 @@ void main() {
 
   group('equality', () {
     test('markers compare by full styling', () {
-      check(
-        const MKAnnotationIcon.marker(markerTintColor: Color(0xFF112233)),
-      ).equals(
-        const MKAnnotationIcon.marker(markerTintColor: Color(0xFF112233)),
+      const tinted = MKAnnotationIcon.marker(
+        markerTintColor: Color(0xFF112233),
       );
-      check(
-        const MKAnnotationIcon.marker(markerTintColor: Color(0xFF112233)) ==
-            const MKAnnotationIcon.marker(),
-      ).isFalse();
+      check(tinted).equals(tinted);
+      check(tinted == const MKAnnotationIcon.marker()).isFalse();
     });
 
     test('images compare by byte content', () {

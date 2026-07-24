@@ -97,9 +97,8 @@ void main() {
     });
 
     test('different coordinates compare unequal', () {
-      check(
-        annotation('a') == annotation('a', coordinate: infiniteLoop),
-      ).isFalse();
+      final moved = annotation('a', coordinate: infiniteLoop);
+      check(annotation('a') == moved).isFalse();
     });
   });
 

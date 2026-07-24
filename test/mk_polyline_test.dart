@@ -100,9 +100,8 @@ void main() {
           lineDashPattern: [1, 2],
         ),
       );
-      check(
-        polyline('p') == polyline('p').copyWith(lineDashPattern: const [1]),
-      ).isFalse();
+      final dashed = polyline('p').copyWith(lineDashPattern: const [1]);
+      check(polyline('p') == dashed).isFalse();
     });
   });
 }

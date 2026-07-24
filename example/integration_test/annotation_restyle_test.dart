@@ -18,9 +18,10 @@ void main() {
   );
   const id = MKAnnotationId('restyle');
 
-  testWidgets('in-place restyle, reuse, and callout stay healthy on a live map', (
-    tester,
-  ) async {
+  const description =
+      'in-place restyle, reuse, and callout stay healthy on a live map';
+
+  testWidgets(description, (tester) async {
     MKMapViewController? controller;
 
     Widget mapWith(Set<MKPointAnnotation> annotations) => MaterialApp(

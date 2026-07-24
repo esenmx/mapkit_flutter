@@ -32,9 +32,9 @@ void main() {
     });
 
     test('rejects a non-positive distance', () {
-      check(
-        () => MKMapCamera(centerCoordinate: applePark, distance: 0),
-      ).throws<AssertionError>();
+      MKMapCamera zeroDistance() =>
+          MKMapCamera(centerCoordinate: applePark, distance: 0);
+      check(zeroDistance).throws<AssertionError>();
     });
 
     test('round-trips through the platform type', () {

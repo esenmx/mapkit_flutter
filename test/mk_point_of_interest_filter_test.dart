@@ -18,10 +18,8 @@ void main() {
     });
 
     test('including carries its categories', () {
-      final platform = const MKPointOfInterestFilter.including([
-        .cafe,
-        .museum,
-      ]).toPlatform();
+      const filter = MKPointOfInterestFilter.including([.cafe, .museum]);
+      final platform = filter.toPlatform();
       check(platform.mode).equals(PlatformPOIMode.including);
       check(platform.categories).deepEquals([
         MKPointOfInterestCategory.cafe,
@@ -30,21 +28,18 @@ void main() {
     });
 
     test('excluding carries its categories', () {
-      final platform = const MKPointOfInterestFilter.excluding([
-        .nightlife,
-      ]).toPlatform();
+      const filter = MKPointOfInterestFilter.excluding([.nightlife]);
+      final platform = filter.toPlatform();
       check(platform.mode).equals(PlatformPOIMode.excluding);
-      check(
-        platform.categories,
-      ).deepEquals([MKPointOfInterestCategory.nightlife]);
+      const expected = [MKPointOfInterestCategory.nightlife];
+      check(platform.categories).deepEquals(expected);
     });
   });
 
   group('MKPointOfInterestFilter equality', () {
     test('same categories compare equal', () {
-      check(
-        const MKPointOfInterestFilter.including([.cafe]),
-      ).equals(const MKPointOfInterestFilter.including([.cafe]));
+      const cafe = MKPointOfInterestFilter.including([.cafe]);
+      check(cafe).equals(cafe);
     });
 
     test('including and excluding never compare equal', () {

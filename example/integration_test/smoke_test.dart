@@ -56,10 +56,9 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
     final camera = await controller!.camera;
-    check(camera.centerCoordinate.latitude).isCloseTo(applePark.latitude, 0.05);
-    check(
-      camera.centerCoordinate.longitude,
-    ).isCloseTo(applePark.longitude, 0.05);
+    final center = camera.centerCoordinate;
+    check(center.latitude).isCloseTo(applePark.latitude, 0.05);
+    check(center.longitude).isCloseTo(applePark.longitude, 0.05);
     check(camera.distance).isGreaterThan(0);
   });
 }

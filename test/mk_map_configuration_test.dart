@@ -8,20 +8,15 @@ void main() {
       const config = MKStandardMapConfiguration();
       check(config.elevationStyle).equals(MKMapElevationStyle.flat);
       check(config.emphasisStyle).equals(MKMapEmphasisStyle.standard);
-      check(
-        config.pointOfInterestFilter,
-      ).equals(MKPointOfInterestFilter.includingAll);
+      final filter = config.pointOfInterestFilter;
+      check(filter).equals(MKPointOfInterestFilter.includingAll);
       check(config.showsTraffic).isFalse();
     });
 
     test('equality covers every field', () {
-      check(
-        const MKStandardMapConfiguration(showsTraffic: true),
-      ).equals(const MKStandardMapConfiguration(showsTraffic: true));
-      check(
-        const MKStandardMapConfiguration(showsTraffic: true) ==
-            const MKStandardMapConfiguration(),
-      ).isFalse();
+      const traffic = MKStandardMapConfiguration(showsTraffic: true);
+      check(traffic).equals(traffic);
+      check(traffic == const MKStandardMapConfiguration()).isFalse();
       check(
         const MKStandardMapConfiguration(emphasisStyle: .muted) ==
             const MKStandardMapConfiguration(),
@@ -45,9 +40,8 @@ void main() {
 
   group('MKImageryMapConfiguration', () {
     test('equality covers elevation', () {
-      check(
-        const MKImageryMapConfiguration(elevationStyle: .realistic),
-      ).equals(const MKImageryMapConfiguration(elevationStyle: .realistic));
+      const realistic = MKImageryMapConfiguration(elevationStyle: .realistic);
+      check(realistic).equals(realistic);
       check(
         const MKImageryMapConfiguration() ==
             const MKImageryMapConfiguration(elevationStyle: .realistic),

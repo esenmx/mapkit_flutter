@@ -54,9 +54,8 @@ void main() {
         pitch: 15,
       );
       final camera = await harness.controller.camera;
-      check(
-        camera.centerCoordinate,
-      ).equals(const CLLocationCoordinate2D(latitude: 10, longitude: 20));
+      const target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      check(camera.centerCoordinate).equals(target);
       check(camera.distance).equals(4321);
       check(camera.heading).equals(90);
       check(camera.pitch).equals(15);
@@ -70,12 +69,10 @@ void main() {
         longitudeDelta: 2,
       );
       final region = await harness.controller.region;
-      check(
-        region.center,
-      ).equals(const CLLocationCoordinate2D(latitude: 10, longitude: 20));
-      check(
-        region.span,
-      ).equals(const MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2));
+      const center = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      const span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
+      check(region.center).equals(center);
+      check(region.span).equals(span);
     });
   });
 
@@ -121,9 +118,8 @@ void main() {
 
     test('isCalloutShown returns host bool', () async {
       harness.host.calloutShown = true;
-      check(
-        await harness.controller.isCalloutShown(const MKAnnotationId('a')),
-      ).isTrue();
+      const annotationId = MKAnnotationId('a');
+      check(await harness.controller.isCalloutShown(annotationId)).isTrue();
     });
   });
 
@@ -149,9 +145,8 @@ void main() {
           const CLLocationCoordinate2D(latitude: 37, longitude: -122),
         );
         check(ok).isTrue();
-        check(
-          harness.expectLast<PlatformCoordinate>('openLookAround').latitude,
-        ).equals(37);
+        final sent = harness.expectLast<PlatformCoordinate>('openLookAround');
+        check(sent.latitude).equals(37);
       },
     );
 
@@ -204,9 +199,8 @@ void main() {
 
     test('onAnnotationTap', () {
       harness.controller.eventHandler.onAnnotationTap('a');
-      check(
-        harness.expectSink<MKAnnotationId>('annotationTap'),
-      ).equals(const MKAnnotationId('a'));
+      final sunk = harness.expectSink<MKAnnotationId>('annotationTap');
+      check(sunk).equals(const MKAnnotationId('a'));
     });
 
     test('annotation drag lifecycle', () {
@@ -223,32 +217,29 @@ void main() {
 
     test('onMapTap delivers a coordinate', () {
       harness.controller.eventHandler.onMapTap(platformCoord(10, 20));
-      check(
-        harness.expectSink<CLLocationCoordinate2D>('mapTap'),
-      ).equals(const CLLocationCoordinate2D(latitude: 10, longitude: 20));
+      const target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      final sunk = harness.expectSink<CLLocationCoordinate2D>('mapTap');
+      check(sunk).equals(target);
     });
 
     test('onDidFailLoadingMap delivers the error description', () {
       harness.controller.eventHandler.onDidFailLoadingMap('offline');
-      check(
-        harness.sink.events.single,
-      ).equals(('didFailLoadingMap', 'offline'));
+      final event = harness.sink.events.single;
+      check(event).equals(('didFailLoadingMap', 'offline'));
     });
 
     test('onDidFailToLocateUser delivers the error description', () {
       harness.controller.eventHandler.onDidFailToLocateUser('denied');
-      check(
-        harness.sink.events.single,
-      ).equals(('didFailToLocateUser', 'denied'));
+      final event = harness.sink.events.single;
+      check(event).equals(('didFailToLocateUser', 'denied'));
     });
   });
 
   group('errors', () {
     test('disposed controller throws MapKitDisposedException', () async {
       await harness.dispose();
-      await check(
-        harness.controller.setCamera(sampleCamera),
-      ).throws<MapKitDisposedException>();
+      final setCamera = harness.controller.setCamera(sampleCamera);
+      await check(setCamera).throws<MapKitDisposedException>();
     });
 
     test('snapshot failure surfaces its stable code', () async {

@@ -26,9 +26,8 @@ void main() {
 
   group('concrete exceptions', () {
     test('disposed exception names the controller', () {
-      check(
-        const MapKitDisposedException().message,
-      ).contains('MKMapViewController');
+      final message = const MapKitDisposedException().message;
+      check(message).contains('MKMapViewController');
     });
 
     test('unsupported platform exception carries the platform', () {

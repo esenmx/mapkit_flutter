@@ -12,27 +12,21 @@ void main() {
     });
 
     test('clamps latitude to [-90, 90]', () {
-      check(
-        const CLLocationCoordinate2D(latitude: 91, longitude: 0).latitude,
-      ).equals(90);
-      check(
-        const CLLocationCoordinate2D(latitude: -120, longitude: 0).latitude,
-      ).equals(-90);
+      const over = CLLocationCoordinate2D(latitude: 91, longitude: 0);
+      const under = CLLocationCoordinate2D(latitude: -120, longitude: 0);
+      check(over.latitude).equals(90);
+      check(under.latitude).equals(-90);
     });
 
     test('wraps longitude to [-180, 180)', () {
-      check(
-        const CLLocationCoordinate2D(latitude: 0, longitude: 190).longitude,
-      ).equals(-170);
-      check(
-        const CLLocationCoordinate2D(latitude: 0, longitude: -190).longitude,
-      ).equals(170);
-      check(
-        const CLLocationCoordinate2D(latitude: 0, longitude: 180).longitude,
-      ).equals(-180);
-      check(
-        const CLLocationCoordinate2D(latitude: 0, longitude: 540).longitude,
-      ).equals(-180);
+      const at190 = CLLocationCoordinate2D(latitude: 0, longitude: 190);
+      const atNeg190 = CLLocationCoordinate2D(latitude: 0, longitude: -190);
+      const at180 = CLLocationCoordinate2D(latitude: 0, longitude: 180);
+      const at540 = CLLocationCoordinate2D(latitude: 0, longitude: 540);
+      check(at190.longitude).equals(-170);
+      check(atNeg190.longitude).equals(170);
+      check(at180.longitude).equals(-180);
+      check(at540.longitude).equals(-180);
     });
 
     test('round-trips through the platform type', () {
@@ -45,9 +39,8 @@ void main() {
 
     test('Coordinate is an alias for the full Apple symbol', () {
       const alias = CLLocationCoordinate2D(latitude: 1, longitude: 2);
-      check(
-        alias,
-      ).equals(const CLLocationCoordinate2D(latitude: 1, longitude: 2));
+      const expected = CLLocationCoordinate2D(latitude: 1, longitude: 2);
+      check(alias).equals(expected);
     });
   });
 }

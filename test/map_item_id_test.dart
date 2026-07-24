@@ -5,10 +5,9 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   group('MapItemId', () {
     test('equal value and type compare equal', () {
-      check(const MKAnnotationId('a')).equals(const MKAnnotationId('a'));
-      check(
-        const MKAnnotationId('a').hashCode,
-      ).equals(const MKAnnotationId('a').hashCode);
+      const a = MKAnnotationId('a');
+      check(a).equals(const MKAnnotationId('a'));
+      check(a.hashCode).equals(const MKAnnotationId('a').hashCode);
     });
 
     test('phantom type keeps ids of different kinds apart', () {

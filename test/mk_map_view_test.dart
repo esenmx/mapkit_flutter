@@ -19,8 +19,14 @@ void main() {
     nextViewId++;
   });
 
-  MKMapViewController controllerFactory(MKMapViewEventSink sink) =>
-      MKMapViewController.create(viewId: nextViewId, sink: sink, hostApi: host);
+  late MKMapViewControllerImpl created;
+
+  MKMapViewControllerImpl controllerFactory(MKMapViewEventSink sink) =>
+      created = MKMapViewControllerImpl(
+        viewId: nextViewId,
+        sink: sink,
+        hostApi: host,
+      );
 
   Widget map({
     Set<MKPointAnnotation> annotations = const {},
@@ -69,17 +75,17 @@ void main() {
     testWidgets('pushes camera, configuration, and content once', (
       tester,
     ) async {
-      MKMapViewController? created;
+      MKMapViewController? fromCallback;
       await tester.pumpWidget(
         map(
           annotations: {annotation('a')},
           polylines: {polyline('p')},
-          onMapCreated: (c) => created = c,
+          onMapCreated: (c) => fromCallback = c,
         ),
       );
       await tester.pump();
 
-      check(created).isNotNull();
+      check(fromCallback).isNotNull();
       check(host.callNames).deepEquals(['initialize']);
       final params = host.initializeParams;
       check(params.initialCamera.distance).equals(sampleCamera.distance);
@@ -265,14 +271,11 @@ void main() {
 
   group('inbound events', () {
     testWidgets('map taps reach the widget callback', (tester) async {
-      MKMapViewController? controller;
       CLLocationCoordinate2D? tapped;
-      await tester.pumpWidget(
-        map(onMapCreated: (c) => controller = c, onTap: (c) => tapped = c),
-      );
+      await tester.pumpWidget(map(onTap: (c) => tapped = c));
       await tester.pump();
 
-      controller!.eventHandler.onMapTap(platformCoord(1, 2));
+      created.eventHandler.onMapTap(platformCoord(1, 2));
       const target = CLLocationCoordinate2D(latitude: 1, longitude: 2);
       check(tapped).equals(target);
     });
@@ -280,19 +283,16 @@ void main() {
     testWidgets('annotation taps reach the matching annotation', (
       tester,
     ) async {
-      MKMapViewController? controller;
       var tapCount = 0;
       final tappable = MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
         onTap: () => tapCount++,
       );
-      await tester.pumpWidget(
-        map(annotations: {tappable}, onMapCreated: (c) => controller = c),
-      );
+      await tester.pumpWidget(map(annotations: {tappable}));
       await tester.pump();
 
-      controller!.eventHandler
+      created.eventHandler
         ..onAnnotationTap('a')
         ..onAnnotationTap('missing');
       check(tapCount).equals(1);
@@ -301,7 +301,6 @@ void main() {
     testWidgets('annotation tap fires the latest closure after a rebuild', (
       tester,
     ) async {
-      MKMapViewController? controller;
       var fired = '';
       MKPointAnnotation tappable(String tag) => MKPointAnnotation(
         id: const MKAnnotationId('a'),
@@ -309,12 +308,7 @@ void main() {
         onTap: () => fired = tag,
       );
 
-      await tester.pumpWidget(
-        map(
-          annotations: {tappable('first')},
-          onMapCreated: (c) => controller = c,
-        ),
-      );
+      await tester.pumpWidget(map(annotations: {tappable('first')}));
       await tester.pump();
 
       // Visually identical annotation (same id/coordinate/icon), fresh onTap.
@@ -325,24 +319,22 @@ void main() {
       await tester.pump();
 
       check(host.callNames).deepEquals(['initialize']);
-      controller!.eventHandler.onAnnotationTap('a');
+      created.eventHandler.onAnnotationTap('a');
       check(fired).equals('second');
     });
 
     testWidgets('failure events reach the widget callbacks', (tester) async {
-      MKMapViewController? controller;
       String? loadError;
       String? locateError;
       await tester.pumpWidget(
         map(
-          onMapCreated: (c) => controller = c,
           onDidFailLoadingMap: (e) => loadError = e,
           onDidFailToLocateUser: (e) => locateError = e,
         ),
       );
       await tester.pump();
 
-      controller!.eventHandler
+      created.eventHandler
         ..onDidFailLoadingMap('offline')
         ..onDidFailToLocateUser('denied');
       check(loadError).equals('offline');

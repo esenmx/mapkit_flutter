@@ -224,6 +224,25 @@ final Uint8List png = await controller.takeSnapshot(
 
 Mutations run on an internal serial queue — concurrent calls execute in source order. `controller.dispose()` runs automatically when the owning `MKMapView` widget unmounts.
 
+`MKMapViewController` is an interface, so the code you write against it is unit-testable without a platform view:
+
+```dart
+@GenerateNiceMocks([MockSpec<MKMapViewController>()])
+void main() {
+  // Nice mocks need a dummy for each non-nullable return type.
+  setUpAll(() => provideDummy<MKMapCamera>(someCamera));
+
+  test('recenters on the selected stop', () async {
+    final controller = MockMKMapViewController();
+    when(controller.camera).thenAnswer((_) async => someCamera);
+
+    await MapPresenter(controller).select(stop);
+
+    verify(controller.setCenter(stop.coordinate, animated: true)).called(1);
+  });
+}
+```
+
 ## Two dialects
 
 The canonical API is the MapKit mirror above. If you think in google_maps_flutter terms, the exported `CameraConveniences` extension layers that dialect on top — implemented purely over the canonical calls, no extra platform surface:

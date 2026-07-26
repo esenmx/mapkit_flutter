@@ -46,27 +46,129 @@ abstract interface class MKMapViewEventSink {
 /// imperative half of `MKMapView`: [camera] / [region] state plus
 /// [setCamera], [setRegion], [setCenter], and coordinate conversion.
 ///
+/// Instances arrive through `MKMapView.onMapCreated`; the concrete
+/// implementation is owned by the widget. The type is an interface so code
+/// that drives a map can be unit-tested against a mock or fake — every member
+/// below is the whole surface a test double has to cover, and none of it
+/// touches platform channels.
+///
+/// ```dart
+/// @GenerateNiceMocks([MockSpec<MKMapViewController>()])
+/// void main() {
+///   // Nice mocks need a dummy for each non-nullable return type.
+///   setUpAll(() => provideDummy<MKMapCamera>(someCamera));
+///
+///   final controller = MockMKMapViewController();
+///   when(controller.camera).thenAnswer((_) async => someCamera);
+/// }
+/// ```
+///
 /// All platform calls run through a type-safe Pigeon channel and are
 /// serialized onto an internal queue, so concurrent calls execute in source
 /// order. Failures surface as [MapKitException]s.
-final class MKMapViewController {
-  /// Internal constructor used by the `MKMapView` state when the platform
-  /// view finishes initialization.
+abstract interface class MKMapViewController {
+  /// The current camera (`MKMapView.camera`).
+  Future<MKMapCamera> get camera;
+
+  /// The currently visible region (`MKMapView.region`).
+  ///
+  /// Returns a zero region while the view has no layout (before the first
+  /// frame).
+  Future<MKCoordinateRegion> get region;
+
+  /// `MKMapView.setCamera(_:animated:)`.
+  Future<void> setCamera(MKMapCamera camera, {bool animated = true});
+
+  /// `MKMapView.setRegion(_:animated:)`.
+  Future<void> setRegion(MKCoordinateRegion region, {bool animated = true});
+
+  /// `MKMapView.setCenter(_:animated:)` — pans without changing distance,
+  /// heading, or pitch.
+  Future<void> setCenter(
+    CLLocationCoordinate2D coordinate, {
+    bool animated = true,
+  });
+
+  /// Screen point for a coordinate (`MKMapView.convert(_:toPointTo:)`).
+  /// Returns null while the view has no layout.
+  Future<Offset?> convertToPoint(CLLocationCoordinate2D coordinate);
+
+  /// Coordinate under a screen point
+  /// (`MKMapView.convert(_:toCoordinateFrom:)`). Returns null while the view
+  /// has no layout.
+  Future<CLLocationCoordinate2D?> convertToCoordinate(Offset point);
+
+  /// Select the annotation, showing its callout bubble.
+  ///
+  /// An id that is not on the map is ignored, matching
+  /// `MKMapView.selectAnnotation(_:animated:)` semantics for foreign
+  /// annotations — so a call racing a rebuild that removed the annotation is
+  /// harmless.
+  Future<void> showCallout(MKAnnotationId id);
+
+  /// Deselect the annotation, hiding its callout bubble.
+  ///
+  /// An id that is not on the map is ignored (see [showCallout]).
+  Future<void> hideCallout(MKAnnotationId id);
+
+  /// Whether the annotation is selected (its callout is showing). Returns
+  /// `false` for an id that is not on the map.
+  Future<bool> isCalloutShown(MKAnnotationId id);
+
+  /// Render the current map to a PNG via `MKMapSnapshotter`.
+  ///
+  /// Throws a [MapKitPlatformException] with code `snapshot-failed` when the
+  /// snapshotter fails (e.g. tile loading) or produces no image data.
+  Future<Uint8List> takeSnapshot([
+    MKMapSnapshotOptions options = const MKMapSnapshotOptions(),
+  ]);
+
+  /// Open the iOS Look Around (street-view) experience for a coordinate.
+  ///
+  /// Returns `true` if a Look Around scene was available and presented,
+  /// `false` when no scene exists for the coordinate, the scene request
+  /// failed (e.g. offline), or the viewer could not be presented.
+  Future<bool> openLookAround(CLLocationCoordinate2D coordinate);
+
+  /// Add a custom raster tile overlay backed by a URL template.
+  ///
+  /// The template uses `{x}`, `{y}`, `{z}` placeholders, e.g.
+  /// `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
+  Future<void> addTileOverlay(MKTileOverlay overlay);
+
+  /// Remove a previously-added tile overlay. Idempotent — an id that is not
+  /// on the map is ignored.
+  Future<void> removeTileOverlay(MKTileOverlayId id);
+
+  /// Release platform resources. Called automatically when the owning
+  /// `MKMapView` widget unmounts.
+  Future<void> dispose();
+}
+
+/// Pigeon-backed implementation of [MKMapViewController], plus the
+/// state-driven mutations the `MKMapView` diff pipeline pushes over the
+/// channel.
+///
+/// Those mutations stay off [MKMapViewController] so a test double only has
+/// to cover the public API, and so their signatures can change without
+/// breaking mocks.
+@internal
+final class MKMapViewControllerImpl implements MKMapViewController {
+  /// Creates the controller for a platform view.
   ///
   /// [hostApi] is injectable for tests; in production it defaults to a Pigeon
   /// host API bound to this view's id.
-  @internal
-  factory MKMapViewController.create({
+  factory MKMapViewControllerImpl({
     required int viewId,
     required MKMapViewEventSink sink,
     @visibleForTesting MapKitHostApi? hostApi,
   }) {
     final suffix = '$viewId';
     final host = hostApi ?? MapKitHostApi(messageChannelSuffix: suffix);
-    return MKMapViewController._(host, sink, suffix);
+    return MKMapViewControllerImpl._(host, sink, suffix);
   }
 
-  MKMapViewController._(
+  MKMapViewControllerImpl._(
     this._host,
     MKMapViewEventSink sink,
     this._channelSuffix,
@@ -108,34 +210,29 @@ final class MKMapViewController {
 
   // ------------------------- Public API -------------------------
 
-  /// The current camera (`MKMapView.camera`).
+  @override
   Future<MKMapCamera> get camera =>
       _enqueue(() async => .fromPlatform(await _host.getCamera()));
 
-  /// The currently visible region (`MKMapView.region`).
-  ///
-  /// Returns a zero region while the view has no layout (before the first
-  /// frame).
+  @override
   Future<MKCoordinateRegion> get region =>
       _enqueue(() async => .fromPlatform(await _host.getRegion()));
 
-  /// `MKMapView.setCamera(_:animated:)`.
+  @override
   Future<void> setCamera(MKMapCamera camera, {bool animated = true}) =>
       _enqueue(() => _host.setCamera(camera.toPlatform(), animated));
 
-  /// `MKMapView.setRegion(_:animated:)`.
+  @override
   Future<void> setRegion(MKCoordinateRegion region, {bool animated = true}) =>
       _enqueue(() => _host.setRegion(region.toPlatform(), animated));
 
-  /// `MKMapView.setCenter(_:animated:)` — pans without changing distance,
-  /// heading, or pitch.
+  @override
   Future<void> setCenter(
     CLLocationCoordinate2D coordinate, {
     bool animated = true,
   }) => _enqueue(() => _host.setCenter(coordinate.toPlatform(), animated));
 
-  /// Screen point for a coordinate (`MKMapView.convert(_:toPointTo:)`).
-  /// Returns null while the view has no layout.
+  @override
   Future<Offset?> convertToPoint(CLLocationCoordinate2D coordinate) => _enqueue(
     () async => switch (await _host.convertToPoint(coordinate.toPlatform())) {
       null => null,
@@ -143,9 +240,7 @@ final class MKMapViewController {
     },
   );
 
-  /// Coordinate under a screen point
-  /// (`MKMapView.convert(_:toCoordinateFrom:)`). Returns null while the view
-  /// has no layout.
+  @override
   Future<CLLocationCoordinate2D?> convertToCoordinate(Offset point) => _enqueue(
     () async => switch (await _host.convertToCoordinate(
       PlatformPoint(x: point.dx, y: point.dy),
@@ -155,60 +250,38 @@ final class MKMapViewController {
     },
   );
 
-  /// Select the annotation, showing its callout bubble.
-  ///
-  /// An id that is not on the map is ignored, matching
-  /// `MKMapView.selectAnnotation(_:animated:)` semantics for foreign
-  /// annotations — so a call racing a rebuild that removed the annotation is
-  /// harmless.
+  @override
   Future<void> showCallout(MKAnnotationId id) =>
       _enqueue(() => _host.showCallout(id.value));
 
-  /// Deselect the annotation, hiding its callout bubble.
-  ///
-  /// An id that is not on the map is ignored (see [showCallout]).
+  @override
   Future<void> hideCallout(MKAnnotationId id) =>
       _enqueue(() => _host.hideCallout(id.value));
 
-  /// Whether the annotation is selected (its callout is showing). Returns
-  /// `false` for an id that is not on the map.
+  @override
   Future<bool> isCalloutShown(MKAnnotationId id) =>
       _enqueue(() => _host.isCalloutShown(id.value));
 
-  /// Render the current map to a PNG via `MKMapSnapshotter`.
-  ///
-  /// Throws a [MapKitPlatformException] with code `snapshot-failed` when the
-  /// snapshotter fails (e.g. tile loading) or produces no image data.
+  @override
   Future<Uint8List> takeSnapshot([
     MKMapSnapshotOptions options = const MKMapSnapshotOptions(),
   ]) => _enqueue(() => _host.takeSnapshot(options.toPlatform()));
 
-  /// Open the iOS Look Around (street-view) experience for a coordinate.
-  ///
-  /// Returns `true` if a Look Around scene was available and presented,
-  /// `false` when no scene exists for the coordinate, the scene request
-  /// failed (e.g. offline), or the viewer could not be presented.
+  @override
   Future<bool> openLookAround(CLLocationCoordinate2D coordinate) =>
       _enqueue(() => _host.openLookAround(coordinate.toPlatform()));
 
-  /// Add a custom raster tile overlay backed by a URL template.
-  ///
-  /// The template uses `{x}`, `{y}`, `{z}` placeholders, e.g.
-  /// `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
+  @override
   Future<void> addTileOverlay(MKTileOverlay overlay) =>
       _enqueue(() => _host.addTileOverlay(overlay.toPlatform()));
 
-  /// Remove a previously-added tile overlay. Idempotent — an id that is not
-  /// on the map is ignored.
+  @override
   Future<void> removeTileOverlay(MKTileOverlayId id) =>
       _enqueue(() => _host.removeTileOverlay(id.value));
 
-  // ------------------------- Internal mutations -------------------------
+  // ------------------------- Widget-driven mutations -------------------------
 
-  @internal
-  /// Initializes the map view.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapviewcontroller/initialize
+  /// Pushes the initial map state now that the platform view exists.
   Future<void> initialize({
     required MKMapCamera initialCamera,
     required PlatformMapConfiguration configuration,
@@ -229,17 +302,9 @@ final class MKMapViewController {
     ),
   );
 
-  @internal
-  /// Creates a new MapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updateMapConfiguration(PlatformMapConfiguration configuration) =>
       _enqueue(() => _host.updateMapConfiguration(configuration));
 
-  @internal
-  /// Creates a new Annotations object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updateAnnotations(MapObjectUpdates<MKPointAnnotation> updates) =>
       _enqueue(
         () => _host.updateAnnotations(
@@ -249,10 +314,6 @@ final class MKMapViewController {
         ),
       );
 
-  @internal
-  /// Creates a new Polylines object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updatePolylines(MapObjectUpdates<MKPolyline> updates) =>
       _enqueue(
         () => _host.updatePolylines(
@@ -262,10 +323,6 @@ final class MKMapViewController {
         ),
       );
 
-  @internal
-  /// Creates a new Polygons object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updatePolygons(MapObjectUpdates<MKPolygon> updates) => _enqueue(
     () => _host.updatePolygons(
       updates.toAdd.map((p) => p.toPlatform()).toList(),
@@ -274,10 +331,6 @@ final class MKMapViewController {
     ),
   );
 
-  @internal
-  /// Creates a new Circles object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   Future<void> updateCircles(MapObjectUpdates<MKCircle> updates) => _enqueue(
     () => _host.updateCircles(
       updates.toAdd.map((c) => c.toPlatform()).toList(),
@@ -286,8 +339,7 @@ final class MKMapViewController {
     ),
   );
 
-  /// Release platform resources. Called automatically when the owning
-  /// `MKMapView` widget unmounts.
+  @override
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;

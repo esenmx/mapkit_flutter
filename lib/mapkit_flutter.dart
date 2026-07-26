@@ -21,7 +21,8 @@ export 'src/mk_map_camera.dart';
 export 'src/mk_map_configuration.dart';
 export 'src/mk_map_snapshot_options.dart';
 export 'src/mk_map_view.dart';
-export 'src/mk_map_view_controller.dart' hide MKMapViewEventSink;
+export 'src/mk_map_view_controller.dart'
+    hide MKMapViewControllerImpl, MKMapViewEventSink;
 export 'src/mk_point_annotation.dart';
 export 'src/mk_point_of_interest_filter.dart';
 export 'src/mk_polygon.dart';

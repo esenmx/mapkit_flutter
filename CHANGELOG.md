@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.6
+
+- Testing: `MKMapViewController` is now an interface (`abstract interface class`) instead of a `final class`, so code that drives a map can be mocked or faked in unit tests. The widget-only mutations (`initialize`, `update*`) moved to the internal `MKMapViewControllerImpl`, keeping the mockable surface to the public API.
+
 ## 0.3.5
 
 - Fix: Marker annotation views dequeue with a safe cast and fallback instead of a forced downcast, hardening against a potential native crash.

@@ -199,7 +199,7 @@ final class MKMapView extends StatefulWidget {
   /// `build` renders a plain box instead of a `UiKitView`/`AppKitView` and
   /// skips the platform check.
   @visibleForTesting
-  final MKMapViewController Function(MKMapViewEventSink sink)?
+  final MKMapViewControllerImpl Function(MKMapViewEventSink sink)?
   debugControllerFactory;
 
   @override
@@ -208,7 +208,7 @@ final class MKMapView extends StatefulWidget {
 
 final class _MKMapViewState extends State<MKMapView>
     implements MKMapViewEventSink {
-  MKMapViewController? _controller;
+  MKMapViewControllerImpl? _controller;
 
   late Map<MKAnnotationId, MKPointAnnotation> _annotations;
   late Map<MKPolylineId, MKPolyline> _polylines;
@@ -258,11 +258,11 @@ final class _MKMapViewState extends State<MKMapView>
   }
 
   void _onPlatformViewCreated(int id) =>
-      _wireController(MKMapViewController.create(viewId: id, sink: this));
+      _wireController(MKMapViewControllerImpl(viewId: id, sink: this));
 
   /// Push the full initial state over the type-safe channel now that the
   /// platform view (and its host API handler) exists.
-  void _wireController(MKMapViewController controller) {
+  void _wireController(MKMapViewControllerImpl controller) {
     _controller = controller;
     unawaited(
       controller.initialize(
@@ -353,13 +353,13 @@ final class _MKMapViewState extends State<MKMapView>
     _circles = {for (final o in widget.circles) o.id: o};
   }
 
-  void _updateConfiguration(MKMapViewController c, MKMapView oldWidget) {
+  void _updateConfiguration(MKMapViewControllerImpl c, MKMapView oldWidget) {
     if (_configurationChanged(oldWidget)) {
       unawaited(c.updateMapConfiguration(_platformConfiguration()));
     }
   }
 
-  void _updateAnnotations(MKMapViewController c, MKMapView oldWidget) {
+  void _updateAnnotations(MKMapViewControllerImpl c, MKMapView oldWidget) {
     if (!setEquals(widget.annotations, oldWidget.annotations)) {
       final updates = MapObjectUpdates.between(
         oldWidget.annotations,
@@ -370,7 +370,7 @@ final class _MKMapViewState extends State<MKMapView>
     }
   }
 
-  void _updatePolylines(MKMapViewController c, MKMapView oldWidget) {
+  void _updatePolylines(MKMapViewControllerImpl c, MKMapView oldWidget) {
     if (!setEquals(widget.polylines, oldWidget.polylines)) {
       final updates = MapObjectUpdates.between(
         oldWidget.polylines,
@@ -381,7 +381,7 @@ final class _MKMapViewState extends State<MKMapView>
     }
   }
 
-  void _updatePolygons(MKMapViewController c, MKMapView oldWidget) {
+  void _updatePolygons(MKMapViewControllerImpl c, MKMapView oldWidget) {
     if (!setEquals(widget.polygons, oldWidget.polygons)) {
       final updates = MapObjectUpdates.between(
         oldWidget.polygons,
@@ -392,7 +392,7 @@ final class _MKMapViewState extends State<MKMapView>
     }
   }
 
-  void _updateCircles(MKMapViewController c, MKMapView oldWidget) {
+  void _updateCircles(MKMapViewControllerImpl c, MKMapView oldWidget) {
     if (!setEquals(widget.circles, oldWidget.circles)) {
       final updates = MapObjectUpdates.between(
         oldWidget.circles,

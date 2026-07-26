@@ -1,6 +1,7 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 
 import 'fake_host_api.dart';
 import 'recorded_call.dart';
@@ -17,7 +18,7 @@ final class ControllerHarness {
   final RecordingSink sink;
   final FakeHostApi host;
 
-  late final MKMapViewController controller = MKMapViewController.create(
+  late final MKMapViewControllerImpl controller = MKMapViewControllerImpl(
     viewId: viewId,
     sink: sink,
     hostApi: host,

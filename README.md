@@ -286,10 +286,10 @@ The generated files (`lib/src/messages.g.dart`, `darwin/mapkit_flutter/Sources/m
 
 ## Claude Code skill
 
-A scaffold skill ships at [`tool/skills/flutter-mapkit-scaffold/SKILL.md`](tool/skills/flutter-mapkit-scaffold/SKILL.md). Drop it into your user skills and invoke with `/flutter-mapkit-scaffold`:
+A scaffold skill ships at [`skills/flutter-mapkit-scaffold/SKILL.md`](skills/flutter-mapkit-scaffold/SKILL.md). Drop it into your user skills and invoke with `/flutter-mapkit-scaffold`:
 
 ```bash
-cp -R tool/skills/flutter-mapkit-scaffold ~/.claude/skills/
+cp -R skills/flutter-mapkit-scaffold ~/.claude/skills/
 ```
 
 ## License

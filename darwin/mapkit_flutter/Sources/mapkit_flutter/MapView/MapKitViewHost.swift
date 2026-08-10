@@ -213,15 +213,23 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     private func applyOverlayUpdate(adding: [any FlutterOverlay], changing: [any FlutterOverlay], removing: [String]) {
+        var overlaysToRemove: [MKOverlay] = []
         for id in removing {
             if let overlay = self.overlaysById.removeValue(forKey: id) {
-                self.mapView.removeOverlay(overlay)
+                overlaysToRemove.append(overlay)
             }
         }
         for new in changing {
             if let old = self.overlaysById[new.id] {
-                self.mapView.removeOverlay(old)
+                overlaysToRemove.append(old)
             }
+        }
+
+        if !overlaysToRemove.isEmpty {
+            self.mapView.removeOverlays(overlaysToRemove)
+        }
+
+        for new in changing {
             self.addOverlay(new)
         }
         for new in adding {

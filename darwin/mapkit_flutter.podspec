@@ -21,11 +21,14 @@ and modern MapKit configurations.
 
   s.ios.deployment_target = '17.0'
   s.osx.deployment_target = '14.0'
-  s.swift_version = '5.0'
+  # Swift 6 language mode: data-race safety enforced by the compiler, not a
+  # flag stack (subsumes the old -strict-concurrency=complete). Needs
+  # Xcode 16+, already below Flutter's own minimum.
+  s.swift_version = '6.0'
 
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'SWIFT_VERSION' => '5.0',
-    'OTHER_SWIFT_FLAGS' => '-warnings-as-errors -strict-concurrency=complete'
+    'SWIFT_VERSION' => '6.0',
+    'OTHER_SWIFT_FLAGS' => '-warnings-as-errors'
   }
 end

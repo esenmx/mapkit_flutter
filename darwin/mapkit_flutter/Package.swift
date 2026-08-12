@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(
@@ -12,6 +12,8 @@ let package = Package(
     .library(name: "mapkit-flutter", targets: ["mapkit_flutter"])
   ],
   targets: [
+    // swiftLanguageMode defaults to v6 under tools 6.0 — data-race safety is
+    // compiler-enforced, matching the podspec's swift_version = '6.0'.
     .target(name: "mapkit_flutter")
   ]
 )

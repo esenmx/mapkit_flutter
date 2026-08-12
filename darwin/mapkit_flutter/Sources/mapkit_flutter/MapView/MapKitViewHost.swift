@@ -164,9 +164,8 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         #if os(iOS)
         let coord = coordinate.clCoordinate
         Task { @MainActor in
-            let request = MKLookAroundSceneRequest(coordinate: coord)
             do {
-                guard let scene = try await request.scene else {
+                guard let scene = try await Self.requestLookAroundScene(at: coord) else {
                     completion(.success(false))
                     return
                 }
@@ -192,6 +191,18 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         completion(.success(false))
         #endif
     }
+
+    #if os(iOS)
+    /// Runs the scene request off the main actor and hands the result back
+    /// with `sending`: older SDKs don't mark `MKLookAroundScene` Sendable, so
+    /// awaiting `request.scene` directly from `@MainActor` fails to compile
+    /// there. Region isolation proves the fresh scene is safe to move.
+    private nonisolated static func requestLookAroundScene(
+        at coordinate: CLLocationCoordinate2D
+    ) async throws -> sending MKLookAroundScene? {
+        try await MKLookAroundSceneRequest(coordinate: coordinate).scene
+    }
+    #endif
 
     func addTileOverlay(overlay overlayData: PlatformTileOverlay) throws {
         let overlay = FlutterTileOverlay(fromPlatform: overlayData)
@@ -293,22 +304,25 @@ extension MapKitViewHost: MKMapViewDelegate {
 
 extension MapKitViewHost {
     private func takeSnapshot(options: PlatformSnapshotOptions) async throws -> FlutterStandardTypedData? {
+        // Caller-side options exist only for `size`/`mapRect` in the
+        // compositing pass below; the snapshotter gets its own copy off-actor.
         let snapshotOptions = MKMapSnapshotter.Options()
         snapshotOptions.region = self.mapView.region
         snapshotOptions.size = self.mapView.frame.size
-        #if os(iOS)
-        // Unspecified traits report displayScale == 0; leaving `scale` unset
-        // falls back to MapKit's main-screen default.
-        let displayScale = self.mapView.traitCollection.displayScale
-        if displayScale > 0 {
-            snapshotOptions.scale = displayScale
-        }
-        #endif
-        snapshotOptions.showsBuildings = options.showsBuildings
-        snapshotOptions.pointOfInterestFilter = options.showsPointsOfInterest ? .includingAll : .excludingAll
 
-        let snapshotter = MKMapSnapshotter(options: snapshotOptions)
-        let snapshot = try await snapshotter.start()
+        #if os(iOS)
+        // Unspecified traits report displayScale == 0; 0 leaves `scale` unset
+        // so MapKit falls back to its main-screen default.
+        let displayScale = self.mapView.traitCollection.displayScale
+        #else
+        let displayScale: CGFloat = 0
+        #endif
+        let snapshot = try await Self.takeSnapshot(
+            region: snapshotOptions.region,
+            size: snapshotOptions.size,
+            scale: displayScale,
+            showsBuildings: options.showsBuildings,
+            showsPointsOfInterest: options.showsPointsOfInterest)
 
         #if os(iOS)
         let image = UIGraphicsImageRenderer(size: snapshotOptions.size).image { context in
@@ -338,6 +352,32 @@ extension MapKitViewHost {
         }
         #endif
         return FlutterStandardTypedData(bytes: imageData)
+    }
+
+    /// Runs the snapshotter off the main actor and hands the result back with
+    /// `sending`: older SDKs don't mark `MKMapSnapshotter.Snapshot` Sendable,
+    /// so awaiting `start()` directly from `@MainActor` fails to compile
+    /// there. Only Sendable value types cross in; the options and snapshotter
+    /// live entirely in this disconnected region, so the fresh snapshot is
+    /// provably safe to move out.
+    private nonisolated static func takeSnapshot(
+        region: MKCoordinateRegion,
+        size: CGSize,
+        scale: CGFloat,
+        showsBuildings: Bool,
+        showsPointsOfInterest: Bool
+    ) async throws -> sending MKMapSnapshotter.Snapshot {
+        let options = MKMapSnapshotter.Options()
+        options.region = region
+        options.size = size
+        #if os(iOS)
+        if scale > 0 {
+            options.scale = scale
+        }
+        #endif
+        options.showsBuildings = showsBuildings
+        options.pointOfInterestFilter = showsPointsOfInterest ? .includingAll : .excludingAll
+        return try await MKMapSnapshotter(options: options).start()
     }
 
     #if os(iOS)

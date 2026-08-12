@@ -161,6 +161,7 @@ final class FlutterGeodesicPolyline: MKGeodesicPolyline, StyledPolyline, @unchec
 
 public extension MKPolyline {
     // maxMeters is the preferred distance offset from the self to be acknowledged as a touch
+    @MainActor
     func contains(coordinate: CLLocationCoordinate2D, mapView: MKMapView, maxMeters: Int = 8) -> Bool {
         let distance: Double = distanceOf(pt: MKMapPoint.init(coordinate), toMultipPoint: self)
         return distance <= meters(fromPixel: maxMeters, at: coordinate, view: mapView)
@@ -200,6 +201,7 @@ public extension MKPolyline {
         return distance
     }
 
+    @MainActor
     private func meters(fromPixel pixel: Int, at touchCoordinate: CLLocationCoordinate2D, view: MKMapView) -> Double {
         let touchPoint: CGPoint = view.convert(touchCoordinate, toPointTo: view)
         let maxOffsetPoint = CGPoint(x: touchPoint.x + CGFloat(pixel), y: touchPoint.y)

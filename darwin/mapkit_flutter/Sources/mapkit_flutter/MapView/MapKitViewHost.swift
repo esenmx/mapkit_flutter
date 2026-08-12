@@ -297,7 +297,12 @@ extension MapKitViewHost {
         snapshotOptions.region = self.mapView.region
         snapshotOptions.size = self.mapView.frame.size
         #if os(iOS)
-        snapshotOptions.scale = PlatformScreen.scale
+        // Unspecified traits report displayScale == 0; leaving `scale` unset
+        // falls back to MapKit's main-screen default.
+        let displayScale = self.mapView.traitCollection.displayScale
+        if displayScale > 0 {
+            snapshotOptions.scale = displayScale
+        }
         #endif
         snapshotOptions.showsBuildings = options.showsBuildings
         snapshotOptions.pointOfInterestFilter = options.showsPointsOfInterest ? .includingAll : .excludingAll
@@ -367,7 +372,10 @@ extension MapKitViewHost {
 }
 
 #if os(iOS)
-extension MapKitViewHost: FlutterPlatformView {
+// `@preconcurrency`: FlutterPlatformView is nonisolated; the engine calls
+// `view()` on the platform thread (main), same as the MapKitHostApi
+// conformance above.
+extension MapKitViewHost: @preconcurrency FlutterPlatformView {
     public func view() -> UIView {
         return contentView
     }

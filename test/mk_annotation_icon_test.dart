@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'dart:ui' show Color;
+import 'dart:ui' show Color, PlatformDispatcher;
 
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +16,7 @@ void main() {
       check(platform.glyphSystemImage).isNull();
       check(platform.glyphTintArgb).isNull();
       check(platform.imageBytes).isNull();
+      check(platform.imagePixelRatio).isNull();
     });
 
     test('serializes MKMarkerAnnotationView styling as ARGB32', () {
@@ -42,6 +43,24 @@ void main() {
       check(platform.imageBytes!).deepEquals(png);
       check(platform.markerTintArgb).isNull();
     });
+
+    test('serializes explicit imagePixelRatio', () {
+      final platform = MKAnnotationIcon.image(
+        Uint8List.fromList([1]),
+        imagePixelRatio: 2.5,
+      ).toPlatform();
+      check(platform.imagePixelRatio).equals(2.5);
+    });
+
+    test('imagePixelRatio defaults to the implicit view ratio', () {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final platform = MKAnnotationIcon.image(
+        Uint8List.fromList([1]),
+      ).toPlatform();
+      check(
+        platform.imagePixelRatio,
+      ).equals(PlatformDispatcher.instance.implicitView!.devicePixelRatio);
+    });
   });
 
   group('equality', () {
@@ -60,6 +79,14 @@ void main() {
       check(a).equals(b);
       check(a.hashCode).equals(b.hashCode);
       check(a == c).isFalse();
+    });
+
+    test('images with different pixel ratios never compare equal', () {
+      final bytes = Uint8List.fromList([1, 2]);
+      final a = MKAnnotationIcon.image(bytes, imagePixelRatio: 2);
+      final b = MKAnnotationIcon.image(bytes, imagePixelRatio: 3);
+      check(a == b).isFalse();
+      check(a).equals(MKAnnotationIcon.image(bytes, imagePixelRatio: 2));
     });
 
     test('marker and image never compare equal', () {

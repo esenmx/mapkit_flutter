@@ -42,18 +42,6 @@ extension PlatformView {
     }
 }
 
-enum PlatformScreen {
-    /// Backing scale factor of the main screen (`UIScreen.scale` /
-    /// `NSScreen.backingScaleFactor`). Defaults to 2 when unavailable.
-    static var scale: CGFloat {
-        #if os(iOS)
-        return UIScreen.main.scale
-        #elseif os(macOS)
-        return NSScreen.main?.backingScaleFactor ?? 2
-        #endif
-    }
-}
-
 extension PlatformImage {
     /// An SF Symbol image by name (`UIImage(systemName:)` /
     /// `NSImage(systemSymbolName:)`).
@@ -65,19 +53,18 @@ extension PlatformImage {
         #endif
     }
 
-    /// A bitmap image from raw PNG/image bytes, sized in points to match the
-    /// screen scale (`UIImage(data:scale:)` has no AppKit equivalent, so the
-    /// macOS path divides the pixel size by the backing scale).
-    static func fromImageData(_ data: Data) -> PlatformImage? {
+    /// A bitmap image from raw PNG/image bytes, sized in points via the
+    /// Dart-supplied pixel ratio of the bytes (`UIImage(data:scale:)` has no
+    /// AppKit equivalent, so the macOS path divides the pixel size by it).
+    static func fromImageData(_ data: Data, pixelRatio: CGFloat) -> PlatformImage? {
         #if os(iOS)
-        return UIImage(data: data, scale: PlatformScreen.scale)
+        return UIImage(data: data, scale: pixelRatio)
         #elseif os(macOS)
         guard let image = NSImage(data: data) else { return nil }
         if let rep = image.representations.first {
-            let scale = PlatformScreen.scale
             image.size = NSSize(
-                width: CGFloat(rep.pixelsWide) / scale,
-                height: CGFloat(rep.pixelsHigh) / scale
+                width: CGFloat(rep.pixelsWide) / pixelRatio,
+                height: CGFloat(rep.pixelsHigh) / pixelRatio
             )
         }
         return image

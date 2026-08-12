@@ -27,18 +27,24 @@ final class MKAnnotationIcon {
        _glyphText = glyphText,
        _glyphSystemImage = systemImage,
        _glyphTintColor = glyphTintColor,
-       _imageBytes = null;
+       _imageBytes = null,
+       _imagePixelRatio = null;
 
   /// Raw PNG bytes as the annotation image (`MKAnnotationView.image`). Render
   /// any Flutter widget to a PNG (e.g. via `RenderRepaintBoundary.toImage`)
   /// and pass it here for a fully custom marker.
-  const MKAnnotationIcon.image(Uint8List png)
+  ///
+  /// [imagePixelRatio] is the pixels-per-logical-point of [png] (pass the
+  /// `pixelRatio` the widget was rendered with); defaults to the device pixel
+  /// ratio, matching bytes rendered at native resolution.
+  const MKAnnotationIcon.image(Uint8List png, {double? imagePixelRatio})
     : _type = .image,
       _markerTintColor = null,
       _glyphText = null,
       _glyphSystemImage = null,
       _glyphTintColor = null,
-      _imageBytes = png;
+      _imageBytes = png,
+      _imagePixelRatio = imagePixelRatio;
 
   /// Load an annotation image from the asset bundle into an
   /// [MKAnnotationIcon.image].
@@ -57,7 +63,9 @@ final class MKAnnotationIcon {
     final provider = AssetImage(name, bundle: bundle, package: package);
     final key = await provider.obtainKey(config);
     final data = await (bundle ?? rootBundle).load(key.name);
-    return .image(data.buffer.asUint8List());
+    // key.scale is the resolved variant's scale (1x/2x/3x), which is the
+    // ratio of the bytes actually loaded — not necessarily the screen's.
+    return .image(data.buffer.asUint8List(), imagePixelRatio: key.scale);
   }
 
   final PlatformAnnotationIconType _type;
@@ -66,6 +74,7 @@ final class MKAnnotationIcon {
   final String? _glyphSystemImage;
   final Color? _glyphTintColor;
   final Uint8List? _imageBytes;
+  final double? _imagePixelRatio;
 
   @internal
   /// Creates a new Platform object.
@@ -78,6 +87,10 @@ final class MKAnnotationIcon {
     glyphSystemImage: _glyphSystemImage,
     glyphTintArgb: _glyphTintColor?.toARGB32(),
     imageBytes: _imageBytes,
+    imagePixelRatio: _imageBytes == null
+        ? null
+        : _imagePixelRatio ??
+              PlatformDispatcher.instance.implicitView?.devicePixelRatio,
   );
 
   @override
@@ -88,7 +101,8 @@ final class MKAnnotationIcon {
       other._glyphText == _glyphText &&
       other._glyphSystemImage == _glyphSystemImage &&
       other._glyphTintColor == _glyphTintColor &&
-      listEquals(other._imageBytes, _imageBytes);
+      listEquals(other._imageBytes, _imageBytes) &&
+      other._imagePixelRatio == _imagePixelRatio;
 
   @override
   int get hashCode => Object.hash(
@@ -98,6 +112,7 @@ final class MKAnnotationIcon {
     _glyphSystemImage,
     _glyphTintColor,
     _imageBytes == null ? null : Object.hashAll(_imageBytes),
+    _imagePixelRatio,
   );
 
   @override
@@ -108,6 +123,7 @@ final class MKAnnotationIcon {
     if (_glyphSystemImage case final s?) b.write(', systemImage: $s');
     if (_glyphTintColor case final c?) b.write(', glyphTintColor: $c');
     if (_imageBytes case final bytes?) b.write(', image: ${bytes.length}B');
+    if (_imagePixelRatio case final r?) b.write(', imagePixelRatio: $r');
     return (b..write(')')).toString();
   }
 }

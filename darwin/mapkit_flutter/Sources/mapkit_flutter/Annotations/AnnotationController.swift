@@ -86,9 +86,15 @@ extension MapKitViewHost {
     }
 
     func annotationsToAdd(_ annotations: [PlatformAnnotation]) {
-        for annotation in annotations {
-            addAnnotation(FlutterAnnotation(fromPlatform: annotation))
+        let toAdd = annotations.map(FlutterAnnotation.init(fromPlatform:))
+        let stale = toAdd.compactMap { self.annotationsById.removeValue(forKey: $0.id) }
+        if !stale.isEmpty {
+            self.mapView.removeAnnotations(stale)
         }
+        for annotation in toAdd {
+            self.annotationsById[annotation.id] = annotation
+        }
+        self.mapView.addAnnotations(toAdd)
     }
 
     func annotationsToChange(_ annotations: [PlatformAnnotation]) {
@@ -107,8 +113,9 @@ extension MapKitViewHost {
     }
 
     func annotationsToRemove(_ annotationIds: [String]) {
-        for annotationId in annotationIds {
-            removeAnnotation(id: annotationId)
+        let toRemove = annotationIds.compactMap { self.annotationsById.removeValue(forKey: $0) }
+        if !toRemove.isEmpty {
+            self.mapView.removeAnnotations(toRemove)
         }
     }
 

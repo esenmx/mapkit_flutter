@@ -44,7 +44,8 @@ class AnnotationIcon: Equatable {
         case .image:
             self.iconType = .image
             if let data = icon.imageBytes?.data {
-                self.image = PlatformImage.fromImageData(data)
+                self.image = PlatformImage.fromImageData(
+                    data, pixelRatio: CGFloat(icon.imagePixelRatio ?? 1))
             }
         }
     }

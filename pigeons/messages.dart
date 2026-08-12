@@ -2,10 +2,20 @@
 //
 // Regenerate after editing:
 //   dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
+// then in the regenerated messages.g.swift:
+//   1. Re-apply the O(N) dictionary branch of `deepEquals` (direct
+//      `rhsDictionary[lhsKey]` lookup) — stock pigeon emits an O(N*M) scan
+//      and regenerating silently reverts the 0.3.4 perf fix.
+//   2. Mark the MapKitFlutterApi completions `@Sendable` — Xcode 26+ rejects
+//      capturing a plain completion in the channel reply closure:
+//      perl -pi -e 's/completion: \@escaping \(Result<Void, MapKitHostError>\) -> Void/completion: \@escaping \@Sendable (Result<Void, MapKitHostError>) -> Void/g' \
+//        ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift
+//   3. Copy it over `darwin/mapkit_flutter/Sources/mapkit_flutter/` — the
+//      darwin tree builds from its own checked-in copy, not pigeon's output.
 //
 // Generated files (`lib/src/messages.g.dart`,
-// `ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift`) are checked in
-// and must not be hand-edited.
+// `ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift`, and the
+// darwin copy above) are checked in; hand-edit only per the steps above.
 //
 // Naming: every type here carries a `Platform` prefix — including enums that
 // the public API re-exports via `typedef` (e.g. `MKUserTrackingMode =
@@ -181,6 +191,7 @@ class PlatformAnnotationIcon {
     this.glyphSystemImage,
     this.glyphTintArgb,
     this.imageBytes,
+    this.imagePixelRatio,
   });
 
   final PlatformAnnotationIconType type;
@@ -199,6 +210,9 @@ class PlatformAnnotationIcon {
 
   /// Raw PNG bytes for the `image` variant (`MKAnnotationView.image`).
   final Uint8List? imageBytes;
+
+  /// Pixels per logical point in [imageBytes] (`UIImage(data:scale:)`).
+  final double? imagePixelRatio;
 }
 
 class PlatformAnnotation {

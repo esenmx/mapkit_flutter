@@ -10,7 +10,10 @@ import AppKit
 import FlutterMacOS
 #endif
 
-class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, CLLocationManagerDelegate {
+// `@preconcurrency`: CLLocationManagerDelegate is nonisolated, but callbacks
+// arrive on the thread that created the manager — main, since the manager is
+// an instance property of this MainActor-isolated view.
+class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurrency CLLocationManagerDelegate {
     weak var flutterApi: MapKitFlutterApi?
 
     /// Camera handed over before the first layout pass; re-applied once the

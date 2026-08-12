@@ -21,7 +21,14 @@ Add to `ios/Runner/Info.plist` (on macOS, `macos/Runner/Info.plist` plus the Loc
 <string>Used to show your current location on the map.</string>
 ```
 
-Minimum: iOS 17, macOS 14, Dart 3.10, Flutter 3.41.
+### Minimum requirements
+
+| | |
+|---|---|
+| iOS | 17.0 |
+| macOS | 14.0 |
+| Flutter / Dart | 3.41 / 3.10 |
+| Xcode | 16+ (the native code is Swift 6 language mode — data-race safety is compiler-enforced) |
 
 ## Quick start
 

@@ -307,7 +307,7 @@ extension MapKitViewHost {
             snapshot.image.draw(at: .zero)
             let rect = snapshotOptions.mapRect
             if options.showsAnnotations {
-                for annotation in self.mapView.getMapViewAnnotations() where !annotation.isHidden {
+                for annotation in self.mapView.getMapViewAnnotations() where !annotation.isHidden && rect.contains(MKMapPoint(annotation.coordinate)) {
                     self.drawAnnotations(annotation: annotation, point: snapshot.point(for: annotation.coordinate))
                 }
             }

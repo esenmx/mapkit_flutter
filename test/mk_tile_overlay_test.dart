@@ -50,6 +50,14 @@ void main() {
         ),
       ).throws<AssertionError>();
     });
+
+    test('rejects invalid url template scheme in toPlatform()', () {
+      const overlay = MKTileOverlay(
+        id: MKTileOverlayId('bad_scheme'),
+        urlTemplate: 'file:///etc/passwd',
+      );
+      check(() => overlay.toPlatform()).throws<ArgumentError>();
+    });
   });
 
   group('equality', () {

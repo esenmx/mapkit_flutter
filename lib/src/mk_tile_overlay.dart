@@ -67,16 +67,22 @@ final class MKTileOverlay {
   /// Creates a new Platform object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  PlatformTileOverlay toPlatform() => PlatformTileOverlay(
-    id: id.value,
-    urlTemplate: urlTemplate,
-    minimumZ: minimumZ,
-    maximumZ: maximumZ,
-    tileSize: tileSize,
-    canReplaceMapContent: canReplaceMapContent,
-    alpha: alpha,
-    level: level,
-  );
+  PlatformTileOverlay toPlatform() {
+    if (!urlTemplate.startsWith('https://') &&
+        !urlTemplate.startsWith('http://')) {
+      throw ArgumentError('urlTemplate must use https:// or http:// scheme');
+    }
+    return PlatformTileOverlay(
+      id: id.value,
+      urlTemplate: urlTemplate,
+      minimumZ: minimumZ,
+      maximumZ: maximumZ,
+      tileSize: tileSize,
+      canReplaceMapContent: canReplaceMapContent,
+      alpha: alpha,
+      level: level,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>

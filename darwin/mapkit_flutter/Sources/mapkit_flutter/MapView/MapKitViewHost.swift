@@ -205,6 +205,9 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     #endif
 
     func addTileOverlay(overlay overlayData: PlatformTileOverlay) throws {
+        guard overlayData.urlTemplate.hasPrefix("https://") || overlayData.urlTemplate.hasPrefix("http://") else {
+            throw mapKitError("invalid-url-template", "Tile overlay urlTemplate must use https:// or http:// scheme.")
+        }
         let overlay = FlutterTileOverlay(fromPlatform: overlayData)
         if !overlay.id.isEmpty, tileOverlays[overlay.id] != nil {
             try removeTileOverlay(tileOverlayId: overlay.id)

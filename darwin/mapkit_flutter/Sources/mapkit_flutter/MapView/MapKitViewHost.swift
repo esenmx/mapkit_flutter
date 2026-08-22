@@ -170,11 +170,10 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
                     return
                 }
                 let vc = MKLookAroundViewController(scene: scene)
-                let host = self.contentView.window?.rootViewController
+                guard let host = self.contentView.window?.rootViewController
                     ?? UIApplication.shared.connectedScenes
-                        .compactMap { ($0 as? UIWindowScene)?.keyWindow?.rootViewController }
-                        .first
-                guard let host = host else {
+                        .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
+                        .first else {
                     completion(.success(false))
                     return
                 }

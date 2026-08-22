@@ -50,6 +50,24 @@ void main() {
         ),
       ).throws<AssertionError>();
     });
+
+    test('rejects out of bounds alpha values', () {
+      check(
+        () => MKTileOverlay(
+          id: const MKTileOverlayId('bad'),
+          urlTemplate: 'https://t/{z}/{x}/{y}.png',
+          alpha: -0.1,
+        ),
+      ).throws<AssertionError>();
+
+      check(
+        () => MKTileOverlay(
+          id: const MKTileOverlayId('bad'),
+          urlTemplate: 'https://t/{z}/{x}/{y}.png',
+          alpha: 1.1,
+        ),
+      ).throws<AssertionError>();
+    });
   });
 
   group('equality', () {

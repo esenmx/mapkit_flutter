@@ -8,7 +8,7 @@ import AppKit
 
 @objc(MapKitPlugin)
 @MainActor
-public final class MapKitPlugin: NSObject, FlutterPlugin {
+public final class MapKitPlugin: NSObject, @preconcurrency FlutterPlugin {
     private static let viewType = "dev.mapkit.flutter/map_view"
 
     public static func register(with registrar: FlutterPluginRegistrar) {

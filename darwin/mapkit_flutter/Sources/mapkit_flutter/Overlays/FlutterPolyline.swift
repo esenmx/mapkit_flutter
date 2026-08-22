@@ -80,9 +80,8 @@ extension StyledPolyline {
         }
 
         path.move(to: snapshot.point(for: first))
-        for coordinate in coordinates {
+        for coordinate in coordinates.dropFirst() {
             path.addLine(to: snapshot.point(for: coordinate))
-            path.move(to: snapshot.point(for: coordinate))
         }
 
         shapeLayer.path = path.cgPath

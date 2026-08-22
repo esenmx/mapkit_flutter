@@ -44,6 +44,35 @@ extension MapKitViewHost {
         return nil
     }
 
+    // Annotation drag lifecycle.
+    public func mapView(_ mapView: MKMapView,
+                        annotationView view: MKAnnotationView,
+                        didChange newState: MKAnnotationView.DragState,
+                        fromOldState oldState: MKAnnotationView.DragState) {
+        guard let annotation = view.annotation as? FlutterAnnotation else { return }
+        self.handleAnnotationDragChange(annotation: annotation, newState: newState)
+    }
+
+    private func handleAnnotationDragChange(annotation: FlutterAnnotation, newState: MKAnnotationView.DragState) {
+        let id = annotation.id
+        let coordinate = PlatformCoordinate.from(annotation.coordinate)
+        switch newState {
+        case .starting:
+            self.flutterApi.onAnnotationDragStart(annotationId: id, coordinate: coordinate) { _ in }
+        case .dragging:
+            self.flutterApi.onAnnotationDrag(annotationId: id, coordinate: coordinate) { _ in }
+        case .ending, .canceling:
+            self.handleAnnotationDragEnd(annotation: annotation, id: id, coordinate: coordinate)
+        default:
+            break
+        }
+    }
+
+    private func handleAnnotationDragEnd(annotation: FlutterAnnotation, id: String, coordinate: PlatformCoordinate) {
+        annotation.wasDragged = true
+        self.flutterApi.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) { _ in }
+    }
+
     private func getClusterAnnotationView(cluster: MKClusterAnnotation) -> MKAnnotationView {
         let id = "mapkit.cluster"
         self.mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: id)

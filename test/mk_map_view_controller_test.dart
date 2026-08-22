@@ -266,6 +266,22 @@ void main() {
       ).has((e) => e.code, 'code').equals('boom');
     });
 
+    test(
+      'non-platform exception completes error with original exception',
+      () async {
+        final exception = Exception('custom host error');
+        harness.host.errorToThrow = exception;
+
+        Object? caughtError;
+        try {
+          await harness.controller.setCamera(sampleCamera);
+        } on Object catch (e) {
+          caughtError = e;
+        }
+        check(caughtError).equals(exception);
+      },
+    );
+
     test('queued calls after a failure still run', () async {
       harness.host.errorToThrow = PlatformException(code: 'boom');
       final failing = harness.controller.setCamera(sampleCamera);

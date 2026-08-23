@@ -99,3 +99,18 @@ jobs:
         working-directory: example
       - run: flutter build ios --release --no-codesign
         working-directory: example
+
+  build-example-macos:
+    name: Example macOS build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter config --enable-macos-desktop
+      - run: flutter pub get
+        working-directory: example
+      - run: flutter build macos --debug
+        working-directory: example

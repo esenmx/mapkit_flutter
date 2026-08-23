@@ -79,6 +79,7 @@ extension StyledPolyline {
             return shapeLayer
         }
 
+        // Single subpath: lineJoin and dash phase only apply within a subpath, matching MKPolylineRenderer.
         path.move(to: snapshot.point(for: first))
         for coordinate in coordinates.dropFirst() {
             path.addLine(to: snapshot.point(for: coordinate))

@@ -306,9 +306,12 @@ extension MapKitViewHost {
         let image = UIGraphicsImageRenderer(size: snapshotOptions.size).image { context in
             snapshot.image.draw(at: .zero)
             let rect = snapshotOptions.mapRect
+            // Image-space bounds: `snapshot.point(for:)` projects into this
+            // space, so drawn frames are tested here rather than in map space.
+            let bounds = CGRect(origin: .zero, size: snapshotOptions.size)
             if options.showsAnnotations {
                 for annotation in self.mapView.getMapViewAnnotations() where !annotation.isHidden {
-                    self.drawAnnotations(annotation: annotation, point: snapshot.point(for: annotation.coordinate))
+                    self.drawAnnotations(annotation: annotation, point: snapshot.point(for: annotation.coordinate), bounds: bounds)
                 }
             }
             if options.showsOverlays {
@@ -359,17 +362,21 @@ extension MapKitViewHost {
     }
 
     #if os(iOS)
-    private func drawAnnotations(annotation: FlutterAnnotation, point: CGPoint) {
+    /// Skips fully off-image annotations (their drawn frame does not
+    /// intersect `bounds`) before the expensive `drawHierarchy` / `draw(at:)`;
+    /// partially visible edge annotations still draw, matching MKMapView.
+    private func drawAnnotations(annotation: FlutterAnnotation, point: CGPoint, bounds: CGRect) {
         let annotationView = self.getAnnotationView(annotation: annotation)
 
         if annotationView is MKMarkerAnnotationView {
-            var offsetPoint = point
-            offsetPoint.x -= annotationView.bounds.width / 2
-            offsetPoint.y -= annotationView.bounds.height / 2
-            annotationView.drawHierarchy(
-                in: CGRect(x: offsetPoint.x, y: offsetPoint.y, width: annotationView.bounds.width, height: annotationView.bounds.height),
-                afterScreenUpdates: true
+            let frame = CGRect(
+                x: point.x - annotationView.bounds.width / 2,
+                y: point.y - annotationView.bounds.height / 2,
+                width: annotationView.bounds.width,
+                height: annotationView.bounds.height
             )
+            guard frame.intersects(bounds) else { return }
+            annotationView.drawHierarchy(in: frame, afterScreenUpdates: true)
         } else if let image = annotationView.image {
             // Place the image so its normalized anchor point lands on the
             // annotation's coordinate, matching MKAnnotationView.anchorPoint.
@@ -377,6 +384,7 @@ extension MapKitViewHost {
                 x: point.x - annotation.anchorPoint.x * image.size.width,
                 y: point.y - annotation.anchorPoint.y * image.size.height
             )
+            guard CGRect(origin: origin, size: image.size).intersects(bounds) else { return }
             image.draw(at: origin)
         }
     }

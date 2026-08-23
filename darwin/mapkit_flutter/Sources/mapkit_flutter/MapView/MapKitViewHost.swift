@@ -262,27 +262,6 @@ extension MapKitViewHost: MKMapViewDelegate {
         self.flutterApi.onCameraMoveStarted { _ in }
     }
 
-    // Annotation drag lifecycle.
-    public func mapView(_ mapView: MKMapView,
-                        annotationView view: MKAnnotationView,
-                        didChange newState: MKAnnotationView.DragState,
-                        fromOldState oldState: MKAnnotationView.DragState) {
-        guard let annotation = view.annotation as? FlutterAnnotation else { return }
-        let id = annotation.id
-        let coordinate = PlatformCoordinate.from(annotation.coordinate)
-        switch newState {
-        case .starting:
-            self.flutterApi.onAnnotationDragStart(annotationId: id, coordinate: coordinate) { _ in }
-        case .dragging:
-            self.flutterApi.onAnnotationDrag(annotationId: id, coordinate: coordinate) { _ in }
-        case .ending, .canceling:
-            annotation.wasDragged = true
-            self.flutterApi.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) { _ in }
-        default:
-            break
-        }
-    }
-
     public func mapViewDidFailLoadingMap(_ mapView: MKMapView, withError error: Error) {
         self.flutterApi.onDidFailLoadingMap(error: error.localizedDescription) { _ in }
     }

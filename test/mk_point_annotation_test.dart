@@ -55,6 +55,36 @@ void main() {
       check(platform.isDraggable).isFalse();
       check(platform.clusteringIdentifier).isNull();
     });
+
+    test('rejects out of bounds alpha values', () {
+      check(
+        () => MKPointAnnotation(
+          id: const MKAnnotationId('bad'),
+          coordinate: applePark,
+          alpha: -0.1,
+        ),
+      ).throws<AssertionError>();
+
+      check(
+        () => MKPointAnnotation(
+          id: const MKAnnotationId('bad'),
+          coordinate: applePark,
+          alpha: 1.1,
+        ),
+      ).throws<AssertionError>();
+    });
+
+    test('accepts alpha boundaries', () {
+      for (final alpha in <double>[0, 1]) {
+        check(
+          () => MKPointAnnotation(
+            id: const MKAnnotationId('edge'),
+            coordinate: applePark,
+            alpha: alpha,
+          ),
+        ).returnsNormally();
+      }
+    });
   });
 
   group('equality', () {

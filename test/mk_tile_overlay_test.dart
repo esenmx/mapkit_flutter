@@ -68,6 +68,18 @@ void main() {
         ),
       ).throws<AssertionError>();
     });
+
+    test('accepts alpha boundaries', () {
+      for (final alpha in <double>[0, 1]) {
+        check(
+          () => MKTileOverlay(
+            id: const MKTileOverlayId('edge'),
+            urlTemplate: 'https://t/{z}/{x}/{y}.png',
+            alpha: alpha,
+          ),
+        ).returnsNormally();
+      }
+    });
   });
 
   group('equality', () {

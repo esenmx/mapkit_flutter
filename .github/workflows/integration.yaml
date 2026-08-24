@@ -9,7 +9,7 @@ on:
 jobs:
   integration:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -42,11 +42,37 @@ jobs:
         working-directory: example
         run: |
           set -o pipefail
+          # A wedged simulator hangs `flutter test` after "Xcode build done."
+          # (device handshake never completes); unbounded, one hang consumed
+          # the whole job timeout and the per-file retries below never ran.
+          # Bound every invocation and recycle the simulator on timeout so a
+          # retry starts from a fresh boot. 124/137 = gtimeout TERM/KILL.
+          TIMEOUT_BIN="$(command -v gtimeout || command -v timeout || true)"
+          bounded() {
+            if [ -n "$TIMEOUT_BIN" ]; then
+              "$TIMEOUT_BIN" --kill-after=30 480 "$@"
+            else
+              "$@"
+            fi
+          }
+          recycle_sim() {
+            xcrun simctl shutdown 'iPhone 16' || true
+            sleep 5
+            xcrun simctl boot 'iPhone 16' || true
+            xcrun simctl bootstatus 'iPhone 16'
+          }
           run_one() {
-            local test="$1" out
+            local test="$1" out rc
             out="$(mktemp)"
-            if flutter test "$test" -d 'iPhone 16' 2>&1 | tee "$out"; then
+            rc=0
+            bounded flutter test "$test" -d 'iPhone 16' 2>&1 | tee "$out" || rc=$?
+            if [ "$rc" -eq 0 ]; then
               return 0
+            fi
+            if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+              echo "::warning::$test hung past 480s (rc=$rc); recycling the simulator"
+              recycle_sim
+              return 1
             fi
             if grep -q '✅' "$out" && ! grep -q '❌' "$out" \
                 && ! grep -qiE 'some tests failed' "$out"; then

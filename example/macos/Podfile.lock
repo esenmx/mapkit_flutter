@@ -1,6 +1,6 @@
 PODS:
   - FlutterMacOS (1.0.0)
-  - mapkit_flutter (0.3.0):
+  - mapkit_flutter (0.3.6):
     - Flutter
     - FlutterMacOS
 
@@ -16,8 +16,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  mapkit_flutter: 15e4cc548ff5dea9b966f5e92059b6cfb990a630
+  mapkit_flutter: a07ea82fa019aaf4a1243e0aac992b3272c0cc6c
 
 PODFILE CHECKSUM: d16f5e5d196d1ca9863d7a71d5885cad7ffa7d2d
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

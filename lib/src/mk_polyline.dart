@@ -64,7 +64,10 @@ final class MKPolyline {
   /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/id
   final MKPolylineId id;
 
-  /// The coordinates property.
+  /// The vertices of the polyline. Fewer than two coordinates draws
+  /// nothing — on the live map and in snapshots (matches
+  /// `MKPolylineRenderer`; a single point no longer renders a dot in
+  /// snapshots).
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/coordinates
   final List<CLLocationCoordinate2D> coordinates;

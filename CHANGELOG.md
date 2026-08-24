@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Fix: iOS snapshot polylines now stroke as a single subpath, so `lineJoin` applies and dash patterns run continuously across vertices. A single-coordinate polyline now draws nothing instead of a round-cap dot, matching the live renderer.
+- Performance: iOS snapshots skip annotations whose drawn frame lies entirely outside the image; partially visible edge annotations still draw.
+- Fix: podspec version now tracks pubspec — CocoaPods had advertised 0.3.0 since v0.3.1. CI guards against drift (and fails closed if no podspec matches).
+- CI: macOS example build job added alongside iOS; integration workflow bounds every `flutter test` invocation and recycles a wedged simulator between retries.
+
 ## 0.3.6
 
 - Testing: `MKMapViewController` is now an interface (`abstract interface class`) instead of a `final class`, so code that drives a map can be mocked or faked in unit tests. The widget-only mutations (`initialize`, `update*`) moved to the internal `MKMapViewControllerImpl`, keeping the mockable surface to the public API.

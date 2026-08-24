@@ -9,7 +9,8 @@ on:
 jobs:
   integration:
     runs-on: macos-15
-    timeout-minutes: 45
+    # 60 min funds ~1 cold hang cycle (900s bound + recycle) plus bounded retries per file — not the absolute 3-attempt x 3-file worst case (~90 min); deliberate truncation.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -46,43 +47,60 @@ jobs:
           # (device handshake never completes); unbounded, one hang consumed
           # the whole job timeout and the per-file retries below never ran.
           # Bound every invocation and recycle the simulator on timeout so a
-          # retry starts from a fresh boot. 124/137 = gtimeout TERM/KILL.
+          # retry starts from a fresh boot. 900s clears the slowest observed
+          # legit cold run (677s) with margin — 480 sat inside the cold-run
+          # range and killed passing attempts. 124/137 = gtimeout TERM/KILL,
+          # 142 = perl fallback.
+          TEST_BOUND=900
           TIMEOUT_BIN="$(command -v gtimeout || command -v timeout || true)"
-          echo "per-invocation bound: ${TIMEOUT_BIN:-perl alarm+exec}"
+          echo "per-invocation bound: ${TIMEOUT_BIN:-perl group supervisor}"
           bounded() {
+            local secs="$1"; shift
             if [ -n "$TIMEOUT_BIN" ]; then
-              "$TIMEOUT_BIN" --kill-after=30 480 "$@"
+              "$TIMEOUT_BIN" --kill-after=30 "$secs" "$@"
             else
               # No coreutils on the runner image (observed: the plain "$@"
               # fallback here silently ran unbounded and a wedge ate the whole
-              # job cap again). alarm(2) survives exec, so the child dies on
-              # SIGALRM at 480s -> rc 142.
-              perl -e 'alarm shift; exec @ARGV or die "exec failed: $!"' 480 "$@"
+              # job cap again). A bare alarm+exec bounds only one process; an
+              # inheritStdio descendant survives, holds the tee pipe, and
+              # stalls the pipeline to the job cap. Fork the command into its
+              # own process group and TERM-then-KILL the group on timeout
+              # (rc 142) so pipe holders and orphaned xcodebuild die too.
+              perl -e 'my $t = shift; my $pid = fork // die "fork: $!"; if (!$pid) { setpgrp(0, 0); exec @ARGV or die "exec failed: $!" } $SIG{ALRM} = sub { kill "TERM", -$pid; sleep 30; kill "KILL", -$pid; exit 142 }; alarm $t; waitpid $pid, 0; exit(($? & 127) ? 128 + ($? & 127) : $? >> 8);' "$secs" "$@"
             fi
           }
           recycle_sim() {
             xcrun simctl shutdown 'iPhone 16' || true
             sleep 5
-            xcrun simctl boot 'iPhone 16' || true
-            xcrun simctl bootstatus 'iPhone 16'
+            # -b boots if needed; bounded so a wedged reboot costs 120s, not
+            # the job cap (bare bootstatus blocks forever on a failed boot).
+            bounded 120 xcrun simctl bootstatus 'iPhone 16' -b \
+              || echo "::warning::simulator failed to reboot after recycle"
           }
           run_one() {
             local test="$1" out rc
             out="$(mktemp)"
             rc=0
-            bounded flutter test "$test" -d 'iPhone 16' 2>&1 | tee "$out" || rc=$?
+            bounded "$TEST_BOUND" flutter test "$test" -d 'iPhone 16' 2>&1 | tee "$out" || rc=$?
             if [ "$rc" -eq 0 ]; then
               return 0
             fi
-            if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 142 ]; then
-              echo "::warning::$test hung past 480s (rc=$rc); recycling the simulator"
-              recycle_sim
-              return 1
-            fi
+            # Salvage before timeout classification: the on-device verdict is
+            # printed before host teardown, so ✅ with no failure marker is a
+            # pass even when rc is a timeout code — a pass-then-teardown-hang
+            # is a pass, not a hang.
             if grep -q '✅' "$out" && ! grep -q '❌' "$out" \
                 && ! grep -qiE 'some tests failed' "$out"; then
-              echo "::warning::$test passed on-device; ignoring flutter_tools teardown flake"
+              echo "::warning::$test passed on-device (rc=$rc); ignoring host-side failure"
+              if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 142 ]; then
+                recycle_sim  # the killed tree may have wedged the simulator; next file starts fresh
+              fi
               return 0
+            fi
+            if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 142 ]; then
+              echo "::warning::$test hung past ${TEST_BOUND}s (rc=$rc); recycling the simulator"
+              recycle_sim
+              return 1
             fi
             return 1
           }

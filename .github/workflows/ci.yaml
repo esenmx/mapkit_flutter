@@ -29,6 +29,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Check podspec version matches pubspec
+        run: |
+          pubspec_version=$(grep -m1 '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//')
+          status=0
+          while IFS= read -r podspec; do
+            podspec_version=$(grep -m1 "s\.version" "$podspec" | sed -E "s/.*s\.version[[:space:]]*=[[:space:]]*'([^']+)'.*/\1/")
+            if [ "$podspec_version" != "$pubspec_version" ]; then
+              echo "::error file=$podspec::podspec version ($podspec_version) does not match pubspec.yaml version ($pubspec_version)"
+              status=1
+            fi
+          done < <(find . -name '*.podspec' -not -path './example/*' -not -path './build/*')
+          exit $status
       - uses: subosito/flutter-action@v2
         with:
           channel: stable

@@ -26,12 +26,15 @@ final class FakeHostApi extends MapKitHostApi {
   PlatformCoordinate? coordinate;
   bool calloutShown = false;
   bool lookAroundResult = false;
-  Exception? errorToThrow;
+  Object? errorToThrow;
 
   void _record(String name, Object? args) {
     final e = errorToThrow;
     if (e case final error?) {
       errorToThrow = null;
+      // Rethrows whatever the test staged — Exception or Error — so both
+      // halves of _enqueue's generic catch are reachable.
+      // ignore: only_throw_errors
       throw error;
     }
     calls.add((name, args));

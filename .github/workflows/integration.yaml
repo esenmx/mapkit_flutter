@@ -48,11 +48,16 @@ jobs:
           # Bound every invocation and recycle the simulator on timeout so a
           # retry starts from a fresh boot. 124/137 = gtimeout TERM/KILL.
           TIMEOUT_BIN="$(command -v gtimeout || command -v timeout || true)"
+          echo "per-invocation bound: ${TIMEOUT_BIN:-perl alarm+exec}"
           bounded() {
             if [ -n "$TIMEOUT_BIN" ]; then
               "$TIMEOUT_BIN" --kill-after=30 480 "$@"
             else
-              "$@"
+              # No coreutils on the runner image (observed: the plain "$@"
+              # fallback here silently ran unbounded and a wedge ate the whole
+              # job cap again). alarm(2) survives exec, so the child dies on
+              # SIGALRM at 480s -> rc 142.
+              perl -e 'alarm shift; exec @ARGV or die "exec failed: $!"' 480 "$@"
             fi
           }
           recycle_sim() {
@@ -69,7 +74,7 @@ jobs:
             if [ "$rc" -eq 0 ]; then
               return 0
             fi
-            if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+            if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 142 ]; then
               echo "::warning::$test hung past 480s (rc=$rc); recycling the simulator"
               recycle_sim
               return 1

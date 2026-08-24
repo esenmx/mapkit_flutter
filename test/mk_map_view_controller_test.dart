@@ -282,6 +282,25 @@ void main() {
       check(caughtTrace.toString()).contains('FakeHostApi._record');
     });
 
+    test(
+      'Error subtype propagates unwrapped through the generic catch',
+      () async {
+        final error = StateError('host invariant violated');
+        harness.host.errorToThrow = error;
+
+        Object? caughtError;
+        StackTrace? caughtTrace;
+        try {
+          await harness.controller.setCamera(sampleCamera);
+        } on Object catch (e, st) {
+          caughtError = e;
+          caughtTrace = st;
+        }
+        check(caughtError).identicalTo(error);
+        check(caughtTrace.toString()).contains('FakeHostApi._record');
+      },
+    );
+
     test('queued calls after a failure still run', () async {
       harness.host.errorToThrow = PlatformException(code: 'boom');
       final failing = harness.controller.setCamera(sampleCamera);

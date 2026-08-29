@@ -2,7 +2,6 @@ import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
-import 'package:mapkit_flutter/src/_internal/map_object_updates.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 
 import '_helpers/controller_harness.dart';
@@ -101,7 +100,7 @@ void main() {
 
     test('convertToCoordinate returns null without layout', () async {
       harness.host.coordinate = null;
-      check(await harness.controller.convertToCoordinate(Offset.zero)).isNull();
+      check(await harness.controller.convertToCoordinate(.zero)).isNull();
     });
   });
 
@@ -177,7 +176,7 @@ void main() {
       final before = {annotation('a')};
       final after = {annotation('a', coordinate: infiniteLoop)};
       await harness.controller.updateAnnotations(
-        MapObjectUpdates.between(before, after, idOf: (a) => a.id.value),
+        .between(before, after, idOf: (a) => a.id.value),
       );
       final args = harness.expectLast<AnnotationUpdate>('updateAnnotations');
       check(args.$2).length.equals(1); // toChange

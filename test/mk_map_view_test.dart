@@ -99,19 +99,19 @@ void main() {
       await tester.pump();
 
       final config = host.initializeParams.configuration;
-      check(config.kind).equals(PlatformMapKind.standard);
-      check(config.emphasisStyle).equals(MKMapEmphasisStyle.standard);
-      check(config.elevationStyle).equals(MKMapElevationStyle.flat);
+      check(config.kind).equals(.standard);
+      check(config.emphasisStyle).equals(.standard);
+      check(config.elevationStyle).equals(.flat);
       check(config.isZoomEnabled).isTrue();
       check(config.isScrollEnabled).isTrue();
       check(config.showsCompass).isTrue();
       check(config.showsScale).isFalse();
       check(config.showsUserLocation).isFalse();
       check(config.showsUserTrackingButton).isFalse();
-      check(config.userTrackingMode).equals(MKUserTrackingMode.none);
+      check(config.userTrackingMode).equals(.none);
       check(config.selectableMapFeatures).isEmpty();
       check(config.pointOfInterestFilter).isNotNull();
-      check(config.pointOfInterestFilter!.mode).equals(PlatformPOIMode.all);
+      check(config.pointOfInterestFilter!.mode).equals(.all);
       check(config.cameraZoomRange).isNotNull();
       check(config.cameraZoomRange!.minCenterCoordinateDistance).isNull();
       check(config.cameraBoundary).isNull();
@@ -129,9 +129,9 @@ void main() {
       await tester.pump();
 
       final config = host.initializeParams.configuration;
-      check(config.kind).equals(PlatformMapKind.hybrid);
+      check(config.kind).equals(.hybrid);
       check(config.showsTraffic).isTrue();
-      check(config.pointOfInterestFilter!.mode).equals(PlatformPOIMode.none);
+      check(config.pointOfInterestFilter!.mode).equals(.none);
     });
   });
 
@@ -166,7 +166,7 @@ void main() {
       MKPointAnnotation marker(Color tint) => MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
-        icon: MKAnnotationIcon.marker(markerTintColor: tint),
+        icon: .marker(markerTintColor: tint),
       );
 
       await tester.pumpWidget(
@@ -254,7 +254,7 @@ void main() {
       final config = host.calls.expectLastArgs<PlatformMapConfiguration>(
         'updateMapConfiguration',
       );
-      check(config.kind).equals(PlatformMapKind.imagery);
+      check(config.kind).equals(.imagery);
       check(config.pointOfInterestFilter).isNull();
     });
 

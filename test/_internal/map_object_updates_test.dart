@@ -17,7 +17,7 @@ void main() {
     Set<MKPointAnnotation> before,
     Set<MKPointAnnotation> after,
   ) {
-    return MapObjectUpdates.between(before, after, idOf: (a) => a.id.value);
+    return .between(before, after, idOf: (a) => a.id.value);
   }
 
   group('MapObjectUpdates.between', () {

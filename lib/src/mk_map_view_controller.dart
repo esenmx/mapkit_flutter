@@ -165,7 +165,7 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   }) {
     final suffix = '$viewId';
     final host = hostApi ?? MapKitHostApi(messageChannelSuffix: suffix);
-    return MKMapViewControllerImpl._(host, sink, suffix);
+    return ._(host, sink, suffix);
   }
 
   MKMapViewControllerImpl._(
@@ -188,7 +188,7 @@ final class MKMapViewControllerImpl implements MKMapViewController {
 
   // Serial queue: each public mutation enqueues onto _tail so platform
   // messages always land in source order.
-  Future<void> _tail = Future.value();
+  Future<void> _tail = .value();
 
   Future<T> _enqueue<T>(Future<T> Function() task) {
     final completer = Completer<T>();

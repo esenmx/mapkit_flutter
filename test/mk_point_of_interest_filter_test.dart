@@ -7,13 +7,13 @@ void main() {
   group('MKPointOfInterestFilter wire mapping', () {
     test('includingAll maps to the all mode with no categories', () {
       final platform = MKPointOfInterestFilter.includingAll.toPlatform();
-      check(platform.mode).equals(PlatformPOIMode.all);
+      check(platform.mode).equals(.all);
       check(platform.categories).isEmpty();
     });
 
     test('excludingAll maps to the none mode', () {
       final platform = MKPointOfInterestFilter.excludingAll.toPlatform();
-      check(platform.mode).equals(PlatformPOIMode.none);
+      check(platform.mode).equals(.none);
       check(platform.categories).isEmpty();
     });
 
@@ -45,7 +45,7 @@ void main() {
     test('including and excluding never compare equal', () {
       check(
         const MKPointOfInterestFilter.including([.cafe]) ==
-            const MKPointOfInterestFilter.excluding([.cafe]),
+            const .excluding([.cafe]),
       ).isFalse();
     });
   });

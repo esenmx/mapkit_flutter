@@ -12,7 +12,7 @@ void main() {
       final platform = const MKPointAnnotation(
         id: MKAnnotationId('a'),
         coordinate: applePark,
-        icon: MKAnnotationIcon.marker(markerTintColor: Color(0xFF2266FF)),
+        icon: .marker(markerTintColor: Color(0xFF2266FF)),
         title: 'Apple Park',
         subtitle: 'Cupertino',
         alpha: 0.8,

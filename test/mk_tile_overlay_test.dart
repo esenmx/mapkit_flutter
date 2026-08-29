@@ -28,7 +28,7 @@ void main() {
       check(platform.tileSize).equals(512);
       check(platform.canReplaceMapContent).isTrue();
       check(platform.alpha).equals(0.5);
-      check(platform.level).equals(MKOverlayLevel.aboveLabels);
+      check(platform.level).equals(.aboveLabels);
     });
 
     test('defaults mirror MKTileOverlay', () {

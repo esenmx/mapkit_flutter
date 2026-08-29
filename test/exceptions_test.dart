@@ -1,5 +1,4 @@
 import 'package:checks/checks.dart';
-import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
@@ -31,8 +30,8 @@ void main() {
     });
 
     test('unsupported platform exception carries the platform', () {
-      const e = MapKitUnsupportedPlatformException(TargetPlatform.android);
-      check(e.platform).equals(TargetPlatform.android);
+      const e = MapKitUnsupportedPlatformException(.android);
+      check(e.platform).equals(.android);
       check(e.toString()).contains('android');
     });
   });

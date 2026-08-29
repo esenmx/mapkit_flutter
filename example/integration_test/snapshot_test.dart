@@ -144,7 +144,7 @@ void main() {
           showsOverlays: overlays,
         ),
       );
-      return _Rgba.decode(bytes);
+      return .decode(bytes);
     }
 
     // Projects a coordinate into snapshot pixel space via the live view
@@ -157,7 +157,7 @@ void main() {
     }
 
     Rect around(Offset px, double radiusPt) =>
-        Rect.fromCircle(center: px, radius: radiusPt * pxPerPt);
+        .fromCircle(center: px, radius: radiusPt * pxPerPt);
 
     // --- Annotation culling -------------------------------------------------
     await pump(
@@ -288,7 +288,7 @@ final class _Rgba {
     final codec = await ui.instantiateImageCodec(png);
     final frame = await codec.getNextFrame();
     final image = frame.image;
-    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final data = await image.toByteData(format: .rawRgba);
     final rgba = _Rgba(data!.buffer.asUint8List(), image.width, image.height);
     image.dispose();
     codec.dispose();

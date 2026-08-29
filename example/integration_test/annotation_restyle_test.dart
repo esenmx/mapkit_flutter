@@ -44,10 +44,7 @@ void main() {
         MKPointAnnotation(
           id: id,
           coordinate: applePark,
-          icon: MKAnnotationIcon.marker(
-            markerTintColor: tint,
-            systemImage: glyph,
-          ),
+          icon: .marker(markerTintColor: tint, systemImage: glyph),
           title: 'Restyle',
           subtitle: subtitle,
         );
@@ -75,7 +72,7 @@ void main() {
       MKPointAnnotation(
         id: id,
         coordinate: applePark,
-        icon: MKAnnotationIcon.image(png),
+        icon: .image(png),
         title: 'Restyle',
       ),
     });

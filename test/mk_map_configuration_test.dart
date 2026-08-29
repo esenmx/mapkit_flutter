@@ -6,10 +6,10 @@ void main() {
   group('MKStandardMapConfiguration', () {
     test('defaults mirror MKStandardMapConfiguration', () {
       const config = MKStandardMapConfiguration();
-      check(config.elevationStyle).equals(MKMapElevationStyle.flat);
-      check(config.emphasisStyle).equals(MKMapEmphasisStyle.standard);
+      check(config.elevationStyle).equals(.flat);
+      check(config.emphasisStyle).equals(.standard);
       final filter = config.pointOfInterestFilter;
-      check(filter).equals(MKPointOfInterestFilter.includingAll);
+      check(filter).equals(.includingAll);
       check(config.showsTraffic).isFalse();
     });
 

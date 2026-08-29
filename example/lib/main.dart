@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -94,7 +93,7 @@ class _HomePageState extends State<HomePage> {
   bool _suppressed = false;
 
   final Set<MKPolyline> _polylines = {
-    const MKPolyline.geodesic(
+    const .geodesic(
       id: MKPolylineId('campus-to-sf'),
       coordinates: [_applePark, _sanFrancisco],
       lineWidth: 4,
@@ -273,7 +272,7 @@ class _HomePageState extends State<HomePage> {
     if (renderObject is! RenderRepaintBoundary || !mounted) return null;
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final image = await renderObject.toImage(pixelRatio: dpr);
-    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    final data = await image.toByteData(format: .png);
     image.dispose();
     if (mounted) setState(() => _captureChild = null);
     return data?.buffer.asUint8List();
@@ -403,7 +402,7 @@ class _HomePageState extends State<HomePage> {
             right: 12,
             bottom: 12,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 FloatingActionButton.small(
                   heroTag: 'zoom-in',
@@ -471,8 +470,8 @@ class _RestyleBar extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: .min,
+          crossAxisAlignment: .start,
           children: [
             Row(
               children: [

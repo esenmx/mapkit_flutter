@@ -26,12 +26,12 @@ void main() {
       check(platform.coordinates).length.equals(2);
       check(platform.strokeColorArgb).equals(0xFF0000FF);
       check(platform.lineWidth).equals(4);
-      check(platform.lineCap).equals(CGLineCap.butt);
-      check(platform.lineJoin).equals(CGLineJoin.miter);
+      check(platform.lineCap).equals(.butt);
+      check(platform.lineJoin).equals(.miter);
       check(platform.lineDashPattern).isNotNull();
       check(platform.lineDashPattern!).deepEquals([6, 3]);
       check(platform.zIndex).equals(2);
-      check(platform.level).equals(MKOverlayLevel.aboveLabels);
+      check(platform.level).equals(.aboveLabels);
       check(platform.consumeTapEvents).isTrue();
       check(platform.isGeodesic).isFalse();
       check(platform.isHidden).isFalse();
@@ -39,8 +39,8 @@ void main() {
 
     test('defaults mirror MKOverlayPathRenderer', () {
       final platform = polyline('p').toPlatform();
-      check(platform.lineCap).equals(CGLineCap.round);
-      check(platform.lineJoin).equals(CGLineJoin.round);
+      check(platform.lineCap).equals(.round);
+      check(platform.lineJoin).equals(.round);
       check(platform.lineDashPattern).isNull();
       check(platform.gradientColorsArgb).isNull();
     });

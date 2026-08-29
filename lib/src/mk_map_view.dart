@@ -241,13 +241,13 @@ final class _MKMapViewState extends State<MKMapView>
 
     const viewType = 'dev.mapkit.flutter/map_view';
     return switch (defaultTargetPlatform) {
-      TargetPlatform.iOS => UiKitView(
+      .iOS => UiKitView(
         viewType: viewType,
         onPlatformViewCreated: _onPlatformViewCreated,
         gestureRecognizers: widget.gestureRecognizers,
         creationParamsCodec: const StandardMessageCodec(),
       ),
-      TargetPlatform.macOS => AppKitView(
+      .macOS => AppKitView(
         viewType: viewType,
         onPlatformViewCreated: _onPlatformViewCreated,
         gestureRecognizers: widget.gestureRecognizers,
@@ -470,7 +470,7 @@ extension on MKMapConfiguration {
       :final pointOfInterestFilter,
     ) =>
       (
-        PlatformMapKind.standard,
+        .standard,
         emphasisStyle,
         showsTraffic,
         pointOfInterestFilter.toPlatform(),
@@ -479,17 +479,7 @@ extension on MKMapConfiguration {
       :final showsTraffic,
       :final pointOfInterestFilter,
     ) =>
-      (
-        PlatformMapKind.hybrid,
-        MKMapEmphasisStyle.standard,
-        showsTraffic,
-        pointOfInterestFilter.toPlatform(),
-      ),
-    MKImageryMapConfiguration() => (
-      PlatformMapKind.imagery,
-      MKMapEmphasisStyle.standard,
-      false,
-      null,
-    ),
+      (.hybrid, .standard, showsTraffic, pointOfInterestFilter.toPlatform()),
+    MKImageryMapConfiguration() => (.imagery, .standard, false, null),
   };
 }

@@ -19,14 +19,14 @@ Future<Uint8List> renderCircleMarkerPng(Color color, {int size = 96}) async {
     center,
     d / 2 - d * 0.06,
     Paint()
-      ..style = PaintingStyle.stroke
+      ..style = .stroke
       ..strokeWidth = d * 0.08
       ..color = white,
   );
   canvas.drawCircle(center, d * 0.18, Paint()..color = white);
 
   final image = await recorder.endRecording().toImage(size, size);
-  final data = await image.toByteData(format: ui.ImageByteFormat.png);
+  final data = await image.toByteData(format: .png);
   image.dispose();
   return data!.buffer.asUint8List();
 }

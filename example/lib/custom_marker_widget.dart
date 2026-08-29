@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 /// capture doesn't clip it.
 Widget customMarkerWidget({required String label, required Color color}) {
   return Material(
-    type: MaterialType.transparency,
+    type: .transparency,
     child: Padding(
       padding: const EdgeInsets.all(6),
       child: Container(
@@ -27,7 +27,7 @@ Widget customMarkerWidget({required String label, required Color color}) {
           ],
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             const Icon(Icons.place, color: Colors.white, size: 18),
             const SizedBox(width: 4),
@@ -35,7 +35,7 @@ Widget customMarkerWidget({required String label, required Color color}) {
               label,
               style: const TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: .bold,
                 fontSize: 14,
               ),
             ),

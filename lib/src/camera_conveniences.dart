@@ -3,7 +3,6 @@ import 'dart:ui' show Offset;
 
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/mk_coordinate_region.dart';
-import 'package:mapkit_flutter/src/mk_map_camera.dart';
 import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 
 /// google_maps_flutter-dialect camera helpers layered over the canonical
@@ -26,7 +25,7 @@ extension CameraConveniences on MKMapViewController {
   Future<void> zoomTo(double zoomLevel, {bool animated = true}) async {
     final current = await camera;
     await setCamera(
-      MKMapCamera.withZoomLevel(
+      .withZoomLevel(
         centerCoordinate: current.centerCoordinate,
         zoomLevel: zoomLevel,
         heading: current.heading,

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.7
 
 - Fix: iOS snapshot polylines now stroke as a single subpath, so `lineJoin` applies and dash patterns run continuously across vertices. A single-coordinate polyline now draws nothing instead of a round-cap dot, matching the live renderer.
 - Performance: iOS snapshots skip annotations whose drawn frame lies entirely outside the image; partially visible edge annotations still draw.

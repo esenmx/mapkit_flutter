@@ -159,8 +159,8 @@ final class MKPolygon {
   @override
   int get hashCode => Object.hash(
     id,
-    Object.hashAll(coordinates),
-    Object.hashAll(interiorPolygons.map(Object.hashAll)),
+    .hashAll(coordinates),
+    .hashAll(interiorPolygons.map(Object.hashAll)),
     fillColor,
     strokeColor,
     lineWidth,

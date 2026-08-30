@@ -2,7 +2,7 @@ PODS:
   - Flutter (1.0.0)
   - integration_test (0.0.1):
     - Flutter
-  - mapkit_flutter (0.3.6):
+  - mapkit_flutter (0.3.7):
     - Flutter
     - FlutterMacOS
 
@@ -22,7 +22,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  mapkit_flutter: a07ea82fa019aaf4a1243e0aac992b3272c0cc6c
+  mapkit_flutter: 56acc2155eab53ed9d806ed6379987c9c20e0cce
 
 PODFILE CHECKSUM: be4e2944d77ce60ac343268fbf242e6b4b653409
 

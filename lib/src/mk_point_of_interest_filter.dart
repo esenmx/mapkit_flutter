@@ -94,7 +94,7 @@ final class IncludingPointsOfInterest extends MKPointOfInterestFilter {
       listEquals(other.categories, categories);
 
   @override
-  int get hashCode => Object.hash('including', Object.hashAll(categories));
+  int get hashCode => Object.hash('including', .hashAll(categories));
 }
 
 /// Shows every category except the listed [categories].
@@ -119,5 +119,5 @@ final class ExcludingPointsOfInterest extends MKPointOfInterestFilter {
       listEquals(other.categories, categories);
 
   @override
-  int get hashCode => Object.hash('excluding', Object.hashAll(categories));
+  int get hashCode => Object.hash('excluding', .hashAll(categories));
 }

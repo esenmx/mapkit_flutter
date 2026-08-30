@@ -46,7 +46,7 @@ void main() {
 
     test('serializes explicit imagePixelRatio', () {
       final platform = MKAnnotationIcon.image(
-        Uint8List.fromList([1]),
+        .fromList([1]),
         imagePixelRatio: 2.5,
       ).toPlatform();
       check(platform.imagePixelRatio).equals(2.5);
@@ -54,9 +54,7 @@ void main() {
 
     test('imagePixelRatio defaults to the implicit view ratio', () {
       TestWidgetsFlutterBinding.ensureInitialized();
-      final platform = MKAnnotationIcon.image(
-        Uint8List.fromList([1]),
-      ).toPlatform();
+      final platform = MKAnnotationIcon.image(.fromList([1])).toPlatform();
       check(
         platform.imagePixelRatio,
       ).equals(PlatformDispatcher.instance.implicitView!.devicePixelRatio);
@@ -73,9 +71,9 @@ void main() {
     });
 
     test('images compare by byte content', () {
-      final a = MKAnnotationIcon.image(Uint8List.fromList([1, 2]));
-      final b = MKAnnotationIcon.image(Uint8List.fromList([1, 2]));
-      final c = MKAnnotationIcon.image(Uint8List.fromList([9]));
+      final a = MKAnnotationIcon.image(.fromList([1, 2]));
+      final b = MKAnnotationIcon.image(.fromList([1, 2]));
+      final c = MKAnnotationIcon.image(.fromList([9]));
       check(a).equals(b);
       check(a.hashCode).equals(b.hashCode);
       check(a == c).isFalse();
@@ -90,9 +88,7 @@ void main() {
     });
 
     test('marker and image never compare equal', () {
-      check(
-        const MKAnnotationIcon.marker() == MKAnnotationIcon.image(Uint8List(0)),
-      ).isFalse();
+      check(const MKAnnotationIcon.marker() == .image(Uint8List(0))).isFalse();
     });
   });
 }

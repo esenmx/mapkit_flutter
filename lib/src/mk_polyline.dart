@@ -197,14 +197,14 @@ final class MKPolyline {
   @override
   int get hashCode => Object.hash(
     id,
-    Object.hashAll(coordinates),
+    .hashAll(coordinates),
     isGeodesic,
     strokeColor,
     lineWidth,
     lineCap,
     lineJoin,
-    Object.hashAll(lineDashPattern ?? const []),
-    Object.hashAll(gradientColors),
+    .hashAll(lineDashPattern ?? const []),
+    .hashAll(gradientColors),
     isHidden,
     zIndex,
     consumeTapEvents,

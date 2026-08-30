@@ -111,7 +111,7 @@ final class MKAnnotationIcon {
     _glyphText,
     _glyphSystemImage,
     _glyphTintColor,
-    _imageBytes == null ? null : Object.hashAll(_imageBytes),
+    _imageBytes == null ? null : .hashAll(_imageBytes),
     _imagePixelRatio,
   );
 

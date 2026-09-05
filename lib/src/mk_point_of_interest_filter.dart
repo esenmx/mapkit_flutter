@@ -8,17 +8,15 @@ import 'package:mapkit_flutter/src/mk_enums.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkpointofinterestfilter
 @immutable
 sealed class MKPointOfInterestFilter {
-  const MKPointOfInterestFilter();
+  const new();
 
   /// Shows only the listed [categories].
-  const factory MKPointOfInterestFilter.including(
-    List<MKPointOfInterestCategory> categories,
-  ) = IncludingPointsOfInterest;
+  const factory including(List<MKPointOfInterestCategory> categories) =
+      IncludingPointsOfInterest;
 
   /// Shows every category except the listed [categories].
-  const factory MKPointOfInterestFilter.excluding(
-    List<MKPointOfInterestCategory> categories,
-  ) = ExcludingPointsOfInterest;
+  const factory excluding(List<MKPointOfInterestCategory> categories) =
+      ExcludingPointsOfInterest;
 
   /// Shows every point-of-interest category.
   static const MKPointOfInterestFilter includingAll =
@@ -41,7 +39,7 @@ final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
   /// Creates a new IncludingAllPointsOfInterest object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  const IncludingAllPointsOfInterest();
+  const new();
 
   @override
   PlatformPointOfInterestFilter toPlatform() =>
@@ -59,7 +57,7 @@ final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
   /// Creates a new ExcludingAllPointsOfInterest object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  const ExcludingAllPointsOfInterest();
+  const new();
 
   @override
   PlatformPointOfInterestFilter toPlatform() =>
@@ -73,16 +71,16 @@ final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
 }
 
 /// Shows only the listed [categories].
-final class IncludingPointsOfInterest extends MKPointOfInterestFilter {
-  /// Creates a new IncludingPointsOfInterest object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
-  const IncludingPointsOfInterest(this.categories);
-
+final class const IncludingPointsOfInterest(
   /// The categories property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  final List<MKPointOfInterestCategory> categories;
+  final List<MKPointOfInterestCategory> categories,
+) extends MKPointOfInterestFilter {
+  /// Creates a new IncludingPointsOfInterest object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
+  this;
 
   @override
   PlatformPointOfInterestFilter toPlatform() =>
@@ -98,16 +96,16 @@ final class IncludingPointsOfInterest extends MKPointOfInterestFilter {
 }
 
 /// Shows every category except the listed [categories].
-final class ExcludingPointsOfInterest extends MKPointOfInterestFilter {
-  /// Creates a new ExcludingPointsOfInterest object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
-  const ExcludingPointsOfInterest(this.categories);
-
+final class const ExcludingPointsOfInterest(
   /// The categories property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  final List<MKPointOfInterestCategory> categories;
+  final List<MKPointOfInterestCategory> categories,
+) extends MKPointOfInterestFilter {
+  /// Creates a new ExcludingPointsOfInterest object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
+  this;
 
   @override
   PlatformPointOfInterestFilter toPlatform() =>

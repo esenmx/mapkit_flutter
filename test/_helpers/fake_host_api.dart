@@ -5,7 +5,7 @@ import 'package:mapkit_flutter/src/messages.g.dart';
 /// Records every host call and returns canned responses, standing in for the
 /// generated Pigeon channel. Set [errorToThrow] to make the next call fail.
 final class FakeHostApi extends MapKitHostApi {
-  FakeHostApi() : super();
+  new() : super();
 
   final List<(String, Object?)> calls = [];
 

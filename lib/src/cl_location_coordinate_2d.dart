@@ -17,19 +17,17 @@ final class CLLocationCoordinate2D {
   /// Creates a new CLLocationCoordinate2D object.
   ///
   /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
-  const CLLocationCoordinate2D({
-    required double latitude,
-    required double longitude,
-  }) : latitude = (latitude < -90.0
-           ? -90.0
-           : (90.0 < latitude ? 90.0 : latitude)),
-       longitude = (longitude + 180.0) % 360.0 - 180.0;
+  const new({required double latitude, required double longitude})
+    : latitude = (latitude < -90.0
+          ? -90.0
+          : (90.0 < latitude ? 90.0 : latitude)),
+      longitude = (longitude + 180.0) % 360.0 - 180.0;
 
   @internal
   /// Creates a new CLLocationCoordinate2D object.
   ///
   /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
-  factory CLLocationCoordinate2D.fromPlatform(PlatformCoordinate p) =>
+  factory fromPlatform(PlatformCoordinate p) =>
       CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude);
 
   /// The latitude property.

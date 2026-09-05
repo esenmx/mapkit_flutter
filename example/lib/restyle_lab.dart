@@ -38,13 +38,11 @@ const subtitlePalette = <String?>[
 /// returns a *new* value for the *same* pin id — exactly the "stable id, new
 /// icon" rebuild the marker-restyle fix repairs.
 @immutable
-class PinStyle {
-  const PinStyle({this.tint, this.glyph, this.subtitle});
-
-  final Color? tint;
-  final String? glyph;
-  final String? subtitle;
-
+class const PinStyle({
+  final Color? tint,
+  final String? glyph,
+  final String? subtitle,
+}) {
   /// Advance `markerTintColor` to the next palette entry (wraps).
   PinStyle withNextTint() => PinStyle(
     tint: _next(tintPalette, tint),

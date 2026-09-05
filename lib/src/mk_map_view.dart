@@ -30,169 +30,136 @@ import 'package:mapkit_flutter/src/mk_polyline.dart';
 /// iOS and macOS only. Building this widget on any other platform throws a
 /// [MapKitUnsupportedPlatformException] rather than degrading silently.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapview
-final class MKMapView extends StatefulWidget {
-  /// Creates a new MKMapView object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview
-  const MKMapView({
-    required this.initialCamera,
-    super.key,
-    this.preferredConfiguration = const MKStandardMapConfiguration(),
-    this.isZoomEnabled = true,
-    this.isScrollEnabled = true,
-    this.isRotateEnabled = true,
-    this.isPitchEnabled = true,
-    this.showsUserLocation = false,
-    this.showsUserTrackingButton = false,
-    this.showsCompass = true,
-    this.showsScale = false,
-    this.userTrackingMode = .none,
-    this.cameraZoomRange = const MKCameraZoomRange(),
-    this.cameraBoundary,
-    this.selectableMapFeatures = const {},
-    this.insetsLayoutMarginsFromSafeArea = true,
-    this.annotations = const {},
-    this.polylines = const {},
-    this.polygons = const {},
-    this.circles = const {},
-    this.gestureRecognizers = const {},
-    this.onMapCreated,
-    this.onCameraMoveStarted,
-    this.onCameraMove,
-    this.onCameraIdle,
-    this.onTap,
-    this.onLongPress,
-    this.onDidFailLoadingMap,
-    this.onDidFailToLocateUser,
-    this.debugControllerFactory,
-  });
-
+final class const MKMapView({
   /// Where the camera starts (`MKMapCamera`).
-  final MKMapCamera initialCamera;
+  required final MKMapCamera initialCamera,
+  super.key,
 
   /// The map's base style (`MKMapView.preferredConfiguration`).
-  final MKMapConfiguration preferredConfiguration;
+  final MKMapConfiguration preferredConfiguration =
+      const MKStandardMapConfiguration(),
 
   /// The isZoomEnabled property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/iszoomenabled
-  final bool isZoomEnabled;
+  final bool isZoomEnabled = true,
 
   /// The isScrollEnabled property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/isscrollenabled
-  final bool isScrollEnabled;
+  final bool isScrollEnabled = true,
 
   /// The isRotateEnabled property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/isrotateenabled
-  final bool isRotateEnabled;
+  final bool isRotateEnabled = true,
 
   /// The isPitchEnabled property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/ispitchenabled
-  final bool isPitchEnabled;
+  final bool isPitchEnabled = true,
 
   /// Requires `NSLocationWhenInUseUsageDescription` in `Info.plist`.
-  final bool showsUserLocation;
+  final bool showsUserLocation = false,
 
   /// `MKMapView.showsUserTrackingButton` (iOS 17).
-  final bool showsUserTrackingButton;
+  final bool showsUserTrackingButton = false,
 
   /// The showsCompass property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/showscompass
-  final bool showsCompass;
+  final bool showsCompass = true,
 
   /// The showsScale property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/showsscale
-  final bool showsScale;
+  final bool showsScale = false,
 
   /// The userTrackingMode property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/usertrackingmode
-  final MKUserTrackingMode userTrackingMode;
+  final MKUserTrackingMode userTrackingMode = .none,
 
   /// Camera distance limits in meters (`MKMapView.cameraZoomRange`).
-  final MKCameraZoomRange cameraZoomRange;
+  final MKCameraZoomRange cameraZoomRange = const MKCameraZoomRange(),
 
   /// Region the camera center is constrained to
   /// (`MKMapView.cameraBoundary`).
-  final MKCoordinateRegion? cameraBoundary;
+  final MKCoordinateRegion? cameraBoundary,
 
   /// Map features the user can tap to select
   /// (`MKMapView.selectableMapFeatures`).
-  final Set<MKMapFeatureOptions> selectableMapFeatures;
+  final Set<MKMapFeatureOptions> selectableMapFeatures = const {},
 
   /// The insetsLayoutMarginsFromSafeArea property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/insetslayoutmarginsfromsafearea
-  final bool insetsLayoutMarginsFromSafeArea;
+  final bool insetsLayoutMarginsFromSafeArea = true,
 
   /// The annotations property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/annotations
-  final Set<MKPointAnnotation> annotations;
+  final Set<MKPointAnnotation> annotations = const {},
 
   /// The polylines property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/polylines
-  final Set<MKPolyline> polylines;
+  final Set<MKPolyline> polylines = const {},
 
   /// The polygons property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/polygons
-  final Set<MKPolygon> polygons;
+  final Set<MKPolygon> polygons = const {},
 
   /// The circles property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/circles
-  final Set<MKCircle> circles;
+  final Set<MKCircle> circles = const {},
 
   /// The gestureRecognizers property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/gesturerecognizers
-  final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
+  final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers =
+      const {},
 
   /// Creates a new Function object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  final void Function(MKMapViewController controller)? onMapCreated;
+  final void Function(MKMapViewController controller)? onMapCreated,
 
   /// The onCameraMoveStarted property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameramovestarted
-  final VoidCallback? onCameraMoveStarted;
+  final VoidCallback? onCameraMoveStarted,
 
   /// Creates a new Function object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  final void Function(MKMapCamera camera)? onCameraMove;
+  final void Function(MKMapCamera camera)? onCameraMove,
 
   /// The onCameraIdle property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameraidle
-  final VoidCallback? onCameraIdle;
+  final VoidCallback? onCameraIdle,
 
   /// Creates a new Function object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  final void Function(CLLocationCoordinate2D coordinate)? onTap;
+  final void Function(CLLocationCoordinate2D coordinate)? onTap,
 
   /// Creates a new Function object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  final void Function(CLLocationCoordinate2D coordinate)? onLongPress;
+  final void Function(CLLocationCoordinate2D coordinate)? onLongPress,
 
   /// Map content failed to load, e.g. no network
   /// (`MKMapViewDelegate.mapViewDidFailLoadingMap(_:withError:)`).
-  final ValueChanged<String>? onDidFailLoadingMap;
+  final ValueChanged<String>? onDidFailLoadingMap,
 
   /// The map could not determine the user's location — most commonly because
   /// location permission was denied — while [showsUserLocation] is enabled
   /// (`MKMapViewDelegate.mapView(_:didFailToLocateUserWithError:)`).
-  final ValueChanged<String>? onDidFailToLocateUser;
+  final ValueChanged<String>? onDidFailToLocateUser,
 
   /// Replaces the platform view with an injected controller so widget tests
   /// can drive the full diff pipeline against a fake host API. When set,
@@ -200,7 +167,12 @@ final class MKMapView extends StatefulWidget {
   /// skips the platform check.
   @visibleForTesting
   final MKMapViewControllerImpl Function(MKMapViewEventSink sink)?
-  debugControllerFactory;
+  debugControllerFactory,
+}) extends StatefulWidget {
+  /// Creates a new MKMapView object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapview
+  this;
 
   @override
   State<MKMapView> createState() => _MKMapViewState();

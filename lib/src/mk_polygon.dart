@@ -18,71 +18,59 @@ typedef MKPolygonId = MapItemId<MKPolygon>;
 /// fill/stroke properties merged in.
 /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
 @immutable
-final class MKPolygon {
-  /// Creates a new MKPolygon object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
-  const MKPolygon({
-    required this.id,
-    required this.coordinates,
-    this.interiorPolygons = const [],
-    this.fillColor = const Color(0x00000000),
-    this.strokeColor = const Color(0xFF000000),
-    this.lineWidth = 10,
-    this.zIndex = 0,
-    this.isHidden = false,
-    this.consumeTapEvents = false,
-    this.level = .aboveRoads,
-    this.onTap,
-  });
-
+final class const MKPolygon({
   /// The id property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/id
-  final MKPolygonId id;
+  required final MKPolygonId id,
 
   /// The coordinates property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/coordinates
-  final List<CLLocationCoordinate2D> coordinates;
+  required final List<CLLocationCoordinate2D> coordinates,
 
   /// Rings cut out of the filled shape (`MKPolygon.interiorPolygons`).
-  final List<List<CLLocationCoordinate2D>> interiorPolygons;
+  final List<List<CLLocationCoordinate2D>> interiorPolygons = const [],
 
   /// The fillColor property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/fillcolor
-  final Color fillColor;
+  final Color fillColor = const Color(0x00000000),
 
   /// The strokeColor property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/strokecolor
-  final Color strokeColor;
+  final Color strokeColor = const Color(0xFF000000),
 
   /// Stroke width in points (`lineWidth`).
-  final double lineWidth;
+  final double lineWidth = 10,
 
   /// Flutter-side insertion-order hint between overlays. MapKit has no
   /// overlay z-index; ties resolve by insertion.
-  final int zIndex;
+  final int zIndex = 0,
 
   /// The isHidden property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ishidden
-  final bool isHidden;
+  final bool isHidden = false,
 
   /// The consumeTapEvents property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/consumetapevents
-  final bool consumeTapEvents;
+  final bool consumeTapEvents = false,
 
   /// Vertical placement relative to the base map's labels/roads.
-  final MKOverlayLevel level;
+  final MKOverlayLevel level = .aboveRoads,
 
   /// The onTap property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ontap
-  final VoidCallback? onTap;
+  final VoidCallback? onTap,
+}) {
+  /// Creates a new MKPolygon object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
+  this;
 
   /// Creates a new With object.
   ///

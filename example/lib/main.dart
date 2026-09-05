@@ -11,9 +11,7 @@ void main() {
   runApp(const ExampleApp());
 }
 
-class ExampleApp extends StatelessWidget {
-  const ExampleApp({super.key});
-
+class const ExampleApp({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(title: 'MapKit Flutter', home: HomePage());
@@ -25,9 +23,7 @@ class ExampleApp extends StatelessWidget {
 /// rasterized to an image (`MKAnnotationIcon.image`) — the bar at the bottom
 /// flips the selected pin between the two and restyles it *in place* (same id,
 /// new icon), the code path the 0.2.2 fix repairs.
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
+class const HomePage({super.key}) extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -441,29 +437,17 @@ class _HomePageState extends State<HomePage> {
 }
 
 /// Bottom control bar acting on the currently selected pin.
-class _RestyleBar extends StatelessWidget {
-  const _RestyleBar({
-    required this.selectedTitle,
-    required this.isCustom,
-    required this.onSelectNext,
-    required this.onTint,
-    required this.onGlyph,
-    required this.onSubtitle,
-    required this.onCustom,
-    required this.onReset,
-    required this.onRebuild,
-  });
-
-  final String? selectedTitle;
-  final bool isCustom;
-  final VoidCallback onSelectNext;
-  final VoidCallback onTint;
-  final VoidCallback onGlyph;
-  final VoidCallback onSubtitle;
-  final VoidCallback onCustom;
-  final VoidCallback onReset;
-  final VoidCallback onRebuild;
-
+class const _RestyleBar({
+  required final String? selectedTitle,
+  required final bool isCustom,
+  required final VoidCallback onSelectNext,
+  required final VoidCallback onTint,
+  required final VoidCallback onGlyph,
+  required final VoidCallback onSubtitle,
+  required final VoidCallback onCustom,
+  required final VoidCallback onReset,
+  required final VoidCallback onRebuild,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(

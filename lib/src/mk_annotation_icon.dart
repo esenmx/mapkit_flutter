@@ -14,19 +14,16 @@ import 'package:mapkit_flutter/src/messages.g.dart';
 final class MKAnnotationIcon {
   /// System balloon marker (`MKMarkerAnnotationView`).
   ///
-  /// All-default renders the plain red marker. [markerTintColor] tints the
-  /// balloon; brand the glyph with a short [glyphText] label or an SF Symbol
-  /// via [systemImage], tinted by [glyphTintColor].
-  const MKAnnotationIcon.marker({
-    Color? markerTintColor,
-    String? glyphText,
+  /// All-default renders the plain red marker. `markerTintColor` tints the
+  /// balloon; brand the glyph with a short `glyphText` label or an SF Symbol
+  /// via [systemImage], tinted by `glyphTintColor`.
+  const new marker({
+    this._markerTintColor,
+    this._glyphText,
     String? systemImage,
-    Color? glyphTintColor,
+    this._glyphTintColor,
   }) : _type = .marker,
-       _markerTintColor = markerTintColor,
-       _glyphText = glyphText,
        _glyphSystemImage = systemImage,
-       _glyphTintColor = glyphTintColor,
        _imageBytes = null,
        _imagePixelRatio = null;
 
@@ -34,17 +31,16 @@ final class MKAnnotationIcon {
   /// any Flutter widget to a PNG (e.g. via `RenderRepaintBoundary.toImage`)
   /// and pass it here for a fully custom marker.
   ///
-  /// [imagePixelRatio] is the pixels-per-logical-point of [png] (pass the
+  /// `imagePixelRatio` is the pixels-per-logical-point of [png] (pass the
   /// `pixelRatio` the widget was rendered with); defaults to the device pixel
   /// ratio, matching bytes rendered at native resolution.
-  const MKAnnotationIcon.image(Uint8List png, {double? imagePixelRatio})
+  const new image(Uint8List png, {this._imagePixelRatio})
     : _type = .image,
       _markerTintColor = null,
       _glyphText = null,
       _glyphSystemImage = null,
       _glyphTintColor = null,
-      _imageBytes = png,
-      _imagePixelRatio = imagePixelRatio;
+      _imageBytes = png;
 
   /// Load an annotation image from the asset bundle into an
   /// [MKAnnotationIcon.image].

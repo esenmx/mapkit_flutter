@@ -39,169 +39,138 @@ import 'package:mockito/src/dummies.dart' as _i5;
 class MockMKMapViewController extends _i1.Mock
     implements _i2.MKMapViewController {
   @override
-  _i3.Future<_i4.MKMapCamera> get camera =>
-      (super.noSuchMethod(
-            Invocation.getter(#camera),
-            returnValue: _i3.Future<_i4.MKMapCamera>.value(
-              _i5.dummyValue<_i4.MKMapCamera>(this, Invocation.getter(#camera)),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.MKMapCamera>.value(
-              _i5.dummyValue<_i4.MKMapCamera>(this, Invocation.getter(#camera)),
-            ),
-          )
-          as _i3.Future<_i4.MKMapCamera>);
+  _i3.Future<_i4.MKMapCamera> get camera => (super.noSuchMethod(
+    Invocation.getter(#camera),
+    returnValue: _i3.Future<_i4.MKMapCamera>.value(
+      _i5.dummyValue<_i4.MKMapCamera>(this, Invocation.getter(#camera)),
+    ),
+    returnValueForMissingStub: _i3.Future<_i4.MKMapCamera>.value(
+      _i5.dummyValue<_i4.MKMapCamera>(this, Invocation.getter(#camera)),
+    ),
+  ) as _i3.Future<_i4.MKMapCamera>);
 
   @override
-  _i3.Future<_i6.MKCoordinateRegion> get region =>
-      (super.noSuchMethod(
-            Invocation.getter(#region),
-            returnValue: _i3.Future<_i6.MKCoordinateRegion>.value(
-              _i5.dummyValue<_i6.MKCoordinateRegion>(
-                this,
-                Invocation.getter(#region),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i6.MKCoordinateRegion>.value(
-              _i5.dummyValue<_i6.MKCoordinateRegion>(
-                this,
-                Invocation.getter(#region),
-              ),
-            ),
-          )
-          as _i3.Future<_i6.MKCoordinateRegion>);
+  _i3.Future<_i6.MKCoordinateRegion> get region => (super.noSuchMethod(
+    Invocation.getter(#region),
+    returnValue: _i3.Future<_i6.MKCoordinateRegion>.value(
+      _i5.dummyValue<_i6.MKCoordinateRegion>(this, Invocation.getter(#region)),
+    ),
+    returnValueForMissingStub: _i3.Future<_i6.MKCoordinateRegion>.value(
+      _i5.dummyValue<_i6.MKCoordinateRegion>(this, Invocation.getter(#region)),
+    ),
+  ) as _i3.Future<_i6.MKCoordinateRegion>);
 
   @override
   _i3.Future<void> setCamera(
     _i4.MKMapCamera? camera, {
     bool? animated = true,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(#setCamera, [camera], {#animated: animated}),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  }) => (super.noSuchMethod(
+    Invocation.method(#setCamera, [camera], {#animated: animated}),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
   _i3.Future<void> setRegion(
     _i6.MKCoordinateRegion? region, {
     bool? animated = true,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(#setRegion, [region], {#animated: animated}),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  }) => (super.noSuchMethod(
+    Invocation.method(#setRegion, [region], {#animated: animated}),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
   _i3.Future<void> setCenter(
     _i7.CLLocationCoordinate2D? coordinate, {
     bool? animated = true,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(#setCenter, [coordinate], {#animated: animated}),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  }) => (super.noSuchMethod(
+    Invocation.method(#setCenter, [coordinate], {#animated: animated}),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
   _i3.Future<_i8.Offset?> convertToPoint(
     _i7.CLLocationCoordinate2D? coordinate,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#convertToPoint, [coordinate]),
-            returnValue: _i3.Future<_i8.Offset?>.value(),
-            returnValueForMissingStub: _i3.Future<_i8.Offset?>.value(),
-          )
-          as _i3.Future<_i8.Offset?>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#convertToPoint, [coordinate]),
+    returnValue: _i3.Future<_i8.Offset?>.value(),
+    returnValueForMissingStub: _i3.Future<_i8.Offset?>.value(),
+  ) as _i3.Future<_i8.Offset?>);
 
   @override
   _i3.Future<_i7.CLLocationCoordinate2D?> convertToCoordinate(
     _i8.Offset? point,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#convertToCoordinate, [point]),
-            returnValue: _i3.Future<_i7.CLLocationCoordinate2D?>.value(),
-            returnValueForMissingStub:
-                _i3.Future<_i7.CLLocationCoordinate2D?>.value(),
-          )
-          as _i3.Future<_i7.CLLocationCoordinate2D?>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#convertToCoordinate, [point]),
+    returnValue: _i3.Future<_i7.CLLocationCoordinate2D?>.value(),
+    returnValueForMissingStub: _i3.Future<_i7.CLLocationCoordinate2D?>.value(),
+  ) as _i3.Future<_i7.CLLocationCoordinate2D?>);
 
   @override
   _i3.Future<void> showCallout(_i9.MapItemId<_i10.MKPointAnnotation>? id) =>
       (super.noSuchMethod(
-            Invocation.method(#showCallout, [id]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+        Invocation.method(#showCallout, [id]),
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 
   @override
   _i3.Future<void> hideCallout(_i9.MapItemId<_i10.MKPointAnnotation>? id) =>
       (super.noSuchMethod(
-            Invocation.method(#hideCallout, [id]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+        Invocation.method(#hideCallout, [id]),
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 
   @override
   _i3.Future<bool> isCalloutShown(_i9.MapItemId<_i10.MKPointAnnotation>? id) =>
       (super.noSuchMethod(
-            Invocation.method(#isCalloutShown, [id]),
-            returnValue: _i3.Future<bool>.value(false),
-            returnValueForMissingStub: _i3.Future<bool>.value(false),
-          )
-          as _i3.Future<bool>);
+        Invocation.method(#isCalloutShown, [id]),
+        returnValue: _i3.Future<bool>.value(false),
+        returnValueForMissingStub: _i3.Future<bool>.value(false),
+      ) as _i3.Future<bool>);
 
   @override
   _i3.Future<_i11.Uint8List> takeSnapshot([
     _i12.MKMapSnapshotOptions? options = const _i12.MKMapSnapshotOptions(),
-  ]) =>
-      (super.noSuchMethod(
-            Invocation.method(#takeSnapshot, [options]),
-            returnValue: _i3.Future<_i11.Uint8List>.value(_i11.Uint8List(0)),
-            returnValueForMissingStub: _i3.Future<_i11.Uint8List>.value(
-              _i11.Uint8List(0),
-            ),
-          )
-          as _i3.Future<_i11.Uint8List>);
+  ]) => (super.noSuchMethod(
+    Invocation.method(#takeSnapshot, [options]),
+    returnValue: _i3.Future<_i11.Uint8List>.value(_i11.Uint8List(0)),
+    returnValueForMissingStub: _i3.Future<_i11.Uint8List>.value(
+      _i11.Uint8List(0),
+    ),
+  ) as _i3.Future<_i11.Uint8List>);
 
   @override
   _i3.Future<bool> openLookAround(_i7.CLLocationCoordinate2D? coordinate) =>
       (super.noSuchMethod(
-            Invocation.method(#openLookAround, [coordinate]),
-            returnValue: _i3.Future<bool>.value(false),
-            returnValueForMissingStub: _i3.Future<bool>.value(false),
-          )
-          as _i3.Future<bool>);
+        Invocation.method(#openLookAround, [coordinate]),
+        returnValue: _i3.Future<bool>.value(false),
+        returnValueForMissingStub: _i3.Future<bool>.value(false),
+      ) as _i3.Future<bool>);
 
   @override
   _i3.Future<void> addTileOverlay(_i13.MKTileOverlay? overlay) =>
       (super.noSuchMethod(
-            Invocation.method(#addTileOverlay, [overlay]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+        Invocation.method(#addTileOverlay, [overlay]),
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 
   @override
   _i3.Future<void> removeTileOverlay(_i9.MapItemId<_i13.MKTileOverlay>? id) =>
       (super.noSuchMethod(
-            Invocation.method(#removeTileOverlay, [id]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+        Invocation.method(#removeTileOverlay, [id]),
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> dispose() =>
-      (super.noSuchMethod(
-            Invocation.method(#dispose, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> dispose() => (super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 }

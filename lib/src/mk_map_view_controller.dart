@@ -158,7 +158,7 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   ///
   /// [hostApi] is injectable for tests; in production it defaults to a Pigeon
   /// host API bound to this view's id.
-  factory MKMapViewControllerImpl({
+  factory({
     required int viewId,
     required MKMapViewEventSink sink,
     @visibleForTesting MapKitHostApi? hostApi,
@@ -168,11 +168,8 @@ final class MKMapViewControllerImpl implements MKMapViewController {
     return ._(host, sink, suffix);
   }
 
-  MKMapViewControllerImpl._(
-    this._host,
-    MKMapViewEventSink sink,
-    this._channelSuffix,
-  ) : _eventHandler = _MKMapViewFlutterApi(sink) {
+  new _(this._host, MKMapViewEventSink sink, this._channelSuffix)
+    : _eventHandler = _MKMapViewFlutterApi(sink) {
     MapKitFlutterApi.setUp(_eventHandler, messageChannelSuffix: _channelSuffix);
   }
 
@@ -350,11 +347,8 @@ final class MKMapViewControllerImpl implements MKMapViewController {
 /// Adapts the generated [MapKitFlutterApi] onto the widget's
 /// [MKMapViewEventSink], converting `Platform*` payloads back to the public
 /// model types.
-final class _MKMapViewFlutterApi implements MapKitFlutterApi {
-  _MKMapViewFlutterApi(this._sink);
-
-  final MKMapViewEventSink _sink;
-
+final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
+    implements MapKitFlutterApi {
   @override
   void onCameraMoveStarted() => _sink.onCameraMoveStarted();
 

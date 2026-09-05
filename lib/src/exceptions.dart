@@ -17,21 +17,23 @@ import 'package:meta/meta.dart';
 /// }
 /// ```
 @immutable
-sealed class MapKitException implements Exception {
-  const MapKitException(this.message);
+sealed class const MapKitException(
+  /// Human-readable description of what went wrong.
+  final String message,
+) implements Exception {
+  /// Creates a new MapKitException object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit
+  this;
 
   /// Wraps a raw [PlatformException] from the platform channel into a
   /// [MapKitException].
   @internal
-  factory MapKitException.fromPlatform(PlatformException e) =>
-      MapKitPlatformException(
-        code: e.code,
-        message: e.message ?? 'Platform error',
-        details: e.details,
-      );
-
-  /// Human-readable description of what went wrong.
-  final String message;
+  factory fromPlatform(PlatformException e) => MapKitPlatformException(
+    code: e.code,
+    message: e.message ?? 'Platform error',
+    details: e.details,
+  );
 
   @override
   String toString() => 'MapKitException: $message';
@@ -43,26 +45,25 @@ final class MapKitDisposedException extends MapKitException {
   /// Creates a new MapKitDisposedException object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  const MapKitDisposedException()
-    : super('The MKMapViewController has been disposed.');
+  const new() : super('The MKMapViewController has been disposed.');
 }
 
 /// Thrown when an `MKMapView` is built on a non-Apple platform (anything other
 /// than iOS or macOS). `mapkit_flutter`
 /// wraps Apple's MapKit, so there is no cross-platform fallback — this
 /// surfaces loudly instead of silently rendering an empty box.
-final class MapKitUnsupportedPlatformException extends MapKitException {
+final class const MapKitUnsupportedPlatformException(
+  /// The platform the widget was built on.
+  final TargetPlatform platform,
+) extends MapKitException {
   /// Creates a new MapKitUnsupportedPlatformException object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  const MapKitUnsupportedPlatformException(this.platform)
+  this
     : super(
         'mapkit_flutter supports iOS and macOS only; '
         'MKMapView cannot render here.',
       );
-
-  /// The platform the widget was built on.
-  final TargetPlatform platform;
 
   @override
   String toString() =>
@@ -73,21 +74,18 @@ final class MapKitUnsupportedPlatformException extends MapKitException {
 
 /// A failure reported by the native MapKit layer. Carries the original
 /// platform [code] and [details] for diagnostics.
-final class MapKitPlatformException extends MapKitException {
+final class const MapKitPlatformException({
+  /// The platform error code (from the Swift side).
+  required final String code,
+  required String message,
+
+  /// Optional structured details from the platform.
+  final Object? details,
+}) extends MapKitException {
   /// Creates a new MapKitPlatformException object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit
-  const MapKitPlatformException({
-    required this.code,
-    required String message,
-    this.details,
-  }) : super(message);
-
-  /// The platform error code (from the Swift side).
-  final String code;
-
-  /// Optional structured details from the platform.
-  final Object? details;
+  this : super(message);
 
   @override
   String toString() => 'MapKitPlatformException($code): $message';

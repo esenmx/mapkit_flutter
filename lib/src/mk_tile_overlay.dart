@@ -16,52 +16,44 @@ typedef MKTileOverlayId = MapItemId<MKTileOverlay>;
 /// standard slippy-map scheme.
 /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
 @immutable
-final class MKTileOverlay {
-  /// Creates a new MKTileOverlay object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
-  const MKTileOverlay({
-    required this.id,
-    required this.urlTemplate,
-    this.minimumZ = 0,
-    this.maximumZ = 21,
-    this.tileSize = 256,
-    this.canReplaceMapContent = false,
-    this.alpha = 1.0,
-    this.level = .aboveRoads,
-  }) : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]'),
-       assert(minimumZ <= maximumZ, 'minimumZ must be <= maximumZ');
-
+final class const MKTileOverlay({
   /// The id property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay/id
-  final MKTileOverlayId id;
+  required final MKTileOverlayId id,
 
   /// Slippy-map URL template, e.g.
   /// `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
-  final String urlTemplate;
+  required final String urlTemplate,
 
   /// Lowest tile zoom level the overlay serves (`MKTileOverlay.minimumZ`).
-  final int minimumZ;
+  final int minimumZ = 0,
 
   /// Highest tile zoom level the overlay serves (`MKTileOverlay.maximumZ`).
-  final int maximumZ;
+  final int maximumZ = 21,
 
   /// Tile size in points (`MKTileOverlay.tileSize`). Most providers serve
   /// 256-point tiles; Mapbox / Apple high-DPI sources use 512.
-  final int tileSize;
+  final int tileSize = 256,
 
   /// When `true`, the overlay replaces the base map underneath it
   /// (`MKTileOverlay.canReplaceMapContent`). Use for opaque world-coverage
   /// providers like a styled basemap; leave `false` for transparent
   /// supplemental layers.
-  final bool canReplaceMapContent;
+  final bool canReplaceMapContent = false,
 
   /// Renderer opacity (`MKTileOverlayRenderer.alpha`). Default 1.0.
-  final double alpha;
+  final double alpha = 1.0,
 
   /// Vertical placement relative to the base map's labels/roads.
-  final MKOverlayLevel level;
+  final MKOverlayLevel level = .aboveRoads,
+}) {
+  /// Creates a new MKTileOverlay object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
+  this
+    : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]'),
+      assert(minimumZ <= maximumZ, 'minimumZ must be <= maximumZ');
 
   @internal
   /// Creates a new Platform object.

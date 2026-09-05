@@ -11,38 +11,38 @@ import 'package:mapkit_flutter/src/mk_point_of_interest_filter.dart';
 /// `MKMapView` rather than of the configuration in MapKit.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapconfiguration
 @immutable
-sealed class MKMapConfiguration {
-  const MKMapConfiguration({required this.elevationStyle});
-
+sealed class const MKMapConfiguration({
   /// Flat versus realistic 3-D terrain (`MKMapConfiguration.elevationStyle`).
-  final MKMapElevationStyle elevationStyle;
+  required final MKMapElevationStyle elevationStyle,
+}) {
+  /// Creates a new MKMapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapconfiguration
+  this;
 }
 
 /// Roads-and-labels base map (`MKStandardMapConfiguration`).
 /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration
-final class MKStandardMapConfiguration extends MKMapConfiguration {
-  /// Creates a new MKStandardMapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration
-  const MKStandardMapConfiguration({
-    super.elevationStyle = .flat,
-    this.emphasisStyle = .standard,
-    this.pointOfInterestFilter = .includingAll,
-    this.showsTraffic = false,
-  });
+final class const MKStandardMapConfiguration({
+  super.elevationStyle = .flat,
 
   /// Label and feature emphasis; `standard` maps to Apple's `.default`.
-  final MKMapEmphasisStyle emphasisStyle;
+  final MKMapEmphasisStyle emphasisStyle = .standard,
 
   /// The pointOfInterestFilter property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/pointofinterestfilter
-  final MKPointOfInterestFilter pointOfInterestFilter;
+  final MKPointOfInterestFilter pointOfInterestFilter = .includingAll,
 
   /// The showsTraffic property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/showstraffic
-  final bool showsTraffic;
+  final bool showsTraffic = false,
+}) extends MKMapConfiguration {
+  /// Creates a new MKStandardMapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration
+  this;
 
   @override
   bool operator ==(Object other) =>
@@ -69,25 +69,23 @@ final class MKStandardMapConfiguration extends MKMapConfiguration {
 /// Satellite imagery with roads and labels overlaid
 /// (`MKHybridMapConfiguration`).
 /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration
-final class MKHybridMapConfiguration extends MKMapConfiguration {
-  /// Creates a new MKHybridMapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration
-  const MKHybridMapConfiguration({
-    super.elevationStyle = .flat,
-    this.pointOfInterestFilter = .includingAll,
-    this.showsTraffic = false,
-  });
+final class const MKHybridMapConfiguration({
+  super.elevationStyle = .flat,
 
   /// The pointOfInterestFilter property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration/pointofinterestfilter
-  final MKPointOfInterestFilter pointOfInterestFilter;
+  final MKPointOfInterestFilter pointOfInterestFilter = .includingAll,
 
   /// The showsTraffic property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration/showstraffic
-  final bool showsTraffic;
+  final bool showsTraffic = false,
+}) extends MKMapConfiguration {
+  /// Creates a new MKHybridMapConfiguration object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration
+  this;
 
   @override
   bool operator ==(Object other) =>
@@ -108,11 +106,12 @@ final class MKHybridMapConfiguration extends MKMapConfiguration {
 
 /// Satellite imagery with no labels (`MKImageryMapConfiguration`).
 /// See: https://developer.apple.com/documentation/mapkit/mkimagerymapconfiguration
-final class MKImageryMapConfiguration extends MKMapConfiguration {
+final class const MKImageryMapConfiguration({super.elevationStyle = .flat})
+    extends MKMapConfiguration {
   /// Creates a new MKImageryMapConfiguration object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkimagerymapconfiguration
-  const MKImageryMapConfiguration({super.elevationStyle = .flat});
+  this;
 
   @override
   bool operator ==(Object other) =>

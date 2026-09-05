@@ -19,102 +19,85 @@ typedef MKAnnotationId = MapItemId<MKPointAnnotation>;
 /// object to configure.
 /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation
 @immutable
-final class MKPointAnnotation {
-  /// Creates a new MKPointAnnotation object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation
-  const MKPointAnnotation({
-    required this.id,
-    required this.coordinate,
-    this.icon = const .marker(),
-    this.title,
-    this.subtitle,
-    this.alpha = 1.0,
-    this.anchorPoint = const Offset(0.5, 1),
-    this.isDraggable = false,
-    this.isHidden = false,
-    this.zPriority = 500,
-    this.clusteringIdentifier,
-    this.onTap,
-    this.onCalloutTap,
-    this.onDragStart,
-    this.onDrag,
-    this.onDragEnd,
-  }) : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]');
-
+final class const MKPointAnnotation({
   /// The id property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/id
-  final MKAnnotationId id;
+  required final MKAnnotationId id,
 
   /// The coordinate property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/coordinate
-  final CLLocationCoordinate2D coordinate;
+  required final CLLocationCoordinate2D coordinate,
 
   /// The icon property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/icon
-  final MKAnnotationIcon icon;
+  final MKAnnotationIcon icon = const .marker(),
 
   /// Callout title (`MKAnnotation.title`). A non-null title enables the
   /// callout bubble on tap.
-  final String? title;
+  final String? title,
 
   /// Callout subtitle (`MKAnnotation.subtitle`).
-  final String? subtitle;
+  final String? subtitle,
 
   /// View opacity in `[0, 1]`.
-  final double alpha;
+  final double alpha = 1.0,
 
   /// Normalized anchor within the icon image (`MKAnnotationView.anchorPoint`):
   /// `(0.5, 1)` pins the bottom-center to [coordinate]. Applies to
   /// [MKAnnotationIcon.image] icons; system markers anchor themselves.
-  final Offset anchorPoint;
+  final Offset anchorPoint = const Offset(0.5, 1),
 
   /// Whether the user can drag the annotation
   /// (`MKAnnotationView.isDraggable`).
-  final bool isDraggable;
+  final bool isDraggable = false,
 
   /// The isHidden property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ishidden
-  final bool isHidden;
+  final bool isHidden = false,
 
   /// Display priority for overlap stacking
   /// (`MKAnnotationView.zPriority`); MapKit's default is 500
   /// (`.defaultUnselected`), higher floats above.
-  final double zPriority;
+  final double zPriority = 500,
 
   /// Annotations sharing the same `clusteringIdentifier` cluster together
   /// when they're close on screen (`MKAnnotationView.clusteringIdentifier`).
   /// `null` means the annotation never clusters.
-  final String? clusteringIdentifier;
+  final String? clusteringIdentifier,
 
   /// The onTap property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ontap
-  final VoidCallback? onTap;
+  final VoidCallback? onTap,
 
   /// The onCalloutTap property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/oncallouttap
-  final VoidCallback? onCalloutTap;
+  final VoidCallback? onCalloutTap,
 
   /// The onDragStart property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondragstart
-  final ValueChanged<CLLocationCoordinate2D>? onDragStart;
+  final ValueChanged<CLLocationCoordinate2D>? onDragStart,
 
   /// The onDrag property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondrag
-  final ValueChanged<CLLocationCoordinate2D>? onDrag;
+  final ValueChanged<CLLocationCoordinate2D>? onDrag,
 
   /// The onDragEnd property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondragend
-  final ValueChanged<CLLocationCoordinate2D>? onDragEnd;
+  final ValueChanged<CLLocationCoordinate2D>? onDragEnd,
+}) {
+  /// Creates a new MKPointAnnotation object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation
+  this : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]');
 
   /// Creates a new With object.
   ///

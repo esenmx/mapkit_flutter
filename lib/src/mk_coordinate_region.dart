@@ -8,31 +8,30 @@ import 'package:meta/meta.dart';
 /// `MKCoordinateRegion(center:span:)`.
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
 @immutable
-final class MKCoordinateRegion {
+final class const MKCoordinateRegion({
+  /// The center property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/center
+  required final CLLocationCoordinate2D center,
+
+  /// The span property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/span
+  required final MKCoordinateSpan span,
+}) {
   /// Creates a new MKCoordinateRegion object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
-  const MKCoordinateRegion({required this.center, required this.span});
+  this;
 
   @internal
   /// Creates a new MKCoordinateRegion object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
-  factory MKCoordinateRegion.fromPlatform(PlatformCoordinateRegion p) =>
-      MKCoordinateRegion(
-        center: .fromPlatform(p.center),
-        span: .fromPlatform(p.span),
-      );
-
-  /// The center property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/center
-  final CLLocationCoordinate2D center;
-
-  /// The span property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/span
-  final MKCoordinateSpan span;
+  factory fromPlatform(PlatformCoordinateRegion p) => MKCoordinateRegion(
+    center: .fromPlatform(p.center),
+    span: .fromPlatform(p.span),
+  );
 
   /// Smallest region that contains all given [coordinates].
   /// Returns null when [coordinates] is empty.

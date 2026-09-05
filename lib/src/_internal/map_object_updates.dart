@@ -5,11 +5,7 @@ import 'package:meta/meta.dart';
 /// the diff lives in one place instead of one near-identical class per kind.
 @internal
 final class MapObjectUpdates<T extends Object> {
-  MapObjectUpdates.between(
-    Set<T> before,
-    Set<T> after, {
-    required String Function(T) idOf,
-  }) {
+  new between(Set<T> before, Set<T> after, {required String Function(T) idOf}) {
     final beforeById = {for (final o in before) idOf(o): o};
     final afterById = {for (final o in after) idOf(o): o};
 

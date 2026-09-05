@@ -17,71 +17,59 @@ typedef MKCircleId = MapItemId<MKCircle>;
 /// properties merged in.
 /// See: https://developer.apple.com/documentation/mapkit/mkcircle
 @immutable
-final class MKCircle {
-  /// Creates a new MKCircle object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle
-  const MKCircle({
-    required this.id,
-    required this.center,
-    required this.radius,
-    this.fillColor = const Color(0x00000000),
-    this.strokeColor = const Color(0xFF000000),
-    this.lineWidth = 10,
-    this.zIndex = 0,
-    this.isHidden = false,
-    this.consumeTapEvents = false,
-    this.level = .aboveRoads,
-    this.onTap,
-  }) : assert(radius >= 0, 'radius must be >= 0 meters');
-
+final class const MKCircle({
   /// The id property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/id
-  final MKCircleId id;
+  required final MKCircleId id,
 
   /// The center property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/center
-  final CLLocationCoordinate2D center;
+  required final CLLocationCoordinate2D center,
 
   /// Radius in meters.
-  final double radius;
+  required final double radius,
 
   /// The fillColor property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/fillcolor
-  final Color fillColor;
+  final Color fillColor = const Color(0x00000000),
 
   /// The strokeColor property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/strokecolor
-  final Color strokeColor;
+  final Color strokeColor = const Color(0xFF000000),
 
   /// Stroke width in points (`lineWidth`).
-  final double lineWidth;
+  final double lineWidth = 10,
 
   /// Flutter-side insertion-order hint between overlays. MapKit has no
   /// overlay z-index; ties resolve by insertion.
-  final int zIndex;
+  final int zIndex = 0,
 
   /// The isHidden property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/ishidden
-  final bool isHidden;
+  final bool isHidden = false,
 
   /// The consumeTapEvents property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/consumetapevents
-  final bool consumeTapEvents;
+  final bool consumeTapEvents = false,
 
   /// Vertical placement relative to the base map's labels/roads.
-  final MKOverlayLevel level;
+  final MKOverlayLevel level = .aboveRoads,
 
   /// The onTap property.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/ontap
-  final VoidCallback? onTap;
+  final VoidCallback? onTap,
+}) {
+  /// Creates a new MKCircle object.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcircle
+  this : assert(radius >= 0, 'radius must be >= 0 meters');
 
   /// Creates a new With object.
   ///

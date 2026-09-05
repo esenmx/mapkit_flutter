@@ -34,9 +34,9 @@ void main() {
     await controller.zoomIn();
 
     final zoomed =
-        verify(
-              controller.setCamera(captureAny, animated: anyNamed('animated')),
-            ).captured.single
+        verify(controller.setCamera(captureAny, animated: anyNamed('animated')))
+                .captured
+                .single
             as MKMapCamera;
     check(zoomed.distance).equals(sampleCamera.distance / 2);
   });

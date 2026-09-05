@@ -24,7 +24,7 @@ typedef MKPolylineId = MapItemId<MKPolyline>;
 @immutable
 final class MKPolyline {
   /// Straight-segment polyline (`MKPolyline`).
-  const MKPolyline({
+  const new({
     required this.id,
     required this.coordinates,
     this.strokeColor = const Color(0xFF000000),
@@ -43,7 +43,7 @@ final class MKPolyline {
   /// Polyline whose segments follow the shortest path over the globe,
   /// mirroring `MKGeodesicPolyline`.
   /// See: https://developer.apple.com/documentation/mapkit/mkgeodesicpolyline
-  const MKPolyline.geodesic({
+  const new geodesic({
     required this.id,
     required this.coordinates,
     this.strokeColor = const Color(0xFF000000),

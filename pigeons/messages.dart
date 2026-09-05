@@ -29,6 +29,11 @@
 // Everything else degrades instead of throwing: unknown ids no-op,
 // conversions return null pre-layout, `openLookAround` returns false.
 
+// Pigeon parses this file with its own bundled analyzer, which does not
+// support Dart 3.13 primary-constructor syntax. Keep the class name on
+// constructors here or `dart run pigeon` fails to parse the input.
+// ignore_for_file: unnecessary_type_name_in_constructor
+
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(

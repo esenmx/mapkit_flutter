@@ -9,14 +9,9 @@ import 'recording_sink.dart';
 
 /// Bundles a [FakeHostApi], [RecordingSink], and [MKMapViewController] for
 /// outbound/inbound channel tests.
-final class ControllerHarness {
-  ControllerHarness({this.viewId = 1, RecordingSink? sink})
-    : sink = sink ?? RecordingSink(),
-      host = FakeHostApi();
-
-  final int viewId;
-  final RecordingSink sink;
-  final FakeHostApi host;
+final class ControllerHarness({final int viewId = 1, RecordingSink? sink}) {
+  final RecordingSink sink = sink ?? RecordingSink();
+  final FakeHostApi host = FakeHostApi();
 
   late final MKMapViewControllerImpl controller = MKMapViewControllerImpl(
     viewId: viewId,

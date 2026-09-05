@@ -6,35 +6,32 @@ import 'package:meta/meta.dart';
 /// `MKCoordinateSpan(latitudeDelta:longitudeDelta:)`.
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
 @immutable
-final class MKCoordinateSpan {
+final class const MKCoordinateSpan({
+  /// The latitudeDelta property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/latitudedelta
+  required final double latitudeDelta,
+
+  /// The longitudeDelta property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/longitudedelta
+  required final double longitudeDelta,
+}) {
   /// Creates a new MKCoordinateSpan object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
-  const MKCoordinateSpan({
-    required this.latitudeDelta,
-    required this.longitudeDelta,
-  }) : assert(latitudeDelta >= 0, 'latitudeDelta must be >= 0'),
-       assert(longitudeDelta >= 0, 'longitudeDelta must be >= 0');
+  this
+    : assert(latitudeDelta >= 0, 'latitudeDelta must be >= 0'),
+      assert(longitudeDelta >= 0, 'longitudeDelta must be >= 0');
 
   @internal
   /// Creates a new MKCoordinateSpan object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
-  factory MKCoordinateSpan.fromPlatform(PlatformCoordinateSpan p) =>
-      MKCoordinateSpan(
-        latitudeDelta: p.latitudeDelta,
-        longitudeDelta: p.longitudeDelta,
-      );
-
-  /// The latitudeDelta property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/latitudedelta
-  final double latitudeDelta;
-
-  /// The longitudeDelta property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/longitudedelta
-  final double longitudeDelta;
+  factory fromPlatform(PlatformCoordinateSpan p) => MKCoordinateSpan(
+    latitudeDelta: p.latitudeDelta,
+    longitudeDelta: p.longitudeDelta,
+  );
 
   @internal
   /// Creates a new Platform object.

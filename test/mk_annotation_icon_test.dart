@@ -55,9 +55,8 @@ void main() {
     test('imagePixelRatio defaults to the implicit view ratio', () {
       TestWidgetsFlutterBinding.ensureInitialized();
       final platform = MKAnnotationIcon.image(.fromList([1])).toPlatform();
-      check(
-        platform.imagePixelRatio,
-      ).equals(PlatformDispatcher.instance.implicitView!.devicePixelRatio);
+      check(platform.imagePixelRatio)
+          .equals(PlatformDispatcher.instance.implicitView!.devicePixelRatio);
     });
   });
 

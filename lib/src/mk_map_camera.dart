@@ -10,22 +10,32 @@ import 'package:meta/meta.dart';
 /// rotated to the compass [heading] and tilted by [pitch] degrees.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
 @immutable
-final class MKMapCamera {
+final class const MKMapCamera({
+  /// The centerCoordinate property.
+  ///
+  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera/centercoordinate
+  required final CLLocationCoordinate2D centerCoordinate,
+
+  /// `MKMapCamera.centerCoordinateDistance` — meters between the camera and
+  /// [centerCoordinate].
+  required final double distance,
+
+  /// Compass heading in degrees (0 = north).
+  final double heading = 0.0,
+
+  /// Tilt in degrees (0 = looking straight down).
+  final double pitch = 0.0,
+}) {
   /// Creates a new MKMapCamera object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
-  const MKMapCamera({
-    required this.centerCoordinate,
-    required this.distance,
-    this.heading = 0.0,
-    this.pitch = 0.0,
-  }) : assert(distance > 0, 'distance must be > 0 meters');
+  this : assert(distance > 0, 'distance must be > 0 meters');
 
   @internal
   /// Creates a new MKMapCamera object.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
-  factory MKMapCamera.fromPlatform(PlatformMapCamera p) => MKMapCamera(
+  factory fromPlatform(PlatformMapCamera p) => MKMapCamera(
     centerCoordinate: .fromPlatform(p.centerCoordinate),
     distance: p.distance,
     heading: p.heading,
@@ -37,7 +47,7 @@ final class MKMapCamera {
   /// The conversion `distance = 591657550.5 / 2^(zoomLevel - 1)` is the
   /// de-facto standard approximation — it ignores latitude and viewport size,
   /// so treat zoom levels as a convenience, not an exact MapKit concept.
-  factory MKMapCamera.withZoomLevel({
+  factory withZoomLevel({
     required CLLocationCoordinate2D centerCoordinate,
     required double zoomLevel,
     double heading = 0.0,
@@ -48,21 +58,6 @@ final class MKMapCamera {
     heading: heading,
     pitch: pitch,
   );
-
-  /// The centerCoordinate property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera/centercoordinate
-  final CLLocationCoordinate2D centerCoordinate;
-
-  /// `MKMapCamera.centerCoordinateDistance` — meters between the camera and
-  /// [centerCoordinate].
-  final double distance;
-
-  /// Compass heading in degrees (0 = north).
-  final double heading;
-
-  /// Tilt in degrees (0 = looking straight down).
-  final double pitch;
 
   /// Approximate Web-Mercator zoom level for [distance] — the inverse of
   /// [MKMapCamera.withZoomLevel], with the same caveats.

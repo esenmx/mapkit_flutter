@@ -48,7 +48,8 @@ final class const MKPointAnnotation({
 
   /// Normalized anchor within the icon image (`MKAnnotationView.anchorPoint`):
   /// `(0.5, 1)` pins the bottom-center to [coordinate]. Applies to
-  /// [MKAnnotationIcon.image] icons; system markers anchor themselves.
+  /// [MKAnnotationIcon.image] icons; system markers anchor themselves. iOS
+  /// only: macOS centers the image on [coordinate].
   final Offset anchorPoint = const Offset(0.5, 1),
 
   /// Whether the user can drag the annotation
@@ -75,7 +76,8 @@ final class const MKPointAnnotation({
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ontap
   final VoidCallback? onTap,
 
-  /// The onCalloutTap property.
+  /// Called when the callout bubble is tapped. iOS only (macOS shows
+  /// MapKit's default callout).
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/oncallouttap
   final VoidCallback? onCalloutTap,

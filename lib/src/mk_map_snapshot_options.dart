@@ -18,9 +18,11 @@ final class const MKMapSnapshotOptions({
   final bool showsPointsOfInterest = true,
 
   /// Whether the plugin draws the current annotations into the snapshot.
+  /// iOS only; macOS snapshots contain the base map.
   final bool showsAnnotations = true,
 
   /// Whether the plugin draws the current overlays into the snapshot.
+  /// iOS only; macOS snapshots contain the base map.
   final bool showsOverlays = true,
 }) {
   /// Creates a new MKMapSnapshotOptions object.

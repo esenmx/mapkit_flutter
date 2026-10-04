@@ -30,14 +30,18 @@ MKMapView(
 )
 ```
 
-Run it on an iOS simulator or device:
+Run it on an iOS simulator or macOS (`flutter run -d macos`).
+
+Integration tests (real `MKMapView`, real pigeon channel) run one file per
+invocation, on macOS or on a simulator:
 
 ```sh
-flutter run
+flutter test integration_test/<file>.dart -d macos
+flutter test integration_test/<file>.dart -d "iPhone 16"
 ```
 
-The integration smoke test (real `MKMapView`, real pigeon channel):
+Native tests (XCTest against the plugin's Swift code):
 
 ```sh
-flutter test integration_test/ -d "iPhone 16"
+flutter build macos --config-only && xcodebuild test -workspace macos/Runner.xcworkspace -scheme Runner -destination 'platform=macOS'
 ```

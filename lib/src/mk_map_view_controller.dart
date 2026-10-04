@@ -291,10 +291,20 @@ final class MKMapViewControllerImpl implements MKMapViewController {
       PlatformMapViewCreationParams(
         initialCamera: initialCamera.toPlatform(),
         configuration: configuration,
-        annotations: annotations.map((a) => a.toPlatform()).toList(),
-        polylines: polylines.map((p) => p.toPlatform()).toList(),
-        polygons: polygons.map((p) => p.toPlatform()).toList(),
-        circles: circles.map((c) => c.toPlatform()).toList(),
+        annotations: [
+          for (final a in lastById(annotations, (a) => a.id.value))
+            a.toPlatform(),
+        ],
+        polylines: [
+          for (final p in lastById(polylines, (p) => p.id.value))
+            p.toPlatform(),
+        ],
+        polygons: [
+          for (final p in lastById(polygons, (p) => p.id.value)) p.toPlatform(),
+        ],
+        circles: [
+          for (final c in lastById(circles, (c) => c.id.value)) c.toPlatform(),
+        ],
       ),
     ),
   );

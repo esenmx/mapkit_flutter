@@ -2,6 +2,7 @@ import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mapkit_flutter/src/_internal/unset.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -105,36 +106,46 @@ final class const MKPointAnnotation({
   MKPointAnnotation copyWith({
     CLLocationCoordinate2D? coordinate,
     MKAnnotationIcon? icon,
-    String? title,
-    String? subtitle,
+    Object? title = unset,
+    Object? subtitle = unset,
     double? alpha,
     Offset? anchorPoint,
     bool? isDraggable,
     bool? isHidden,
     double? zPriority,
-    String? clusteringIdentifier,
-    VoidCallback? onTap,
-    VoidCallback? onCalloutTap,
-    ValueChanged<CLLocationCoordinate2D>? onDragStart,
-    ValueChanged<CLLocationCoordinate2D>? onDrag,
-    ValueChanged<CLLocationCoordinate2D>? onDragEnd,
+    Object? clusteringIdentifier = unset,
+    Object? onTap = unset,
+    Object? onCalloutTap = unset,
+    Object? onDragStart = unset,
+    Object? onDrag = unset,
+    Object? onDragEnd = unset,
   }) => MKPointAnnotation(
     id: id,
     coordinate: coordinate ?? this.coordinate,
     icon: icon ?? this.icon,
-    title: title ?? this.title,
-    subtitle: subtitle ?? this.subtitle,
+    title: identical(title, unset) ? this.title : title as String?,
+    subtitle: identical(subtitle, unset) ? this.subtitle : subtitle as String?,
     alpha: alpha ?? this.alpha,
     anchorPoint: anchorPoint ?? this.anchorPoint,
     isDraggable: isDraggable ?? this.isDraggable,
     isHidden: isHidden ?? this.isHidden,
     zPriority: zPriority ?? this.zPriority,
-    clusteringIdentifier: clusteringIdentifier ?? this.clusteringIdentifier,
-    onTap: onTap ?? this.onTap,
-    onCalloutTap: onCalloutTap ?? this.onCalloutTap,
-    onDragStart: onDragStart ?? this.onDragStart,
-    onDrag: onDrag ?? this.onDrag,
-    onDragEnd: onDragEnd ?? this.onDragEnd,
+    clusteringIdentifier: identical(clusteringIdentifier, unset)
+        ? this.clusteringIdentifier
+        : clusteringIdentifier as String?,
+    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
+    onCalloutTap: identical(onCalloutTap, unset)
+        ? this.onCalloutTap
+        : onCalloutTap as VoidCallback?,
+    onDragStart: identical(onDragStart, unset)
+        ? this.onDragStart
+        : onDragStart as ValueChanged<CLLocationCoordinate2D>?,
+    onDrag: identical(onDrag, unset)
+        ? this.onDrag
+        : onDrag as ValueChanged<CLLocationCoordinate2D>?,
+    onDragEnd: identical(onDragEnd, unset)
+        ? this.onDragEnd
+        : onDragEnd as ValueChanged<CLLocationCoordinate2D>?,
   );
 
   @internal

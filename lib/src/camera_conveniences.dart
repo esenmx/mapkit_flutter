@@ -1,8 +1,9 @@
-import 'dart:math' show pow;
+import 'dart:math' show max, min, pow;
 import 'dart:ui' show Offset;
 
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/mk_coordinate_region.dart';
+import 'package:mapkit_flutter/src/mk_coordinate_span.dart';
 import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 
 /// google_maps_flutter-dialect camera helpers layered over the canonical
@@ -71,15 +72,35 @@ extension CameraConveniences on MKMapViewController {
 
   /// Move the camera so all [coordinates] are visible.
   ///
+  /// [padding] adds that fraction of the span on each side; [minimumSpan]
+  /// (degrees) keeps a single coordinate or a tight cluster from zooming
+  /// fully in. Spans clamp to 180° latitude / 360° longitude around the same
+  /// center.
+  ///
   /// google_maps_flutter dialect (`CameraUpdate.newLatLngBounds`); canonical:
   /// `setRegion(MKCoordinateRegion.containing(coordinates))`. No-op when
   /// [coordinates] is empty.
   Future<void> fitCoordinates(
     Iterable<CLLocationCoordinate2D> coordinates, {
     bool animated = true,
+    double padding = 0,
+    double minimumSpan = 0.005,
   }) async {
+    assert(padding >= 0, 'padding must be >= 0');
+    assert(minimumSpan >= 0, 'minimumSpan must be >= 0');
     final region = MKCoordinateRegion.containing(coordinates);
     if (region == null) return;
-    await setRegion(region, animated: animated);
+    double fit(double delta, double limit) =>
+        min(max(delta * (1 + 2 * padding), minimumSpan), limit);
+    await setRegion(
+      MKCoordinateRegion(
+        center: region.center,
+        span: MKCoordinateSpan(
+          latitudeDelta: fit(region.span.latitudeDelta, 180),
+          longitudeDelta: fit(region.span.longitudeDelta, 360),
+        ),
+      ),
+      animated: animated,
+    );
   }
 }

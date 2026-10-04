@@ -57,4 +57,17 @@ void main() {
       ).isFalse();
     });
   });
+
+  group('tap consumption', () {
+    test('onTap implies consumeTapEvents on the wire', () {
+      final tappable = polygon('z').copyWith(onTap: () {});
+      check(tappable.consumeTapEvents).isFalse();
+      check(tappable.toPlatform().consumeTapEvents).isTrue();
+    });
+
+    test('clearing onTap makes the overlay unequal', () {
+      final tappable = polygon('z').copyWith(onTap: () {});
+      check(tappable.copyWith(onTap: null) == tappable).isFalse();
+    });
+  });
 }

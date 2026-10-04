@@ -6,12 +6,18 @@
 
 - Requires Dart 3.13 / Flutter 3.47 (was Dart 3.10 / Flutter 3.41).
 - Platform channel regenerated with Pigeon 29; host→Dart events use its async Swift API.
+- An overlay with onTap now consumes taps (onTap implies consumeTapEvents).
+- fitCoordinates gains padding and minimumSpan; a single coordinate now frames 0.005° instead of zooming fully in.
 
 ### Fixed
 
 - Package.swift declares the FlutterFramework dependency (silences the Flutter 3.47 build warning).
 - Unmounting a map now releases its native MKMapView, host and location manager (channel handlers were never removed).
 - Geodesic polylines no longer corrupt memory on iOS/macOS 27 (MKGeodesicPolyline is no longer subclassed).
+- A rebuild that lands before the platform view finishes creating no longer leaves taps on stale callbacks.
+- `copyWith` can clear nullable fields with an explicit `null` (e.g. `copyWith(title: null)`).
+- In-range longitudes are stored verbatim (normalisation used to perturb them, e.g. 10.1 → 10.099999999999994).
+- `initialize` sends one object per id, last wins, like the rebuild diff; duplicate ids now assert in debug.
 
 ### Removed
 

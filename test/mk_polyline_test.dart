@@ -104,4 +104,21 @@ void main() {
       check(polyline('p') == dashed).isFalse();
     });
   });
+
+  group('tap consumption', () {
+    test('onTap implies consumeTapEvents on the wire', () {
+      final tappable = MKPolyline(
+        id: const MKPolylineId('p'),
+        coordinates: const [applePark, infiniteLoop],
+        onTap: () {},
+      );
+      check(tappable.consumeTapEvents).isFalse();
+      check(tappable.toPlatform().consumeTapEvents).isTrue();
+    });
+
+    test('clearing onTap makes the overlay unequal', () {
+      final tappable = polyline('p').copyWith(onTap: () {});
+      check(tappable.copyWith(onTap: null) == tappable).isFalse();
+    });
+  });
 }

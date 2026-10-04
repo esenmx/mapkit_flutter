@@ -190,6 +190,7 @@ final class _MKMapViewState extends State<MKMapView>
   @override
   void initState() {
     super.initState();
+    assert(_debugUniqueIds(), 'MKMapView: two objects of one kind share an id');
     _annotations = {for (final a in widget.annotations) a.id: a};
     _polylines = {for (final p in widget.polylines) p.id: p};
     _polygons = {for (final p in widget.polygons) p.id: p};
@@ -200,6 +201,15 @@ final class _MKMapViewState extends State<MKMapView>
       });
     }
   }
+
+  bool _debugUniqueIds() =>
+      {for (final a in widget.annotations) a.id}.length ==
+          widget.annotations.length &&
+      {for (final p in widget.polylines) p.id}.length ==
+          widget.polylines.length &&
+      {for (final p in widget.polygons) p.id}.length ==
+          widget.polygons.length &&
+      {for (final c in widget.circles) c.id}.length == widget.circles.length;
 
   @override
   void dispose() {
@@ -301,10 +311,11 @@ final class _MKMapViewState extends State<MKMapView>
   @override
   void didUpdateWidget(covariant MKMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    assert(_debugUniqueIds(), 'MKMapView: two objects of one kind share an id');
+    _updateDispatchTables();
     final c = _controller;
     if (c == null) return;
 
-    _updateDispatchTables();
     _updateConfiguration(c, oldWidget);
     _updateAnnotations(c, oldWidget);
     _updatePolylines(c, oldWidget);

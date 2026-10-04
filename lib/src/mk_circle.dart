@@ -2,6 +2,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mapkit_flutter/src/_internal/unset.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -53,7 +54,8 @@ final class const MKCircle({
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/ishidden
   final bool isHidden = false,
 
-  /// The consumeTapEvents property.
+  /// Whether this overlay consumes taps; also blocks the map's `onTap`
+  /// without a callback.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/consumetapevents
   final bool consumeTapEvents = false,
@@ -61,7 +63,7 @@ final class const MKCircle({
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level = .aboveRoads,
 
-  /// The onTap property.
+  /// Called when the overlay is tapped; implies `consumeTapEvents`.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkcircle/ontap
   final VoidCallback? onTap,
@@ -84,7 +86,7 @@ final class const MKCircle({
     bool? isHidden,
     bool? consumeTapEvents,
     MKOverlayLevel? level,
-    VoidCallback? onTap,
+    Object? onTap = unset,
   }) => MKCircle(
     id: id,
     center: center ?? this.center,
@@ -96,7 +98,7 @@ final class const MKCircle({
     isHidden: isHidden ?? this.isHidden,
     consumeTapEvents: consumeTapEvents ?? this.consumeTapEvents,
     level: level ?? this.level,
-    onTap: onTap ?? this.onTap,
+    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
   );
 
   @internal
@@ -112,7 +114,7 @@ final class const MKCircle({
     lineWidth: lineWidth,
     zIndex: zIndex,
     isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents,
+    consumeTapEvents: consumeTapEvents || onTap != null,
     level: level,
   );
 
@@ -128,7 +130,8 @@ final class const MKCircle({
       other.zIndex == zIndex &&
       other.isHidden == isHidden &&
       other.consumeTapEvents == consumeTapEvents &&
-      other.level == level;
+      other.level == level &&
+      (other.onTap != null) == (onTap != null);
 
   @override
   int get hashCode => Object.hash(
@@ -142,6 +145,7 @@ final class const MKCircle({
     isHidden,
     consumeTapEvents,
     level,
+    onTap != null,
   );
 
   @override

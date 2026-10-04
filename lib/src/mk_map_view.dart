@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -218,7 +216,7 @@ final class _MKMapViewState extends State<MKMapView>
 
   @override
   void dispose() {
-    unawaited(_controller?.dispose());
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -251,15 +249,13 @@ final class _MKMapViewState extends State<MKMapView>
   /// platform view (and its host API handler) exists.
   void _wireController(MKMapViewControllerImpl controller) {
     _controller = controller;
-    unawaited(
-      controller.initialize(
-        initialCamera: widget.initialCamera,
-        configuration: _platformConfiguration(),
-        annotations: widget.annotations,
-        polylines: widget.polylines,
-        polygons: widget.polygons,
-        circles: widget.circles,
-      ),
+    controller.initialize(
+      initialCamera: widget.initialCamera,
+      configuration: _platformConfiguration(),
+      annotations: widget.annotations,
+      polylines: widget.polylines,
+      polygons: widget.polygons,
+      circles: widget.circles,
     );
     widget.onMapCreated?.call(controller);
   }
@@ -343,7 +339,7 @@ final class _MKMapViewState extends State<MKMapView>
 
   void _updateConfiguration(MKMapViewControllerImpl c, MKMapView oldWidget) {
     if (_configurationChanged(oldWidget)) {
-      unawaited(c.updateMapConfiguration(_platformConfiguration()));
+      c.updateMapConfiguration(_platformConfiguration());
     }
   }
 
@@ -354,7 +350,7 @@ final class _MKMapViewState extends State<MKMapView>
         widget.annotations,
         idOf: (a) => a.id.value,
       );
-      unawaited(c.updateAnnotations(updates));
+      c.updateAnnotations(updates);
     }
   }
 
@@ -365,7 +361,7 @@ final class _MKMapViewState extends State<MKMapView>
         widget.polylines,
         idOf: (p) => p.id.value,
       );
-      unawaited(c.updatePolylines(updates));
+      c.updatePolylines(updates);
     }
   }
 
@@ -376,7 +372,7 @@ final class _MKMapViewState extends State<MKMapView>
         widget.polygons,
         idOf: (p) => p.id.value,
       );
-      unawaited(c.updatePolygons(updates));
+      c.updatePolygons(updates);
     }
   }
 
@@ -387,7 +383,7 @@ final class _MKMapViewState extends State<MKMapView>
         widget.circles,
         idOf: (o) => o.id.value,
       );
-      unawaited(c.updateCircles(updates));
+      c.updateCircles(updates);
     }
   }
 

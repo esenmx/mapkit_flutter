@@ -1,11 +1,7 @@
-*Replace this paragraph with a description of what this PR is changing or adding, and why. Consider including before/after screenshots.*
+## Summary
 
-*List which issues are fixed by this PR.*
+## Checklist
 
-## Pre-launch Checklist
-
-- [ ] I updated pubspec.yaml with an appropriate new version according to the [pub versioning philosophy].
-- [ ] I updated CHANGELOG.md to add a description of the change.
-- [ ] I updated/added relevant documentation (doc comments with `///`).
-- [ ] I added new tests to check the change I am making if a test is possible.
-- [ ] All existing and new tests are passing.
+- [ ] Tests added or updated
+- [ ] `CHANGELOG.md` `## Unreleased` entry
+- [ ] Docs / README / skill updated if public API changed

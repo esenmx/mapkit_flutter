@@ -1,21 +1,9 @@
 // Pigeon schema for the type-safe Dart <-> Swift boundary.
 //
-// Regenerate after editing:
-//   dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
-// then in the regenerated messages.g.swift:
-//   1. Re-apply the O(N) dictionary branch of `deepEquals` (direct
-//      `rhsDictionary[lhsKey]` lookup) — stock pigeon emits an O(N*M) scan
-//      and regenerating silently reverts the 0.3.4 perf fix.
-//   2. Mark the MapKitFlutterApi completions `@Sendable` — Xcode 26+ rejects
-//      capturing a plain completion in the channel reply closure:
-//      perl -pi -e 's/completion: \@escaping \(Result<Void, MapKitHostError>\) -> Void/completion: \@escaping \@Sendable (Result<Void, MapKitHostError>) -> Void/g' \
-//        ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift
-//   3. Copy it over `darwin/mapkit_flutter/Sources/mapkit_flutter/` — the
-//      darwin tree builds from its own checked-in copy, not pigeon's output.
-//
-// Generated files (`lib/src/messages.g.dart`,
-// `ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift`, and the
-// darwin copy above) are checked in; hand-edit only per the steps above.
+// Regenerate after editing (outputs are checked in; never hand-edit them):
+//   dart run pigeon --input pigeons/messages.dart
+//   dart format lib/src/messages.g.dart
+// CI regenerates and fails on any diff.
 //
 // Naming: every type here carries a `Platform` prefix — including enums that
 // the public API re-exports via `typedef` (e.g. `MKUserTrackingMode =
@@ -39,7 +27,7 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/messages.g.dart',
-    swiftOut: 'ios/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift',
+    swiftOut: 'darwin/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift',
     swiftOptions: SwiftOptions(errorClassName: 'MapKitHostError'),
     dartPackageName: 'mapkit_flutter',
   ),
@@ -523,10 +511,12 @@ abstract class MapKitHostApi {
   bool isCalloutShown(String annotationId);
 
   /// Throws: `snapshot-failed`.
-  @async
+  // @asyncCallback, not @async: pigeon's async-throws host handlers capture the non-Sendable api/reply in a Task, which Swift 6 rejects.
+  @asyncCallback
   Uint8List takeSnapshot(PlatformSnapshotOptions options);
 
-  @async
+  // @asyncCallback, not @async: pigeon's async-throws host handlers capture the non-Sendable api/reply in a Task, which Swift 6 rejects.
+  @asyncCallback
   bool openLookAround(PlatformCoordinate coordinate);
 
   void addTileOverlay(PlatformTileOverlay overlay);

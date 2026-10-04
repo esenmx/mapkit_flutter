@@ -54,12 +54,12 @@ extension MapKitViewHost {
         let coordinate = PlatformCoordinate.from(annotation.coordinate)
         switch newState {
         case .starting:
-            self.flutterApi.onAnnotationDragStart(annotationId: id, coordinate: coordinate) { _ in }
+            self.flutterApi.send { try await $0.onAnnotationDragStart(annotationId: id, coordinate: coordinate) }
         case .dragging:
-            self.flutterApi.onAnnotationDrag(annotationId: id, coordinate: coordinate) { _ in }
+            self.flutterApi.send { try await $0.onAnnotationDrag(annotationId: id, coordinate: coordinate) }
         case .ending, .canceling:
             annotation.wasDragged = true
-            self.flutterApi.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) { _ in }
+            self.flutterApi.send { try await $0.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) }
         default:
             break
         }
@@ -142,7 +142,8 @@ extension MapKitViewHost {
 
     func onAnnotationClick(annotation: MKAnnotation) {
         if let flutterAnnotation: FlutterAnnotation = annotation as? FlutterAnnotation {
-            self.flutterApi.onAnnotationTap(annotationId: flutterAnnotation.id) { _ in }
+            let id = flutterAnnotation.id
+            self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
         }
     }
 
@@ -199,7 +200,7 @@ extension MapKitViewHost {
     @objc func onCalloutTapped(infoWindowTap: InfoWindowTapGestureRecognizer) {
         guard let annotationId = infoWindowTap.annotationId else { return }
         if self.currentlySelectedAnnotation == annotationId {
-            self.flutterApi.onCalloutTap(annotationId: annotationId) { _ in }
+            self.flutterApi.send { try await $0.onCalloutTap(annotationId: annotationId) }
         } else {
             infoWindowTap.annotationView?.removeGestureRecognizer(infoWindowTap)
         }

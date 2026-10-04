@@ -11,9 +11,17 @@ let package = Package(
     // Hyphenated product name avoids collision with the target name.
     .library(name: "mapkit-flutter", targets: ["mapkit_flutter"])
   ],
+  dependencies: [
+    .package(name: "FlutterFramework", path: "../FlutterFramework")
+  ],
   targets: [
     // swiftLanguageMode defaults to v6 under tools 6.0 — data-race safety is
     // compiler-enforced, matching the podspec's swift_version = '6.0'.
-    .target(name: "mapkit_flutter")
+    .target(
+      name: "mapkit_flutter",
+      dependencies: [
+        .product(name: "FlutterFramework", package: "FlutterFramework")
+      ]
+    )
   ]
 )

@@ -11,7 +11,7 @@ Frontmatter `status` is the plan's lifecycle, one owner per transition: `draft` 
 
 ## Progress
 - [x] Phase 1: Pigeon 29 + SPM foundation
-- [ ] Phase 2: Native oracle harness, host teardown, geodesic crash
+- [x] Phase 2: Native oracle harness, host teardown, geodesic crash
 - [ ] Phase 3: Dart bug fixes
 - [ ] Phase 4: Swift bug fixes
 - [ ] Phase 5: Snapshot fidelity
@@ -753,6 +753,10 @@ User-only steps (the executor never does these): publish the release to pub.dev 
 Tracker: `/Users/mehmetesen/pub-dev/SWEEP.md` § Deferred (`- [mapkit_flutter] <ID> — <one line> — <why deferred>`).
 
 Executor appends one bullet per discovery the plan didn't name: blocking and in-scope → fix + note; else note only, never silently absorbed. A log, not a tracker — it is deleted with the plan: anything left open — skipped check, deferred follow-up, user-only step — also gets a tracker row (`none` → final report); a finding stays open until its check runs.
+
+- Phase 1: a full `flutter build ios --simulator` right after a macOS build failed once with "package product 'mapkit-flutter-product' requires minimum platform version 17.0 … but this target supports 15.0" (the iOS `FlutterGeneratedPluginSwiftPackage` still said `.iOS("15.0")`); `flutter build ios --config-only --simulator` rewrote it to 17.0 and the next full build passed. The `IOS_XCTEST` alias already regenerates first; for Verification step 4 run the iOS config step before `flutter build ios` if it trips. Closed (workaround known).
+- Phase 1/2: the first `flutter build` of each regenerated example adds `FlutterFramework` and `mapkit_flutter` `PBXFileReference`s to its `project.pbxproj`; committed (macOS in Phase 1, iOS in Phase 2) so later builds leave the tree clean. Closed.
+- Phase 1: 16 `{ _ in }` call sites, not 18; `rg '\{ _ in \}' darwin` prints nothing. Closed.
 
 ## Execution prompt
 Paste as turn 1 of a fresh session:

@@ -214,6 +214,16 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         self.showsUserLocation = false
     }
 
+    /// Detaches every delegate and drops map content so the view holds nothing after `dispose`.
+    func tearDown() {
+        delegate = nil
+        flutterApi = nil
+        locationManager.delegate = nil
+        removeUserLocation()
+        removeAnnotations(annotations)
+        removeOverlays(overlays)
+    }
+
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         guard pendingUserLocationRequest, manager.authorizationStatus != .notDetermined else { return }
         pendingUserLocationRequest = false

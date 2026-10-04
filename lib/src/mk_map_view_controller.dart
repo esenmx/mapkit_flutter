@@ -341,6 +341,11 @@ final class MKMapViewControllerImpl implements MKMapViewController {
     if (_disposed) return;
     _disposed = true;
     MapKitFlutterApi.setUp(null, messageChannelSuffix: _channelSuffix);
+    try {
+      await _host.dispose();
+    } on PlatformException {
+      // The native view is already gone; nothing left to release.
+    }
   }
 }
 

@@ -1,10 +1,7 @@
 import Foundation
 import MapKit
 
-/// Shared style surface for the two polyline classes. Straight lines subclass
-/// `MKPolyline`; geodesic lines subclass `MKGeodesicPolyline` (which densifies
-/// the great-circle path natively) — one class can't do both, so the
-/// renderer/snapshot logic lives here once.
+/// Style surface for polyline overlays; the renderer/snapshot logic lives here once.
 protocol StyledPolyline: MKPolyline, FlutterOverlay {
     var id: String { get set }
     var coordinates: [CLLocationCoordinate2D] { get set }
@@ -20,13 +17,10 @@ protocol StyledPolyline: MKPolyline, FlutterOverlay {
     var overlayLevel: MKOverlayLevel { get set }
 }
 
-/// Builds the right polyline class for the wire payload.
+/// Builds the polyline overlay for the wire payload.
 @MainActor
 func makeStyledPolyline(fromPlatform data: PlatformPolyline) -> any StyledPolyline {
-    if data.isGeodesic {
-        return FlutterGeodesicPolyline(fromPlatform: data)
-    }
-    return FlutterPolyline(fromPlatform: data)
+    FlutterPolyline(fromPlatform: data)
 }
 
 extension StyledPolyline {
@@ -130,32 +124,15 @@ final class FlutterPolyline: MKPolyline, StyledPolyline, @unchecked Sendable {
     var overlayLevel: MKOverlayLevel = .aboveRoads
 
     convenience init(fromPlatform data: PlatformPolyline) {
-        let points = data.coordinates.map(\.clCoordinate)
+        var points = data.coordinates.map(\.clCoordinate)
+        if data.isGeodesic, points.count > 1 {
+            // Never subclass MKGeodesicPolyline (27 SDKs: its factory init returns the base class).
+            let arc = MKGeodesicPolyline(coordinates: points, count: points.count)
+            points = UnsafeBufferPointer(start: arc.points(), count: arc.pointCount).map(\.coordinate)
+        }
         self.init(coordinates: points, count: points.count)
         applyStyle(fromPlatform: data)
-    }
-}
-
-/// Great-circle polyline (`MKGeodesicPolyline`) — MapKit densifies the path
-/// natively, so `points()` already follows the arc for hit tests and drawing.
-final class FlutterGeodesicPolyline: MKGeodesicPolyline, StyledPolyline, @unchecked Sendable {
-    var id: String = ""
-    var coordinates: [CLLocationCoordinate2D] = []
-    var strokeColor: PlatformColor?
-    var lineWidth: CGFloat = 1
-    var lineCapType: CGLineCap = .round
-    var lineJoinType: CGLineJoin = .round
-    var dashPattern: [NSNumber]?
-    var gradientColors: [PlatformColor]?
-    var isHidden: Bool = false
-    var isConsumingTapEvents: Bool = false
-    var zIndex: Int = 0
-    var overlayLevel: MKOverlayLevel = .aboveRoads
-
-    convenience init(fromPlatform data: PlatformPolyline) {
-        let points = data.coordinates.map(\.clCoordinate)
-        self.init(coordinates: points, count: points.count)
-        applyStyle(fromPlatform: data)
+        coordinates = points
     }
 }
 

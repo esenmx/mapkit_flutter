@@ -1582,6 +1582,9 @@ protocol MapKitHostApi {
   func openLookAround(coordinate: PlatformCoordinate, completion: @escaping (Result<Bool, Error>) -> Void)
   func addTileOverlay(overlay: PlatformTileOverlay) throws
   func removeTileOverlay(tileOverlayId: String) throws
+  /// Tears down the native view: removes this host's channel handlers,
+  /// detaches the map delegate, stops location updates.
+  func dispose() throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -1910,6 +1913,21 @@ class MapKitHostApiSetup {
       }
     } else {
       removeTileOverlayChannel.setMessageHandler(nil)
+    }
+    /// Tears down the native view: removes this host's channel handlers,
+    /// detaches the map delegate, stops location updates.
+    let disposeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.dispose\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disposeChannel.setMessageHandler { _, reply in
+        do {
+          try api.dispose()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      disposeChannel.setMessageHandler(nil)
     }
   }
 }

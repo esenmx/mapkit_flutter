@@ -189,7 +189,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
             }
         }
         #elseif os(macOS)
-        // Look Around (MKLookAroundViewController) is unavailable on macOS.
+        // MKLookAroundViewController exists on macOS 13+, but presenting it from the AppKit host isn't wired yet.
         completion(.success(false))
         #endif
     }
@@ -314,7 +314,7 @@ extension MapKitViewHost {
         var options: PlatformSnapshotOptions
     }
 
-    private func snapshotInput(_ options: PlatformSnapshotOptions) -> SnapshotInput {
+    func snapshotInput(_ options: PlatformSnapshotOptions) -> SnapshotInput {
         #if os(iOS)
         // Unspecified traits report displayScale == 0, which leaves the scale to MapKit.
         let displayScale = self.mapView.traitCollection.displayScale

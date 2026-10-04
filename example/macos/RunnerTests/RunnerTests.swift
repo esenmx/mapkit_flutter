@@ -111,7 +111,9 @@ private func configuration(
     )
 }
 
-private func circle(_ id: String, zIndex: Int64 = 0, hidden: Bool = false) -> PlatformCircle {
+private func circle(
+    _ id: String, zIndex: Int64 = 0, hidden: Bool = false, level: PlatformOverlayLevel = .aboveRoads
+) -> PlatformCircle {
     PlatformCircle(
         id: id,
         center: PlatformCoordinate(latitude: 0, longitude: 0),
@@ -122,7 +124,7 @@ private func circle(_ id: String, zIndex: Int64 = 0, hidden: Bool = false) -> Pl
         zIndex: zIndex,
         isHidden: hidden,
         consumeTapEvents: true,
-        level: .aboveRoads
+        level: level
     )
 }
 
@@ -131,12 +133,16 @@ final class RunnerTests: XCTestCase {
     func testDisposeRemovesEveryHandler() throws {
         let messenger = ConnectionCountingMessenger()
         let host = MapKitViewHost(messenger: messenger, id: 0)
+        host.mapView.showsUserLocation = true
         XCTAssertFalse(messenger.live.isEmpty)
+        XCTAssertNotNil(host.mapView.locationManager.delegate)
 
         try host.dispose()
 
         XCTAssertEqual(messenger.live, [])
         XCTAssertNil(host.mapView.delegate)
+        XCTAssertNil(host.mapView.locationManager.delegate)
+        XCTAssertFalse(host.mapView.showsUserLocation)
     }
 
     func testGeodesicPolylineIsSafeToStyle() {
@@ -210,7 +216,7 @@ final class RunnerTests: XCTestCase {
         let messenger = RecordingMessenger()
         let host = MapKitViewHost(messenger: messenger, id: 0)
         try host.updateCircles(
-            toAdd: [circle("low", zIndex: 0), circle("high", zIndex: 1)], toChange: [], idsToRemove: [])
+            toAdd: [circle("high", zIndex: 1), circle("low", zIndex: 0)], toChange: [], idsToRemove: [])
         let circleTap = messenger.expectation(for: "onCircleTap", in: self)
 
         TouchHandler.handleMapTap(
@@ -230,6 +236,36 @@ final class RunnerTests: XCTestCase {
 
         view.apply(configuration: configuration(scale: true, tracking: .none))
         XCTAssertEqual(view.trackingModeSets, 2)
+    }
+
+    func testLabelsLevelOverlayTakesTapBeforeRoadsLevel() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        try host.updateCircles(
+            toAdd: [circle("roads", zIndex: 5, level: .aboveRoads), circle("labels", zIndex: 0, level: .aboveLabels)],
+            toChange: [], idsToRemove: [])
+        let circleTap = messenger.expectation(for: "onCircleTap", in: self)
+
+        TouchHandler.handleMapTap(
+            at: CLLocationCoordinate2D(latitude: 0, longitude: 0), flutterApi: host.flutterApi, in: host.mapView)
+
+        await fulfillment(of: [circleTap], timeout: 2)
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(messenger.args(of: "onCircleTap").map { $0.compactMap { $0 as? String } }, [["labels"]])
+    }
+
+    func testSnapshotInputCarriesMapConfigurationAndAppearance() {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
+        host.mapView.apply(configuration: configuration(kind: .imagery))
+        host.mapView.appearance = NSAppearance(named: .darkAqua)
+
+        let input = host.snapshotInput(PlatformSnapshotOptions(
+            showsBuildings: true, showsPointsOfInterest: true, showsAnnotations: false, showsOverlays: false))
+        let options = MapKitViewHost.makeSnapshotOptions(input)
+
+        XCTAssertTrue(options.preferredConfiguration is MKImageryMapConfiguration)
+        XCTAssertEqual(options.appearance?.name, .darkAqua)
     }
 
     func testReAddingTileOverlayReplacesIt() throws {
@@ -288,13 +324,14 @@ final class RunnerTests: XCTestCase {
         let host = MapKitViewHost(messenger: messenger, id: 0)
         try host.updateAnnotations(toAdd: [annotation("a")], toChange: [], idsToRemove: [])
         let view = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
+        let tapped = messenger.expectation(for: "onAnnotationTap", in: self)
         let selected = messenger.expectation(for: "onAnnotationSelect", in: self)
         let deselected = messenger.expectation(for: "onAnnotationDeselect", in: self)
 
         host.mapView(host.mapView, didSelect: view)
         host.mapView(host.mapView, didDeselect: view)
 
-        await fulfillment(of: [selected, deselected], timeout: 2, enforceOrder: true)
+        await fulfillment(of: [tapped, selected, deselected], timeout: 2, enforceOrder: true)
         XCTAssertNil(host.currentlySelectedAnnotation)
     }
 

@@ -121,9 +121,10 @@ jobs:
   example-apple:
     name: example (iOS + macOS builds, native tests, macOS integration)
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
+      - run: sudo xcode-select -s /Applications/Xcode_26.3.app
       - uses: subosito/flutter-action@v2
         with: { channel: stable, cache: true }
       - run: flutter config --enable-swift-package-manager
@@ -134,12 +135,29 @@ jobs:
           flutter build ios --release --no-codesign
           flutter build macos --debug
           xcodebuild test -workspace macos/Runner.xcworkspace -scheme Runner -destination 'platform=macOS' -quiet SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
-          for test in integration_test/*_test.dart; do flutter test "$test" -d macos; done
+      # A macOS integration run can hang after "Failed to foreground app": bound each file, retry once,
+      # and accept a green on-device result whose host teardown failed.
+      - name: macOS integration
+        working-directory: example
+        timeout-minutes: 25
+        run: |
+          set -o pipefail
+          for t in integration_test/*_test.dart; do
+            for attempt in 1 2; do
+              out=$(mktemp); rc=0
+              perl -e 'alarm shift; exec @ARGV' 420 flutter test "$t" -d macos 2>&1 | tee "$out" || rc=$?
+              [ "$rc" -eq 0 ] && break
+              grep -q 'All tests passed' "$out" && { echo "::warning::$t passed; teardown rc=$rc"; break; }
+              pkill -f mapkit_flutter_example || true
+              [ "$attempt" -eq 2 ] && { echo "::error::$t failed twice"; exit 1; }
+            done
+          done
   cocoapods-probe:
     runs-on: macos-15
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+      - run: sudo xcode-select -s /Applications/Xcode_26.3.app
       - uses: subosito/flutter-action@v2
         with: { channel: stable, cache: true }
       - run: flutter config --no-enable-swift-package-manager

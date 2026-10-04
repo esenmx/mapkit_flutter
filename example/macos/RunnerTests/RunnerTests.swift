@@ -161,4 +161,106 @@ final class RunnerTests: XCTestCase {
         XCTAssertEqual(polyline.dashPattern, [6, 3])
         XCTAssertGreaterThan(polyline.pointCount, 2)
     }
+
+    func testCalloutToggleReachesNative() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        try host.updateAnnotations(toAdd: [annotation("a")], toChange: [], idsToRemove: [])
+
+        try host.updateAnnotations(toAdd: [], toChange: [annotation("a", callout: true)], idsToRemove: [])
+
+        XCTAssertEqual(host.annotationsById["a"]?.calloutConsumesTapEvents, true)
+    }
+
+    func testFirstUpdateAfterDragApplies() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        try host.updateAnnotations(toAdd: [annotation("a", title: "A")], toChange: [], idsToRemove: [])
+        let view = MKAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
+        host.mapView(host.mapView, annotationView: view, didChange: .ending, fromOldState: .dragging)
+
+        try host.updateAnnotations(toAdd: [], toChange: [annotation("a", title: "B")], idsToRemove: [])
+
+        XCTAssertEqual(host.annotationsById["a"]?.title, "B")
+    }
+
+    func testCalloutOffsetIgnoresViewPosition() {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let flutterAnnotation = FlutterAnnotation(fromPlatform: annotation("a"))
+        let view = MKAnnotationView(annotation: flutterAnnotation, reuseIdentifier: nil)
+        view.frame = CGRect(x: 300, y: 120, width: 40, height: 40)
+
+        host.initInfoWindow(annotation: flutterAnnotation, annotationView: view)
+
+        XCTAssertEqual(view.calloutOffset, .zero)
+    }
+
+    func testHiddenOverlayDoesNotConsumeTap() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        try host.updateCircles(toAdd: [circle("hidden", hidden: true)], toChange: [], idsToRemove: [])
+        let mapTap = messenger.expectation(for: "onMapTap", in: self)
+
+        TouchHandler.handleMapTap(
+            at: CLLocationCoordinate2D(latitude: 0, longitude: 0), flutterApi: host.flutterApi, in: host.mapView)
+
+        await fulfillment(of: [mapTap], timeout: 2)
+        XCTAssertTrue(messenger.args(of: "onCircleTap").isEmpty)
+    }
+
+    func testOnlyTopMostOverlayReceivesTap() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        try host.updateCircles(
+            toAdd: [circle("low", zIndex: 0), circle("high", zIndex: 1)], toChange: [], idsToRemove: [])
+        let circleTap = messenger.expectation(for: "onCircleTap", in: self)
+
+        TouchHandler.handleMapTap(
+            at: CLLocationCoordinate2D(latitude: 0, longitude: 0), flutterApi: host.flutterApi, in: host.mapView)
+
+        await fulfillment(of: [circleTap], timeout: 2)
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(messenger.args(of: "onCircleTap").map { $0.compactMap { $0 as? String } }, [["high"]])
+    }
+
+    func testTrackingModeReappliedOnlyWhenItChanges() {
+        let view = CountingMapView()
+
+        view.apply(configuration: configuration(tracking: .follow))
+        view.apply(configuration: configuration(scale: true, tracking: .follow))
+        XCTAssertEqual(view.trackingModeSets, 1)
+
+        view.apply(configuration: configuration(scale: true, tracking: .none))
+        XCTAssertEqual(view.trackingModeSets, 2)
+    }
+
+    func testReAddingTileOverlayReplacesIt() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let tiles = PlatformTileOverlay(
+            id: "",
+            urlTemplate: "https://tile.example.com/{z}/{x}/{y}.png",
+            minimumZ: 0,
+            maximumZ: 19,
+            tileSize: 256,
+            canReplaceMapContent: false,
+            alpha: 1,
+            level: .aboveRoads
+        )
+
+        try host.addTileOverlay(overlay: tiles)
+        try host.addTileOverlay(overlay: tiles)
+
+        XCTAssertEqual(host.mapView.overlays.count, 1)
+    }
+
+    func testTrackingButtonAppliesOnMacOS() {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+
+        host.mapView.apply(configuration: configuration(trackingButton: true))
+
+        XCTAssertTrue(host.mapView.showsUserTrackingButton)
+    }
+}
+
+final class CountingMapView: FlutterMapView {
+    var trackingModeSets = 0
+    override func setUserTrackingMode(_ mode: MKUserTrackingMode, animated: Bool) { trackingModeSets += 1 }
 }

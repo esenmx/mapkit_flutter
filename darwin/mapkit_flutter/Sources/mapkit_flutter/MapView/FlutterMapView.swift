@@ -23,6 +23,9 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
     fileprivate let locationManager = CLLocationManager()
     private var pendingUserLocationRequest = false
 
+    /// The last configuration Dart pushed.
+    private(set) var appliedConfiguration: PlatformMapConfiguration?
+
     override init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
         registerDefaultAnnotationViews()
@@ -90,6 +93,8 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
     // MARK: - Configuration
 
     func apply(configuration config: PlatformMapConfiguration) {
+        let previousTrackingMode = appliedConfiguration?.userTrackingMode
+        appliedConfiguration = config
         applyMapConfiguration(config)
 
         self.showsCompass = config.showsCompass
@@ -105,12 +110,12 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         } else {
             self.removeUserLocation()
         }
-        #if os(iOS)
-        // `showsUserTrackingButton` is the iOS-only MKMapView convenience.
         self.showsUserTrackingButton = config.showsUserTrackingButton
-        #endif
 
-        self.setUserTrackingMode(config.userTrackingMode.mkMode, animated: false)
+        // MapKit drops to `.none` when the user pans; unrelated config changes must not snap back.
+        if config.userTrackingMode != previousTrackingMode {
+            self.setUserTrackingMode(config.userTrackingMode.mkMode, animated: false)
+        }
 
         // Always assign — nil clears a previously-set range/boundary.
         if let range = config.cameraZoomRange,
@@ -295,7 +300,7 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         #if os(iOS)
         guard tap.state == .recognized else { return }
         #endif
-        TouchHandler.handleMapTaps(tap: tap, overlays: self.overlays, flutterApi: self.flutterApi, in: self)
+        TouchHandler.handleMapTaps(tap: tap, flutterApi: self.flutterApi, in: self)
     }
 
     func gestureRecognizer(_ gestureRecognizer: PlatformGestureRecognizer,

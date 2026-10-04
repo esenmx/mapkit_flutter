@@ -8,6 +8,9 @@
 - Platform channel regenerated with Pigeon 29; host→Dart events use its async Swift API.
 - An overlay with onTap now consumes taps (onTap implies consumeTapEvents).
 - fitCoordinates gains padding and minimumSpan; a single coordinate now frames 0.005° instead of zooming fully in.
+- Only the top-most visible consuming overlay receives a tap (was every overlay under the point).
+- `userTrackingMode` is re-applied only when it changes, so unrelated rebuilds no longer snap a panned map back to tracking.
+- `showsUserTrackingButton` works on macOS.
 
 ### Fixed
 
@@ -18,6 +21,13 @@
 - `copyWith` can clear nullable fields with an explicit `null` (e.g. `copyWith(title: null)`).
 - In-range longitudes are stored verbatim (normalisation used to perturb them, e.g. 10.1 → 10.099999999999994).
 - `initialize` sends one object per id, last wins, like the rebuild diff; duplicate ids now assert in debug.
+- Toggling `onCalloutTap` on an existing annotation now reaches native.
+- The first annotation update after a drag is no longer dropped (Dart stays the source of truth: a drag the app ignores snaps back on the next changed rebuild).
+- `MKPointOfInterestCategory.evCharger` works on iOS 17 (an `including` filter with it no longer hides every POI).
+- Custom-image annotation callouts are no longer offset sideways.
+- `onCalloutTap` fires once per tap after reselecting an annotation (iOS).
+- Hidden overlays never take taps.
+- Re-adding a tile overlay with the same id (including the empty id) replaces it.
 
 ### Removed
 

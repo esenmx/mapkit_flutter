@@ -208,8 +208,8 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
     func addTileOverlay(overlay overlayData: PlatformTileOverlay) throws {
         let overlay = FlutterTileOverlay(fromPlatform: overlayData)
-        if !overlay.id.isEmpty, tileOverlays[overlay.id] != nil {
-            try removeTileOverlay(tileOverlayId: overlay.id)
+        if let existing = tileOverlays.removeValue(forKey: overlay.id) {
+            mapView.removeOverlay(existing)
         }
         tileOverlays[overlay.id] = overlay
         self.mapView.addOverlay(overlay, level: overlay.overlayLevel)

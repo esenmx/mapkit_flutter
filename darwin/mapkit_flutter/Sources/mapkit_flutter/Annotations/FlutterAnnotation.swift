@@ -16,7 +16,6 @@ class FlutterAnnotation: NSObject, MKAnnotation, @unchecked Sendable {
     var alpha: Double
     var anchorPoint: CGPoint
     var isDraggable: Bool
-    var wasDragged: Bool = false
     var isHidden: Bool
     var zPriority: Double
     var icon: AnnotationIcon
@@ -48,7 +47,6 @@ class FlutterAnnotation: NSObject, MKAnnotation, @unchecked Sendable {
             && subtitle == other.subtitle
             && alpha == other.alpha
             && isDraggable == other.isDraggable
-            && wasDragged == other.wasDragged
             && isHidden == other.isHidden
             && icon == other.icon
             && coordinate.latitude == other.coordinate.latitude

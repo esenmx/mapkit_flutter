@@ -1,8 +1,7 @@
 import MapKit
 
 extension PlatformPointOfInterestCategory {
-    /// `nil` when the category needs a newer OS than the device runs
-    /// (`evCharger` is iOS 18+).
+    /// `nil` when the category needs a newer OS than the device runs.
     var mkCategory: MKPointOfInterestCategory? {
         switch self {
         case .airport: return .airport
@@ -16,9 +15,7 @@ extension PlatformPointOfInterestCategory {
         case .cafe: return .cafe
         case .campground: return .campground
         case .carRental: return .carRental
-        case .evCharger:
-            if #available(iOS 18.0, *) { return .evCharger }
-            return nil
+        case .evCharger: return .evCharger
         case .fireStation: return .fireStation
         case .fitnessCenter: return .fitnessCenter
         case .foodMarket: return .foodMarket

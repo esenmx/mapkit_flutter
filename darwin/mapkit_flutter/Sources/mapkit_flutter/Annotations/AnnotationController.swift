@@ -13,24 +13,39 @@ extension MapKitViewHost {
 
     public func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         if let annotation: FlutterAnnotation = view.annotation as? FlutterAnnotation {
-            self.currentlySelectedAnnotation = annotation.id
+            let id = annotation.id
+            self.currentlySelectedAnnotation = id
             if !annotation.selectedProgrammatically {
-                self.onAnnotationClick(annotation: annotation)
+                self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
             } else {
                 annotation.selectedProgrammatically = false
             }
 
             #if os(iOS)
             // Callout tap forwarding is bridged via a tap recognizer on iOS;
-            // the macOS callout uses MapKit's default behavior.
-            if annotation.calloutConsumesTapEvents {
+            // the macOS callout uses MapKit's default behavior. One recognizer
+            // per view: reselecting must not stack another.
+            if annotation.calloutConsumesTapEvents,
+               !(view.gestureRecognizers ?? []).contains(where: { $0 is InfoWindowTapGestureRecognizer }) {
                 let tapGestureRecognizer = InfoWindowTapGestureRecognizer(target: self, action: #selector(onCalloutTapped))
-                tapGestureRecognizer.annotationId = annotation.id
+                tapGestureRecognizer.annotationId = id
                 tapGestureRecognizer.annotationView = view
                 view.addGestureRecognizer(tapGestureRecognizer)
             }
             #endif
         }
+    }
+
+    public func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
+        guard let annotation = view.annotation as? FlutterAnnotation else { return }
+        if self.currentlySelectedAnnotation == annotation.id {
+            self.currentlySelectedAnnotation = nil
+        }
+        #if os(iOS)
+        for recognizer in view.gestureRecognizers ?? [] where recognizer is InfoWindowTapGestureRecognizer {
+            view.removeGestureRecognizer(recognizer)
+        }
+        #endif
     }
 
     public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -58,7 +73,6 @@ extension MapKitViewHost {
         case .dragging:
             self.flutterApi.send { try await $0.onAnnotationDrag(annotationId: id, coordinate: coordinate) }
         case .ending, .canceling:
-            annotation.wasDragged = true
             self.flutterApi.send { try await $0.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) }
         default:
             break
@@ -123,11 +137,7 @@ extension MapKitViewHost {
             if let annotationToChange = self.getAnnotation(with: annotationData.id) {
                 let newAnnotation = FlutterAnnotation(fromPlatform: annotationData)
                 if annotationToChange != newAnnotation {
-                    if !annotationToChange.wasDragged {
-                        updateAnnotation(annotation: newAnnotation)
-                    } else {
-                        annotationToChange.wasDragged = false
-                    }
+                    updateAnnotation(annotation: newAnnotation)
                 }
             }
         }
@@ -137,13 +147,6 @@ extension MapKitViewHost {
         let toRemove = annotationIds.compactMap { self.annotationsById.removeValue(forKey: $0) }
         if !toRemove.isEmpty {
             self.mapView.removeAnnotations(toRemove)
-        }
-    }
-
-    func onAnnotationClick(annotation: MKAnnotation) {
-        if let flutterAnnotation: FlutterAnnotation = annotation as? FlutterAnnotation {
-            let id = flutterAnnotation.id
-            self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
         }
     }
 
@@ -171,10 +174,9 @@ extension MapKitViewHost {
         }
     }
 
-    private func initInfoWindow(annotation: FlutterAnnotation, annotationView: MKAnnotationView) {
-        let x = annotationView.frame.origin.x
-            + annotationView.frame.width * annotation.anchorPoint.x
-        annotationView.calloutOffset = CGPoint(x: x, y: 0)
+    func initInfoWindow(annotation: FlutterAnnotation, annotationView: MKAnnotationView) {
+        // MapKit centers the callout on the view; `anchorPoint` already moves the view.
+        annotationView.calloutOffset = .zero
         #if os(iOS)
         // The multi-line subtitle accessory is built with UIKit; macOS uses
         // MapKit's default callout (title/subtitle).
@@ -258,6 +260,7 @@ extension MapKitViewHost {
         oldAnnotation.alpha = annotation.alpha
         oldAnnotation.isHidden = annotation.isHidden
         oldAnnotation.isDraggable = annotation.isDraggable
+        oldAnnotation.calloutConsumesTapEvents = annotation.calloutConsumesTapEvents
         oldAnnotation.title = annotation.title
         oldAnnotation.subtitle = annotation.subtitle
         oldAnnotation.clusteringIdentifier = annotation.clusteringIdentifier

@@ -268,7 +268,8 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
 
     #if os(iOS)
     @objc func onMapGesture(sender: UIGestureRecognizer) {
-        self.flutterApi?.onCameraMove(camera: currentPlatformCamera()) { _ in }
+        let camera = currentPlatformCamera()
+        self.flutterApi?.send { try await $0.onCameraMove(camera: camera) }
     }
     #endif
 
@@ -276,7 +277,8 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         guard sender.state == .began else { return }
         let locationInView = sender.location(in: self)
         let locationOnMap = self.convert(locationInView, toCoordinateFrom: self)
-        self.flutterApi?.onMapLongPress(coordinate: .from(locationOnMap)) { _ in }
+        let coordinate = PlatformCoordinate.from(locationOnMap)
+        self.flutterApi?.send { try await $0.onMapLongPress(coordinate: coordinate) }
     }
 
     @objc func onTap(_ tap: PlatformGestureRecognizer) {

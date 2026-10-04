@@ -252,22 +252,25 @@ extension MapKitViewHost: MKMapViewDelegate {
     // onIdle
     public func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         if self.mapView.bounds.size != .zero {
-            self.flutterApi.onCameraMove(camera: self.mapView.currentPlatformCamera()) { _ in }
+            let camera = self.mapView.currentPlatformCamera()
+            self.flutterApi.send { try await $0.onCameraMove(camera: camera) }
         }
-        self.flutterApi.onCameraIdle { _ in }
+        self.flutterApi.send { try await $0.onCameraIdle() }
     }
 
     // onMoveStarted
     public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-        self.flutterApi.onCameraMoveStarted { _ in }
+        self.flutterApi.send { try await $0.onCameraMoveStarted() }
     }
 
     public func mapViewDidFailLoadingMap(_ mapView: MKMapView, withError error: Error) {
-        self.flutterApi.onDidFailLoadingMap(error: error.localizedDescription) { _ in }
+        let message = error.localizedDescription
+        self.flutterApi.send { try await $0.onDidFailLoadingMap(error: message) }
     }
 
     public func mapView(_ mapView: MKMapView, didFailToLocateUserWithError error: Error) {
-        self.flutterApi.onDidFailToLocateUser(error: error.localizedDescription) { _ in }
+        let message = error.localizedDescription
+        self.flutterApi.send { try await $0.onDidFailToLocateUser(error: message) }
     }
 
     public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {

@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Requires Dart 3.13 / Flutter 3.47 (was Dart 3.10 / Flutter 3.41).
+- Platform channel regenerated with Pigeon 29; host→Dart events use its async Swift API.
+
+### Fixed
+
+- Package.swift declares the FlutterFramework dependency (silences the Flutter 3.47 build warning).
+
+### Removed
+
+- The hand-patched pigeon deepEquals dictionary branch (dead code — the schema has no Map fields) and the unused ios/ copy of the generated Swift file.
+
 ## 0.3.7
 
 - Fix: iOS snapshot polylines now stroke as a single subpath, so `lineJoin` applies and dash patterns run continuously across vertices. A single-coordinate polyline now draws nothing instead of a round-cap dot, matching the live renderer.

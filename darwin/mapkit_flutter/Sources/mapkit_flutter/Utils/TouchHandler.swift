@@ -17,23 +17,27 @@ class TouchHandler {
         for overlay: MKOverlay in overlays {
             if let polyline = overlay as? any StyledPolyline {
                 if polyline.isConsumingTapEvents && polyline.contains(coordinate: coord, mapView: view) {
-                    flutterApi?.onPolylineTap(polylineId: polyline.id) { _ in }
+                    let id = polyline.id
+                    flutterApi?.send { try await $0.onPolylineTap(polylineId: id) }
                     didOverlayConsumeTapEvent = true
                 }
             } else if let polygon = overlay as? FlutterPolygon {
                 if polygon.isConsumingTapEvents && polygon.contains(coordinate: coord) {
-                    flutterApi?.onPolygonTap(polygonId: polygon.id) { _ in }
+                    let id = polygon.id
+                    flutterApi?.send { try await $0.onPolygonTap(polygonId: id) }
                     didOverlayConsumeTapEvent = true
                 }
             } else if let circle = overlay as? FlutterCircle {
                 if circle.isConsumingTapEvents && circle.contains(coordinate: coord) {
-                    flutterApi?.onCircleTap(circleId: circle.id) { _ in }
+                    let id = circle.id
+                    flutterApi?.send { try await $0.onCircleTap(circleId: id) }
                     didOverlayConsumeTapEvent = true
                 }
             }
         }
         if !didOverlayConsumeTapEvent {
-            flutterApi?.onMapTap(coordinate: .from(coord)) { _ in }
+            let coordinate = PlatformCoordinate.from(coord)
+            flutterApi?.send { try await $0.onMapTap(coordinate: coordinate) }
         }
     }
 }

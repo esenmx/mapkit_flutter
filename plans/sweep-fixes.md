@@ -1,7 +1,7 @@
 ---
-status: approved
+status: in-progress
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-04
 ---
 
 # Plan: mapkit_flutter 0.4.0 — pigeon 29, native teardown, Swift fixes, selection/feature callbacks, fleet hygiene
@@ -10,7 +10,7 @@ Every section below is filled from the current tree; a placeholder left in is a 
 Frontmatter `status` is the plan's lifecycle, one owner per transition: `draft` → `approved` (planner, on user approval, before commit) → `in-progress` (executor, before Phase 1) → deleted (executor's last commit, once every § Verification step ran and passed — one that couldn't run keeps it `in-progress`, logged to the § Found tracker). Plans are ephemeral: git is the archive. `outdated` — whoever finds § Files no longer matching the tree; an outdated plan is re-grounded or replaced, never executed. Every transition bumps `updated`.
 
 ## Progress
-- [ ] Phase 1: Pigeon 29 + SPM foundation
+- [x] Phase 1: Pigeon 29 + SPM foundation
 - [ ] Phase 2: Native oracle harness, host teardown, geodesic crash
 - [ ] Phase 3: Dart bug fixes
 - [ ] Phase 4: Swift bug fixes

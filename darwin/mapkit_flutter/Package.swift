@@ -21,7 +21,8 @@ let package = Package(
       name: "mapkit_flutter",
       dependencies: [
         .product(name: "FlutterFramework", package: "FlutterFramework")
-      ]
+      ],
+      resources: [.process("PrivacyInfo.xcprivacy")]
     )
   ]
 )

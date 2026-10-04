@@ -11,6 +11,7 @@
 - MKPointAnnotation.onSelect / onDeselect.
 - MKMapView.onMapFeatureSelected (iOS) with MKMapFeature / MKMapFeatureType.
 - 33 iOS 18 / macOS 15 MKPointOfInterestCategory values (ignored by filters on older OS versions).
+- Apple privacy manifest (PrivacyInfo.xcprivacy) for SPM and CocoaPods.
 
 ### Changed
 
@@ -41,6 +42,7 @@
 - Hidden overlays never take taps.
 - Re-adding a tile overlay with the same id (including the empty id) replaces it.
 - Snapshots now match the on-screen map: style (hybrid/imagery/muted/traffic/elevation/POI filter), rotated/pitched camera and dark mode.
+- The podspec no longer forces -warnings-as-errors on CocoaPods consumers.
 
 ### Removed
 

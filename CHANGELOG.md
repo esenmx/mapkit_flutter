@@ -11,6 +11,7 @@
 - Only the top-most visible consuming overlay receives a tap (was every overlay under the point).
 - `userTrackingMode` is re-applied only when it changes, so unrelated rebuilds no longer snap a panned map back to tracking.
 - `showsUserTrackingButton` works on macOS.
+- MKMapSnapshotOptions.showsBuildings has no effect (MapKit dropped it).
 
 ### Fixed
 
@@ -28,6 +29,7 @@
 - `onCalloutTap` fires once per tap after reselecting an annotation (iOS).
 - Hidden overlays never take taps.
 - Re-adding a tile overlay with the same id (including the empty id) replaces it.
+- Snapshots now match the on-screen map: style (hybrid/imagery/muted/traffic/elevation/POI filter), rotated/pitched camera and dark mode.
 
 ### Removed
 

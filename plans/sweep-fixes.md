@@ -14,7 +14,7 @@ Frontmatter `status` is the plan's lifecycle, one owner per transition: `draft` 
 - [x] Phase 2: Native oracle harness, host teardown, geodesic crash
 - [x] Phase 3: Dart bug fixes
 - [x] Phase 4: Swift bug fixes
-- [ ] Phase 5: Snapshot fidelity
+- [x] Phase 5: Snapshot fidelity
 - [ ] Phase 6: Selection, map-feature and continuous-camera callbacks; iOS 18 POI categories
 - [ ] Phase 7: Packaging
 - [ ] Phase 8: Repo meta, lint config, pubspec
@@ -759,6 +759,7 @@ Executor appends one bullet per discovery the plan didn't name: blocking and in-
 - Phase 1: 16 `{ _ in }` call sites, not 18; `rg '\{ _ in \}' darwin` prints nothing. Closed.
 - Phase 3 (deviation, needs user review): the sentinel `copyWith` broke an existing call at runtime. With an `Object?` parameter, `copyWith(lineDashPattern: [6, 3])` / `const [1]` (`test/mk_polyline_test.dart:103`) infers `List<int>`, so the exact `as List<double>?` cast threw `TypeError`, contradicting the Decision's "source-compatible for every existing call". `MKPolyline.copyWith` now casts `lineDashPattern as List<num>?` and maps `toDouble()`; a non-numeric list still throws. Only this parameter is affected (string and closure literals cast fine). Declined: keep the exact cast, change the test to `<double>[1]` and document the runtime trap. Open until the user confirms.
 - Phase 4: MK-S13's other half (an annotation whose programmatic `showCallout` never produced a `didSelect` keeps `selectedProgrammatically == true`, so its next user tap is swallowed) is deferred per the plan. Tracker row appended in Phase 4; Phase 11 step 3 must not add it again. Open.
+- Phase 5: the oracle's `xcrun simctl list devices booted … [0].udid` picks whichever simulator boots first; another executor had an iOS 27 `iPhone 16 Pro` booted, so the snapshot test ran on the explicit `iPhone 15` (iOS 17.5) UDID `E1C2FC5C-7A36-484B-A573-CC5E580C3C63`. Use an explicit UDID for Verification step 7 too. Closed.
 
 ## Execution prompt
 Paste as turn 1 of a fresh session:

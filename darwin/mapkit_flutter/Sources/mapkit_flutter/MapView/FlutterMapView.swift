@@ -95,7 +95,7 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
     func apply(configuration config: PlatformMapConfiguration) {
         let previousTrackingMode = appliedConfiguration?.userTrackingMode
         appliedConfiguration = config
-        applyMapConfiguration(config)
+        self.preferredConfiguration = Self.makeMapConfiguration(config)
 
         self.showsCompass = config.showsCompass
         self.showsScale = config.showsScale
@@ -138,38 +138,43 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         #endif
     }
 
-    private func applyMapConfiguration(_ config: PlatformMapConfiguration) {
+    /// The `MKMapConfiguration` for a Dart configuration; shared by the live map and snapshots.
+    nonisolated static func makeMapConfiguration(
+        _ config: PlatformMapConfiguration,
+        hidingPointsOfInterest: Bool = false
+    ) -> MKMapConfiguration {
         let elevationStyle: MKMapConfiguration.ElevationStyle =
             config.elevationStyle == .realistic ? .realistic : .flat
+        let filter = hidingPointsOfInterest ? .excludingAll : poiFilter(from: config.pointOfInterestFilter)
 
         switch config.kind {
         case .imagery:
             let configuration = MKImageryMapConfiguration()
             configuration.elevationStyle = elevationStyle
-            self.preferredConfiguration = configuration
+            return configuration
         case .hybrid:
             let configuration = MKHybridMapConfiguration()
             configuration.elevationStyle = elevationStyle
-            if let filter = poiFilter(from: config.pointOfInterestFilter) {
+            if let filter {
                 configuration.pointOfInterestFilter = filter
             }
             configuration.showsTraffic = config.showsTraffic
-            self.preferredConfiguration = configuration
+            return configuration
         case .standard:
             let configuration = MKStandardMapConfiguration()
             configuration.elevationStyle = elevationStyle
             if config.emphasisStyle == .muted {
                 configuration.emphasisStyle = .muted
             }
-            if let filter = poiFilter(from: config.pointOfInterestFilter) {
+            if let filter {
                 configuration.pointOfInterestFilter = filter
             }
             configuration.showsTraffic = config.showsTraffic
-            self.preferredConfiguration = configuration
+            return configuration
         }
     }
 
-    private func poiFilter(from filter: PlatformPointOfInterestFilter?) -> MKPointOfInterestFilter? {
+    private nonisolated static func poiFilter(from filter: PlatformPointOfInterestFilter?) -> MKPointOfInterestFilter? {
         guard let filter = filter else { return nil }
         switch filter.mode {
         case .none:

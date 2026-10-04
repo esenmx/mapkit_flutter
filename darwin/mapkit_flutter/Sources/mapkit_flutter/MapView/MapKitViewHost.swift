@@ -296,6 +296,57 @@ extension MapKitViewHost: MKMapViewDelegate {
 }
 
 extension MapKitViewHost {
+    /// Everything a snapshot needs from the live map, as Sendable values: the
+    /// snapshotter runs off the main actor and must never see `mapView` objects.
+    struct SnapshotInput: Sendable {
+        var region: MKCoordinateRegion
+        var size: CGSize
+        var displayScale: CGFloat
+        var camera: PlatformMapCamera
+        var configuration: PlatformMapConfiguration?
+        var isDark: Bool
+        var options: PlatformSnapshotOptions
+    }
+
+    private func snapshotInput(_ options: PlatformSnapshotOptions) -> SnapshotInput {
+        #if os(iOS)
+        // Unspecified traits report displayScale == 0, which leaves the scale to MapKit.
+        let displayScale = self.mapView.traitCollection.displayScale
+        let isDark = self.mapView.traitCollection.userInterfaceStyle == .dark
+        #elseif os(macOS)
+        let displayScale: CGFloat = 0
+        let isDark = self.mapView.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        #endif
+        return SnapshotInput(
+            region: self.mapView.region,
+            size: self.mapView.frame.size,
+            displayScale: displayScale,
+            camera: self.mapView.currentPlatformCamera(),
+            configuration: self.mapView.appliedConfiguration,
+            isDark: isDark,
+            options: options)
+    }
+
+    nonisolated static func makeSnapshotOptions(_ input: SnapshotInput) -> MKMapSnapshotter.Options {
+        let options = MKMapSnapshotter.Options()
+        options.region = input.region
+        options.size = input.size
+        options.camera = input.camera.mkCamera
+        if let configuration = input.configuration {
+            options.preferredConfiguration = FlutterMapView.makeMapConfiguration(
+                configuration, hidingPointsOfInterest: !input.options.showsPointsOfInterest)
+        }
+        #if os(iOS)
+        options.traitCollection = UITraitCollection { traits in
+            traits.userInterfaceStyle = input.isDark ? .dark : .light
+            if input.displayScale > 0 { traits.displayScale = input.displayScale }
+        }
+        #elseif os(macOS)
+        options.appearance = NSAppearance(named: input.isDark ? .darkAqua : .aqua)
+        #endif
+        return options
+    }
+
     private func takeSnapshot(options: PlatformSnapshotOptions) async throws -> FlutterStandardTypedData? {
         // Caller-side options exist only for `size`/`mapRect` in the
         // compositing pass below; the snapshotter gets its own copy off-actor.
@@ -303,19 +354,7 @@ extension MapKitViewHost {
         snapshotOptions.region = self.mapView.region
         snapshotOptions.size = self.mapView.frame.size
 
-        #if os(iOS)
-        // Unspecified traits report displayScale == 0; 0 leaves `scale` unset
-        // so MapKit falls back to its main-screen default.
-        let displayScale = self.mapView.traitCollection.displayScale
-        #else
-        let displayScale: CGFloat = 0
-        #endif
-        let snapshot = try await Self.takeSnapshot(
-            region: snapshotOptions.region,
-            size: snapshotOptions.size,
-            scale: displayScale,
-            showsBuildings: options.showsBuildings,
-            showsPointsOfInterest: options.showsPointsOfInterest)
+        let snapshot = try await Self.startSnapshot(snapshotInput(options))
 
         #if os(iOS)
         let image = UIGraphicsImageRenderer(size: snapshotOptions.size).image { context in
@@ -353,27 +392,11 @@ extension MapKitViewHost {
     /// Runs the snapshotter off the main actor and hands the result back with
     /// `sending`: older SDKs don't mark `MKMapSnapshotter.Snapshot` Sendable,
     /// so awaiting `start()` directly from `@MainActor` fails to compile
-    /// there. Only Sendable value types cross in; the options and snapshotter
+    /// there. Only the Sendable input crosses in; the options and snapshotter
     /// live entirely in this disconnected region, so the fresh snapshot is
     /// provably safe to move out.
-    private nonisolated static func takeSnapshot(
-        region: MKCoordinateRegion,
-        size: CGSize,
-        scale: CGFloat,
-        showsBuildings: Bool,
-        showsPointsOfInterest: Bool
-    ) async throws -> sending MKMapSnapshotter.Snapshot {
-        let options = MKMapSnapshotter.Options()
-        options.region = region
-        options.size = size
-        #if os(iOS)
-        if scale > 0 {
-            options.scale = scale
-        }
-        #endif
-        options.showsBuildings = showsBuildings
-        options.pointOfInterestFilter = showsPointsOfInterest ? .includingAll : .excludingAll
-        return try await MKMapSnapshotter(options: options).start()
+    private nonisolated static func startSnapshot(_ input: SnapshotInput) async throws -> sending MKMapSnapshotter.Snapshot {
+        try await MKMapSnapshotter(options: makeSnapshotOptions(input)).start()
     }
 
     #if os(iOS)

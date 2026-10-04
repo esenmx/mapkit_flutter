@@ -8,9 +8,8 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotter/options
 @immutable
 final class const MKMapSnapshotOptions({
-  /// The showsBuildings property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotoptions/showsbuildings
+  /// No effect: MapKit no longer supports it; buildings follow the map's
+  /// configuration.
   final bool showsBuildings = true,
 
   /// The showsPointsOfInterest property.

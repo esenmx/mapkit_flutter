@@ -148,4 +148,7 @@ final class FakeHostApi extends MapKitHostApi {
   @override
   Future<void> removeTileOverlay(String tileOverlayId) async =>
       _record('removeTileOverlay', tileOverlayId);
+
+  @override
+  Future<void> dispose() async => _record('dispose', null);
 }

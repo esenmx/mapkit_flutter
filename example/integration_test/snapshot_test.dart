@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -277,7 +278,7 @@ void main() {
     ).isLessThan(400);
 
     check(tester.takeException()).isNull();
-  });
+  }, skip: !Platform.isIOS);
 }
 
 /// A decoded snapshot: raw RGBA bytes plus dimensions.

@@ -521,6 +521,10 @@ abstract class MapKitHostApi {
 
   void addTileOverlay(PlatformTileOverlay overlay);
   void removeTileOverlay(String tileOverlayId);
+
+  /// Tears down the native view: removes this host's channel handlers,
+  /// detaches the map delegate, stops location updates.
+  void dispose();
 }
 
 /// Host -> Flutter. One instance per platform view, keyed by view id.

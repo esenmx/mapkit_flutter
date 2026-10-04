@@ -21,21 +21,24 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     var contentView: UIView
     #endif
     var mapView: FlutterMapView
-    var registrar: FlutterPluginRegistrar
     var flutterApi: MapKitFlutterApi
+    private let hostMessenger: ConnectionTrackingMessenger
     var currentlySelectedAnnotation: String?
     var tileOverlays: [String: FlutterTileOverlay] = [:]
     var annotationsById: [String: FlutterAnnotation] = [:]
     private var overlaysById: [String: any FlutterOverlay] = [:]
 
-    public init(withFrame frame: CGRect, withRegistrar registrar: FlutterPluginRegistrar, withId id: Int64) {
-        let suffix = "\(id)"
+    public convenience init(withFrame frame: CGRect, withRegistrar registrar: FlutterPluginRegistrar, withId id: Int64) {
         #if os(iOS)
-        let messenger = registrar.messenger()
+        self.init(messenger: registrar.messenger(), id: id)
         #elseif os(macOS)
-        let messenger = registrar.messenger
+        self.init(messenger: registrar.messenger, id: id)
         #endif
-        self.registrar = registrar
+    }
+
+    init(messenger: FlutterBinaryMessenger, id: Int64) {
+        let suffix = "\(id)"
+        self.hostMessenger = ConnectionTrackingMessenger(messenger)
         self.flutterApi = MapKitFlutterApi(binaryMessenger: messenger, messageChannelSuffix: suffix)
         self.mapView = FlutterMapView()
 
@@ -50,7 +53,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
         self.mapView.delegate = self
         self.mapView.flutterApi = self.flutterApi
-        MapKitHostApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: suffix)
+        MapKitHostApiSetup.setUp(binaryMessenger: hostMessenger, api: self, messageChannelSuffix: suffix)
     }
 
     private func mapKitError(_ code: String, _ message: String) -> MapKitHostError {
@@ -215,6 +218,15 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     func removeTileOverlay(tileOverlayId: String) throws {
         guard let overlay = tileOverlays.removeValue(forKey: tileOverlayId) else { return }
         self.mapView.removeOverlay(overlay)
+    }
+
+    func dispose() throws {
+        hostMessenger.removeAllHandlers()
+        mapView.tearDown()
+        annotationsById.removeAll()
+        overlaysById.removeAll()
+        tileOverlays.removeAll()
+        currentlySelectedAnnotation = nil
     }
 
     private func addOverlay(_ overlay: any FlutterOverlay) {

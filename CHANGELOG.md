@@ -10,6 +10,8 @@
 ### Fixed
 
 - Package.swift declares the FlutterFramework dependency (silences the Flutter 3.47 build warning).
+- Unmounting a map now releases its native MKMapView, host and location manager (channel handlers were never removed).
+- Geodesic polylines no longer corrupt memory on iOS/macOS 27 (MKGeodesicPolyline is no longer subclassed).
 
 ### Removed
 

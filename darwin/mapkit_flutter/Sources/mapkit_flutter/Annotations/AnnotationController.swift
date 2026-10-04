@@ -12,33 +12,41 @@ import FlutterMacOS
 extension MapKitViewHost {
 
     public func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        if let annotation: FlutterAnnotation = view.annotation as? FlutterAnnotation {
-            let id = annotation.id
-            self.currentlySelectedAnnotation = id
-            if !annotation.selectedProgrammatically {
-                self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
-            } else {
-                annotation.selectedProgrammatically = false
-            }
-
-            #if os(iOS)
-            // Callout tap forwarding is bridged via a tap recognizer on iOS;
-            // the macOS callout uses MapKit's default behavior. One recognizer
-            // per view: reselecting must not stack another.
-            if annotation.calloutConsumesTapEvents,
-               !(view.gestureRecognizers ?? []).contains(where: { $0 is InfoWindowTapGestureRecognizer }) {
-                let tapGestureRecognizer = InfoWindowTapGestureRecognizer(target: self, action: #selector(onCalloutTapped))
-                tapGestureRecognizer.annotationId = id
-                tapGestureRecognizer.annotationView = view
-                view.addGestureRecognizer(tapGestureRecognizer)
-            }
-            #endif
+        #if os(iOS)
+        if let feature = view.annotation as? MKMapFeatureAnnotation {
+            let payload = PlatformMapFeature.from(feature)
+            self.flutterApi.send { try await $0.onMapFeatureSelected(feature: payload) }
+            return
         }
+        #endif
+        guard let annotation = view.annotation as? FlutterAnnotation else { return }
+        let id = annotation.id
+        self.currentlySelectedAnnotation = id
+        if !annotation.selectedProgrammatically {
+            self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
+        } else {
+            annotation.selectedProgrammatically = false
+        }
+        self.flutterApi.send { try await $0.onAnnotationSelect(annotationId: id) }
+
+        #if os(iOS)
+        // Callout tap forwarding is bridged via a tap recognizer on iOS;
+        // the macOS callout uses MapKit's default behavior. One recognizer
+        // per view: reselecting must not stack another.
+        if annotation.calloutConsumesTapEvents,
+           !(view.gestureRecognizers ?? []).contains(where: { $0 is InfoWindowTapGestureRecognizer }) {
+            let tapGestureRecognizer = InfoWindowTapGestureRecognizer(target: self, action: #selector(onCalloutTapped))
+            tapGestureRecognizer.annotationId = id
+            tapGestureRecognizer.annotationView = view
+            view.addGestureRecognizer(tapGestureRecognizer)
+        }
+        #endif
     }
 
     public func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
         guard let annotation = view.annotation as? FlutterAnnotation else { return }
-        if self.currentlySelectedAnnotation == annotation.id {
+        let id = annotation.id
+        if self.currentlySelectedAnnotation == id {
             self.currentlySelectedAnnotation = nil
         }
         #if os(iOS)
@@ -46,6 +54,7 @@ extension MapKitViewHost {
             view.removeGestureRecognizer(recognizer)
         }
         #endif
+        self.flutterApi.send { try await $0.onAnnotationDeselect(annotationId: id) }
     }
 
     public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {

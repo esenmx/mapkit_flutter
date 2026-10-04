@@ -270,6 +270,12 @@ extension MapKitViewHost: MKMapViewDelegate {
         self.flutterApi.send { try await $0.onCameraIdle() }
     }
 
+    public func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+        guard self.mapView.bounds.size != .zero else { return }
+        let camera = self.mapView.currentPlatformCamera()
+        flutterApi.send { try await $0.onCameraMove(camera: camera) }
+    }
+
     // onMoveStarted
     public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
         self.flutterApi.send { try await $0.onCameraMoveStarted() }
@@ -337,10 +343,11 @@ extension MapKitViewHost {
                 configuration, hidingPointsOfInterest: !input.options.showsPointsOfInterest)
         }
         #if os(iOS)
-        options.traitCollection = UITraitCollection { traits in
-            traits.userInterfaceStyle = input.isDark ? .dark : .light
-            if input.displayScale > 0 { traits.displayScale = input.displayScale }
-        }
+        // Not `UITraitCollection { }`: its `UIMutableTraits` closure is UI-actor isolated (27 SDK).
+        let traits = UITraitCollection(userInterfaceStyle: input.isDark ? .dark : .light)
+        options.traitCollection = input.displayScale > 0
+            ? traits.replacing(UITraitDisplayScale.self, value: input.displayScale)
+            : traits
         #elseif os(macOS)
         options.appearance = NSAppearance(named: input.isDark ? .darkAqua : .aqua)
         #endif

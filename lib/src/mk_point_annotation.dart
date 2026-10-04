@@ -94,6 +94,12 @@ final class const MKPointAnnotation({
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondragend
   final ValueChanged<CLLocationCoordinate2D>? onDragEnd,
+
+  /// `mapView(_:didSelect:)` — user or programmatic, after `onTap`.
+  final VoidCallback? onSelect,
+
+  /// `mapView(_:didDeselect:)`.
+  final VoidCallback? onDeselect,
 }) {
   /// Creates a new MKPointAnnotation object.
   ///
@@ -119,6 +125,8 @@ final class const MKPointAnnotation({
     Object? onDragStart = unset,
     Object? onDrag = unset,
     Object? onDragEnd = unset,
+    Object? onSelect = unset,
+    Object? onDeselect = unset,
   }) => MKPointAnnotation(
     id: id,
     coordinate: coordinate ?? this.coordinate,
@@ -146,6 +154,12 @@ final class const MKPointAnnotation({
     onDragEnd: identical(onDragEnd, unset)
         ? this.onDragEnd
         : onDragEnd as ValueChanged<CLLocationCoordinate2D>?,
+    onSelect: identical(onSelect, unset)
+        ? this.onSelect
+        : onSelect as VoidCallback?,
+    onDeselect: identical(onDeselect, unset)
+        ? this.onDeselect
+        : onDeselect as VoidCallback?,
   );
 
   @internal

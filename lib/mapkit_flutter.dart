@@ -19,6 +19,7 @@ export 'src/mk_coordinate_span.dart';
 export 'src/mk_enums.dart';
 export 'src/mk_map_camera.dart';
 export 'src/mk_map_configuration.dart';
+export 'src/mk_map_feature.dart';
 export 'src/mk_map_snapshot_options.dart';
 export 'src/mk_map_view.dart';
 export 'src/mk_map_view_controller.dart'

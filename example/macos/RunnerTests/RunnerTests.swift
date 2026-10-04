@@ -282,6 +282,35 @@ final class RunnerTests: XCTestCase {
         XCTAssertEqual(options.camera.heading, 90, accuracy: 0.001)
         XCTAssertEqual(options.appearance?.name, .darkAqua)
     }
+
+    func testSelectAndDeselectReachDart() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        try host.updateAnnotations(toAdd: [annotation("a")], toChange: [], idsToRemove: [])
+        let view = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
+        let selected = messenger.expectation(for: "onAnnotationSelect", in: self)
+        let deselected = messenger.expectation(for: "onAnnotationDeselect", in: self)
+
+        host.mapView(host.mapView, didSelect: view)
+        host.mapView(host.mapView, didDeselect: view)
+
+        await fulfillment(of: [selected, deselected], timeout: 2, enforceOrder: true)
+        XCTAssertNil(host.currentlySelectedAnnotation)
+    }
+
+    func testVisibleRegionChangeStreamsCamera() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
+        try await Task.sleep(for: .milliseconds(200))
+        let before = messenger.args(of: "onCameraMove").count
+        let moved = messenger.expectation(for: "onCameraMove", in: self)
+
+        (host as MKMapViewDelegate).mapViewDidChangeVisibleRegion?(host.mapView)
+
+        await fulfillment(of: [moved], timeout: 2)
+        XCTAssertEqual(messenger.args(of: "onCameraMove").count, before + 1)
+    }
 }
 
 final class CountingMapView: FlutterMapView {

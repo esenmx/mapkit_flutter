@@ -19,8 +19,9 @@ class TouchHandler {
     /// Fires only the top-most visible consuming overlay under the tap
     /// (`.aboveLabels`, then `.aboveRoads`, each top-first); otherwise the map tap.
     static func handleMapTap(at coord: CLLocationCoordinate2D, flutterApi: MapKitFlutterApi?, in view: MKMapView) {
-        let topFirst: [MKOverlay] = view.overlays(in: .aboveLabels).reversed() + view.overlays(in: .aboveRoads).reversed()
-        for overlay in topFirst {
+        // Both levels list bottom-to-top, so the reversed concatenation is labels then roads, each top-first.
+        // (A typed `a.reversed() + b.reversed()` is an ambiguous overload for Swift 6.2 / Xcode 26.)
+        for overlay in (view.overlays(in: .aboveRoads) + view.overlays(in: .aboveLabels)).reversed() {
             if let polyline = overlay as? any StyledPolyline {
                 guard !polyline.isHidden, polyline.isConsumingTapEvents,
                       polyline.contains(coordinate: coord, mapView: view) else { continue }

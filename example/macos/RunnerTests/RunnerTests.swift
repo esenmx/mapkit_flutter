@@ -258,6 +258,30 @@ final class RunnerTests: XCTestCase {
 
         XCTAssertTrue(host.mapView.showsUserTrackingButton)
     }
+
+    func testSnapshotOptionsFollowMapStyleCameraAndAppearance() {
+        let input = MapKitViewHost.SnapshotInput(
+            region: MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.33, longitude: -122.0),
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)),
+            size: CGSize(width: 200, height: 200),
+            displayScale: 0,
+            camera: PlatformMapCamera(
+                centerCoordinate: PlatformCoordinate(latitude: 37.33, longitude: -122.0),
+                distance: 2000,
+                heading: 90,
+                pitch: 30),
+            configuration: configuration(kind: .imagery),
+            isDark: true,
+            options: PlatformSnapshotOptions(
+                showsBuildings: true, showsPointsOfInterest: true, showsAnnotations: false, showsOverlays: false))
+
+        let options = MapKitViewHost.makeSnapshotOptions(input)
+
+        XCTAssertTrue(options.preferredConfiguration is MKImageryMapConfiguration)
+        XCTAssertEqual(options.camera.heading, 90, accuracy: 0.001)
+        XCTAssertEqual(options.appearance?.name, .darkAqua)
+    }
 }
 
 final class CountingMapView: FlutterMapView {

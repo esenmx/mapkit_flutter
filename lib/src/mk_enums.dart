@@ -24,6 +24,9 @@ typedef MKPointOfInterestCategory = PlatformPointOfInterestCategory;
 /// `MKMapFeatureOptions` — map features the user can select.
 typedef MKMapFeatureOptions = PlatformMapFeatureOptions;
 
+/// MKMapFeatureAnnotation.FeatureType.
+typedef MKMapFeatureType = PlatformMapFeatureType;
+
 /// `MKOverlayLevel` — overlay placement relative to roads and labels.
 typedef MKOverlayLevel = PlatformOverlayLevel;
 

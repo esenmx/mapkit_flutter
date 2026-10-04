@@ -251,32 +251,18 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
 
     private func initialiseTapGestureRecognizers() {
         #if os(iOS)
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(onMapGesture))
-        panGesture.maximumNumberOfTouches = 2
-        panGesture.delegate = self
-        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(onMapGesture))
-        pinchGesture.delegate = self
-        let rotateGesture = UIRotationGestureRecognizer(target: self, action: #selector(onMapGesture))
-        rotateGesture.delegate = self
-        let tiltGesture = UISwipeGestureRecognizer(target: self, action: #selector(onMapGesture))
-        tiltGesture.numberOfTouchesRequired = 2
-        tiltGesture.direction = [.up, .down]
+        // Camera moves arrive via the delegate (`mapViewDidChangeVisibleRegion`).
         let doubleTapGesture = UITapGestureRecognizer(target: self, action: nil)
         doubleTapGesture.numberOfTapsRequired = 2
         let longTapGesture = UILongPressGestureRecognizer(target: self, action: #selector(longTap))
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTap))
         tapGesture.require(toFail: doubleTapGesture)
-        self.addGestureRecognizer(panGesture)
-        self.addGestureRecognizer(pinchGesture)
-        self.addGestureRecognizer(rotateGesture)
-        self.addGestureRecognizer(tiltGesture)
         self.addGestureRecognizer(longTapGesture)
         self.addGestureRecognizer(doubleTapGesture)
         self.addGestureRecognizer(tapGesture)
         #elseif os(macOS)
         // macOS MKMapView pans/zooms/rotates natively; only tap and long-press
-        // need bridging to Flutter. Camera moves arrive via the delegate's
-        // regionDidChange, so no per-gesture camera recognizers are needed.
+        // need bridging to Flutter. Camera moves arrive via the delegate.
         let clickGesture = NSClickGestureRecognizer(target: self, action: #selector(onTap))
         clickGesture.delegate = self
         self.addGestureRecognizer(clickGesture)
@@ -285,13 +271,6 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         self.addGestureRecognizer(pressGesture)
         #endif
     }
-
-    #if os(iOS)
-    @objc func onMapGesture(sender: UIGestureRecognizer) {
-        let camera = currentPlatformCamera()
-        self.flutterApi?.send { try await $0.onCameraMove(camera: camera) }
-    }
-    #endif
 
     @objc func longTap(_ sender: PlatformGestureRecognizer) {
         guard sender.state == .began else { return }

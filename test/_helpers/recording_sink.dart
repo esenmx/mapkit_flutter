@@ -19,6 +19,18 @@ final class RecordingSink implements MKMapViewEventSink {
   void onAnnotationTap(MKAnnotationId id) => events.add(('annotationTap', id));
 
   @override
+  void onAnnotationSelect(MKAnnotationId id) =>
+      events.add(('annotationSelect', id));
+
+  @override
+  void onAnnotationDeselect(MKAnnotationId id) =>
+      events.add(('annotationDeselect', id));
+
+  @override
+  void onMapFeatureSelected(MKMapFeature feature) =>
+      events.add(('mapFeatureSelected', feature));
+
+  @override
   void onAnnotationDragStart(
     MKAnnotationId id,
     CLLocationCoordinate2D coordinate,

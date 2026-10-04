@@ -9,6 +9,7 @@ import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_circle.dart';
 import 'package:mapkit_flutter/src/mk_coordinate_region.dart';
 import 'package:mapkit_flutter/src/mk_map_camera.dart';
+import 'package:mapkit_flutter/src/mk_map_feature.dart';
 import 'package:mapkit_flutter/src/mk_map_snapshot_options.dart';
 import 'package:mapkit_flutter/src/mk_point_annotation.dart';
 import 'package:mapkit_flutter/src/mk_polygon.dart';
@@ -23,6 +24,9 @@ abstract interface class MKMapViewEventSink {
   void onCameraMove(MKMapCamera camera);
   void onCameraIdle();
   void onAnnotationTap(MKAnnotationId id);
+  void onAnnotationSelect(MKAnnotationId id);
+  void onAnnotationDeselect(MKAnnotationId id);
+  void onMapFeatureSelected(MKMapFeature feature);
   void onAnnotationDragStart(
     MKAnnotationId id,
     CLLocationCoordinate2D coordinate,
@@ -377,6 +381,18 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
   @override
   void onAnnotationTap(String annotationId) =>
       _sink.onAnnotationTap(MKAnnotationId(annotationId));
+
+  @override
+  void onAnnotationSelect(String annotationId) =>
+      _sink.onAnnotationSelect(MKAnnotationId(annotationId));
+
+  @override
+  void onAnnotationDeselect(String annotationId) =>
+      _sink.onAnnotationDeselect(MKAnnotationId(annotationId));
+
+  @override
+  void onMapFeatureSelected(PlatformMapFeature feature) =>
+      _sink.onMapFeatureSelected(.fromPlatform(feature));
 
   @override
   void onAnnotationDragStart(

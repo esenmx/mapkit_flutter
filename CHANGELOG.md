@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Breaking
+
+- MKPointOfInterestCategory gained 33 values — exhaustive switches over it must handle them.
+
+### Added
+
+- MKPointAnnotation.onSelect / onDeselect.
+- MKMapView.onMapFeatureSelected (iOS) with MKMapFeature / MKMapFeatureType.
+- 33 iOS 18 / macOS 15 MKPointOfInterestCategory values (ignored by filters on older OS versions).
+
 ### Changed
 
 - Requires Dart 3.13 / Flutter 3.47 (was Dart 3.10 / Flutter 3.41).
@@ -12,6 +22,7 @@
 - `userTrackingMode` is re-applied only when it changes, so unrelated rebuilds no longer snap a panned map back to tracking.
 - `showsUserTrackingButton` works on macOS.
 - MKMapSnapshotOptions.showsBuildings has no effect (MapKit dropped it).
+- onCameraMove fires continuously (gestures, momentum, animations) on iOS and macOS via mapViewDidChangeVisibleRegion.
 
 ### Fixed
 

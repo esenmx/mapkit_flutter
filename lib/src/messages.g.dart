@@ -192,6 +192,39 @@ enum PlatformPointOfInterestCategory {
   university,
   winery,
   zoo,
+  animalService,
+  automotiveRepair,
+  baseball,
+  basketball,
+  beauty,
+  bowling,
+  castle,
+  conventionCenter,
+  distillery,
+  fairground,
+  fishing,
+  fortress,
+  golf,
+  goKart,
+  hiking,
+  kayaking,
+  landmark,
+  mailbox,
+  miniGolf,
+  musicVenue,
+  nationalMonument,
+  planetarium,
+  rockClimbing,
+  rvPark,
+  skatePark,
+  skating,
+  skiing,
+  soccer,
+  spa,
+  surfing,
+  swimming,
+  tennis,
+  volleyball,
 }
 
 /// Map features the user can select (`MKMapFeatureOptions`).
@@ -203,6 +236,9 @@ enum PlatformMapFeatureOptions {
 }
 
 enum PlatformAnnotationIconType { marker, image }
+
+/// MKMapFeatureAnnotation.FeatureType.
+enum PlatformMapFeatureType { pointOfInterest, territory, physicalFeature }
 
 class PlatformCoordinate {
   PlatformCoordinate({required this.latitude, required this.longitude});
@@ -1467,6 +1503,66 @@ class PlatformMapViewCreationParams {
   }
 }
 
+/// A selected map feature (`MKMapFeatureAnnotation`).
+class PlatformMapFeature {
+  PlatformMapFeature({
+    required this.featureType,
+    required this.coordinate,
+    this.title,
+    this.pointOfInterestCategory,
+  });
+
+  PlatformMapFeatureType featureType;
+
+  PlatformCoordinate coordinate;
+
+  String? title;
+
+  PlatformPointOfInterestCategory? pointOfInterestCategory;
+
+  List<Object?> _toList() {
+    return <Object?>[featureType, coordinate, title, pointOfInterestCategory];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PlatformMapFeature decode(Object result) {
+    result as List<Object?>;
+    return PlatformMapFeature(
+      featureType: result[0]! as PlatformMapFeatureType,
+      coordinate: result[1]! as PlatformCoordinate,
+      title: result[2] as String?,
+      pointOfInterestCategory: result[3] as PlatformPointOfInterestCategory?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PlatformMapFeature || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(featureType, other.featureType) &&
+        _deepEquals(coordinate, other.coordinate) &&
+        _deepEquals(title, other.title) &&
+        _deepEquals(pointOfInterestCategory, other.pointOfInterestCategory);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PlatformMapFeature(featureType: $featureType, coordinate: $coordinate, title: $title, pointOfInterestCategory: $pointOfInterestCategory)';
+  }
+}
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -1507,53 +1603,59 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PlatformAnnotationIconType) {
       buffer.putUint8(139);
       writeValue(buffer, value.index);
-    } else if (value is PlatformCoordinate) {
+    } else if (value is PlatformMapFeatureType) {
       buffer.putUint8(140);
-      writeValue(buffer, value.encode());
-    } else if (value is PlatformCoordinateSpan) {
+      writeValue(buffer, value.index);
+    } else if (value is PlatformCoordinate) {
       buffer.putUint8(141);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCoordinateRegion) {
+    } else if (value is PlatformCoordinateSpan) {
       buffer.putUint8(142);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapCamera) {
+    } else if (value is PlatformCoordinateRegion) {
       buffer.putUint8(143);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPoint) {
+    } else if (value is PlatformMapCamera) {
       buffer.putUint8(144);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformAnnotationIcon) {
+    } else if (value is PlatformPoint) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformAnnotation) {
+    } else if (value is PlatformAnnotationIcon) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolyline) {
+    } else if (value is PlatformAnnotation) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolygon) {
+    } else if (value is PlatformPolyline) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCircle) {
+    } else if (value is PlatformPolygon) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformTileOverlay) {
+    } else if (value is PlatformCircle) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPointOfInterestFilter) {
+    } else if (value is PlatformTileOverlay) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCameraZoomRange) {
+    } else if (value is PlatformPointOfInterestFilter) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapConfiguration) {
+    } else if (value is PlatformCameraZoomRange) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformSnapshotOptions) {
+    } else if (value is PlatformMapConfiguration) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapViewCreationParams) {
+    } else if (value is PlatformSnapshotOptions) {
       buffer.putUint8(155);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformMapViewCreationParams) {
+      buffer.putUint8(156);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformMapFeature) {
+      buffer.putUint8(157);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1599,37 +1701,42 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : PlatformAnnotationIconType.values[value];
       case 140:
-        return PlatformCoordinate.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PlatformMapFeatureType.values[value];
       case 141:
-        return PlatformCoordinateSpan.decode(readValue(buffer)!);
+        return PlatformCoordinate.decode(readValue(buffer)!);
       case 142:
-        return PlatformCoordinateRegion.decode(readValue(buffer)!);
+        return PlatformCoordinateSpan.decode(readValue(buffer)!);
       case 143:
-        return PlatformMapCamera.decode(readValue(buffer)!);
+        return PlatformCoordinateRegion.decode(readValue(buffer)!);
       case 144:
-        return PlatformPoint.decode(readValue(buffer)!);
+        return PlatformMapCamera.decode(readValue(buffer)!);
       case 145:
-        return PlatformAnnotationIcon.decode(readValue(buffer)!);
+        return PlatformPoint.decode(readValue(buffer)!);
       case 146:
-        return PlatformAnnotation.decode(readValue(buffer)!);
+        return PlatformAnnotationIcon.decode(readValue(buffer)!);
       case 147:
-        return PlatformPolyline.decode(readValue(buffer)!);
+        return PlatformAnnotation.decode(readValue(buffer)!);
       case 148:
-        return PlatformPolygon.decode(readValue(buffer)!);
+        return PlatformPolyline.decode(readValue(buffer)!);
       case 149:
-        return PlatformCircle.decode(readValue(buffer)!);
+        return PlatformPolygon.decode(readValue(buffer)!);
       case 150:
-        return PlatformTileOverlay.decode(readValue(buffer)!);
+        return PlatformCircle.decode(readValue(buffer)!);
       case 151:
-        return PlatformPointOfInterestFilter.decode(readValue(buffer)!);
+        return PlatformTileOverlay.decode(readValue(buffer)!);
       case 152:
-        return PlatformCameraZoomRange.decode(readValue(buffer)!);
+        return PlatformPointOfInterestFilter.decode(readValue(buffer)!);
       case 153:
-        return PlatformMapConfiguration.decode(readValue(buffer)!);
+        return PlatformCameraZoomRange.decode(readValue(buffer)!);
       case 154:
-        return PlatformSnapshotOptions.decode(readValue(buffer)!);
+        return PlatformMapConfiguration.decode(readValue(buffer)!);
       case 155:
+        return PlatformSnapshotOptions.decode(readValue(buffer)!);
+      case 156:
         return PlatformMapViewCreationParams.decode(readValue(buffer)!);
+      case 157:
+        return PlatformMapFeature.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -2119,6 +2226,15 @@ abstract class MapKitFlutterApi {
 
   void onAnnotationTap(String annotationId);
 
+  /// `MKMapViewDelegate.mapView(_:didSelect:)` for a Flutter annotation.
+  void onAnnotationSelect(String annotationId);
+
+  /// `MKMapViewDelegate.mapView(_:didDeselect:)` for a Flutter annotation.
+  void onAnnotationDeselect(String annotationId);
+
+  /// A selected `MKMapFeatureAnnotation` (iOS).
+  void onMapFeatureSelected(PlatformMapFeature feature);
+
   void onAnnotationDragStart(
     String annotationId,
     PlatformCoordinate coordinate,
@@ -2239,6 +2355,81 @@ abstract class MapKitFlutterApi {
           final String arg_annotationId = args[0]! as String;
           try {
             api.onAnnotationTap(arg_annotationId);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationSelect$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final String arg_annotationId = args[0]! as String;
+          try {
+            api.onAnnotationSelect(arg_annotationId);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDeselect$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final String arg_annotationId = args[0]! as String;
+          try {
+            api.onAnnotationDeselect(arg_annotationId);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          } catch (e) {
+            return wrapResponse(
+              error: PlatformException(code: 'error', message: e.toString()),
+            );
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onMapFeatureSelected$messageChannelSuffix',
+        pigeonChannelCodec,
+        binaryMessenger: binaryMessenger,
+      );
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final PlatformMapFeature arg_feature = args[0]! as PlatformMapFeature;
+          try {
+            api.onMapFeatureSelected(arg_feature);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

@@ -52,4 +52,26 @@ final class RunnerTests: XCTestCase {
         let recognizers = (view.gestureRecognizers ?? []).filter { $0 is InfoWindowTapGestureRecognizer }
         XCTAssertEqual(recognizers.count, 1)
     }
+
+    func testMapFeaturePayloadMapsTypeAndCategory() {
+        let payload = PlatformMapFeature.make(
+            featureType: .territory,
+            coordinate: CLLocationCoordinate2D(latitude: 37.32, longitude: -122.03),
+            title: "Cupertino",
+            category: .evCharger)
+
+        XCTAssertEqual(payload.featureType, .territory)
+        XCTAssertEqual(payload.coordinate.latitude, 37.32)
+        XCTAssertEqual(payload.coordinate.longitude, -122.03)
+        XCTAssertEqual(payload.title, "Cupertino")
+        XCTAssertEqual(payload.pointOfInterestCategory, .evCharger)
+    }
+
+    func testIOS18CategoryDroppedBeforeIOS18() {
+        if #available(iOS 18.0, *) {
+            XCTAssertEqual(PlatformPointOfInterestCategory.golf.mkCategory, .golf)
+        } else {
+            XCTAssertNil(PlatformPointOfInterestCategory.golf.mkCategory)
+        }
+    }
 }

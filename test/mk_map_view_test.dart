@@ -42,6 +42,7 @@ void main() {
     void Function(CLLocationCoordinate2D)? onTap,
     ValueChanged<String>? onDidFailLoadingMap,
     ValueChanged<String>? onDidFailToLocateUser,
+    ValueChanged<MKMapFeature>? onMapFeatureSelected,
   }) {
     return MKMapView(
       initialCamera: sampleCamera,
@@ -57,6 +58,7 @@ void main() {
       onTap: onTap,
       onDidFailLoadingMap: onDidFailLoadingMap,
       onDidFailToLocateUser: onDidFailToLocateUser,
+      onMapFeatureSelected: onMapFeatureSelected,
       debugControllerFactory: controllerFactory,
     );
   }
@@ -339,6 +341,53 @@ void main() {
         ..onDidFailToLocateUser('denied');
       check(loadError).equals('offline');
       check(locateError).equals('denied');
+    });
+
+    testWidgets('select and deselect reach the latest closures', (
+      tester,
+    ) async {
+      final events = <String>[];
+      MKPointAnnotation selectable(String tag) => MKPointAnnotation(
+        id: const MKAnnotationId('a'),
+        coordinate: applePark,
+        onSelect: () => events.add('select-$tag'),
+        onDeselect: () => events.add('deselect-$tag'),
+      );
+      await tester.pumpWidget(map(annotations: {selectable('first')}));
+      await tester.pump();
+      await tester.pumpWidget(map(annotations: {selectable('second')}));
+      await tester.pump();
+
+      created.eventHandler
+        ..onAnnotationSelect('a')
+        ..onAnnotationDeselect('a')
+        ..onAnnotationSelect('missing');
+      check(events).deepEquals(['select-second', 'deselect-second']);
+    });
+
+    testWidgets('a selected map feature reaches onMapFeatureSelected', (
+      tester,
+    ) async {
+      MKMapFeature? selected;
+      await tester.pumpWidget(map(onMapFeatureSelected: (f) => selected = f));
+      await tester.pump();
+
+      created.eventHandler.onMapFeatureSelected(
+        PlatformMapFeature(
+          featureType: .territory,
+          coordinate: platformCoord(1, 2),
+          title: 'Cupertino',
+          pointOfInterestCategory: .evCharger,
+        ),
+      );
+      check(selected).equals(
+        const MKMapFeature(
+          featureType: .territory,
+          coordinate: CLLocationCoordinate2D(latitude: 1, longitude: 2),
+          title: 'Cupertino',
+          pointOfInterestCategory: .evCharger,
+        ),
+      );
     });
   });
 }

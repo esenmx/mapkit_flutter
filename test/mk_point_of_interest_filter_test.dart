@@ -36,6 +36,18 @@ void main() {
     });
   });
 
+  group('MKPointOfInterestCategory', () {
+    test('covers the 40 original and 33 iOS 18 / macOS 15 categories', () {
+      check(MKPointOfInterestCategory.values).length.equals(73);
+    });
+
+    test('an iOS 18 category round-trips through a filter', () {
+      const filter = MKPointOfInterestFilter.including([.golf]);
+      check(filter.toPlatform().categories)
+          .deepEquals([MKPointOfInterestCategory.golf]);
+    });
+  });
+
   group('MKPointOfInterestFilter equality', () {
     test('same categories compare equal', () {
       const cafe = MKPointOfInterestFilter.including([.cafe]);

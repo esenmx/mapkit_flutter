@@ -14,6 +14,7 @@ import 'package:mapkit_flutter/src/mk_coordinate_region.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 import 'package:mapkit_flutter/src/mk_map_camera.dart';
 import 'package:mapkit_flutter/src/mk_map_configuration.dart';
+import 'package:mapkit_flutter/src/mk_map_feature.dart';
 import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 import 'package:mapkit_flutter/src/mk_point_annotation.dart';
 import 'package:mapkit_flutter/src/mk_polygon.dart';
@@ -132,9 +133,9 @@ final class const MKMapView({
   /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameramovestarted
   final VoidCallback? onCameraMoveStarted,
 
-  /// Creates a new Function object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Fires every frame the visible region changes — gestures, momentum and
+  /// animations, both platforms
+  /// (`MKMapViewDelegate.mapViewDidChangeVisibleRegion(_:)`).
   final void Function(MKMapCamera camera)? onCameraMove,
 
   /// The onCameraIdle property.
@@ -160,6 +161,10 @@ final class const MKMapView({
   /// location permission was denied — while [showsUserLocation] is enabled
   /// (`MKMapViewDelegate.mapView(_:didFailToLocateUserWithError:)`).
   final ValueChanged<String>? onDidFailToLocateUser,
+
+  /// The user selected a map feature (`MKMapFeatureAnnotation`). iOS only;
+  /// needs [selectableMapFeatures].
+  final ValueChanged<MKMapFeature>? onMapFeatureSelected,
 
   /// Replaces the platform view with an injected controller so widget tests
   /// can drive the full diff pipeline against a fake host API. When set,
@@ -397,6 +402,18 @@ final class _MKMapViewState extends State<MKMapView>
 
   @override
   void onAnnotationTap(MKAnnotationId id) => _annotations[id]?.onTap?.call();
+
+  @override
+  void onAnnotationSelect(MKAnnotationId id) =>
+      _annotations[id]?.onSelect?.call();
+
+  @override
+  void onAnnotationDeselect(MKAnnotationId id) =>
+      _annotations[id]?.onDeselect?.call();
+
+  @override
+  void onMapFeatureSelected(MKMapFeature feature) =>
+      widget.onMapFeatureSelected?.call(feature);
 
   @override
   void onAnnotationDragStart(

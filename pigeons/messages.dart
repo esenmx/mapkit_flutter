@@ -114,6 +114,40 @@ enum PlatformPointOfInterestCategory {
   university,
   winery,
   zoo,
+  // iOS 18 / macOS 15. Dropped from filters on older OS versions.
+  animalService,
+  automotiveRepair,
+  baseball,
+  basketball,
+  beauty,
+  bowling,
+  castle,
+  conventionCenter,
+  distillery,
+  fairground,
+  fishing,
+  fortress,
+  golf,
+  goKart,
+  hiking,
+  kayaking,
+  landmark,
+  mailbox,
+  miniGolf,
+  musicVenue,
+  nationalMonument,
+  planetarium,
+  rockClimbing,
+  rvPark,
+  skatePark,
+  skating,
+  skiing,
+  soccer,
+  spa,
+  surfing,
+  swimming,
+  tennis,
+  volleyball,
 }
 
 /// Map features the user can select (`MKMapFeatureOptions`).
@@ -125,6 +159,9 @@ enum PlatformMapFeatureOptions {
 }
 
 enum PlatformAnnotationIconType { marker, image }
+
+/// MKMapFeatureAnnotation.FeatureType.
+enum PlatformMapFeatureType { pointOfInterest, territory, physicalFeature }
 
 // ----------------------------- Data classes -----------------------------
 
@@ -448,6 +485,21 @@ class PlatformMapViewCreationParams {
   final List<PlatformCircle> circles;
 }
 
+/// A selected map feature (`MKMapFeatureAnnotation`).
+class PlatformMapFeature {
+  PlatformMapFeature({
+    required this.featureType,
+    required this.coordinate,
+    this.title,
+    this.pointOfInterestCategory,
+  });
+
+  final PlatformMapFeatureType featureType;
+  final PlatformCoordinate coordinate;
+  final String? title;
+  final PlatformPointOfInterestCategory? pointOfInterestCategory;
+}
+
 // ----------------------------- APIs -----------------------------
 
 /// Flutter -> host. One instance per platform view, keyed by the view id via
@@ -534,6 +586,16 @@ abstract class MapKitFlutterApi {
   void onCameraMove(PlatformMapCamera camera);
   void onCameraIdle();
   void onAnnotationTap(String annotationId);
+
+  /// `MKMapViewDelegate.mapView(_:didSelect:)` for a Flutter annotation.
+  void onAnnotationSelect(String annotationId);
+
+  /// `MKMapViewDelegate.mapView(_:didDeselect:)` for a Flutter annotation.
+  void onAnnotationDeselect(String annotationId);
+
+  /// A selected `MKMapFeatureAnnotation` (iOS).
+  void onMapFeatureSelected(PlatformMapFeature feature);
+
   void onAnnotationDragStart(
     String annotationId,
     PlatformCoordinate coordinate,

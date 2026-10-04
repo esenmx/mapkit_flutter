@@ -78,3 +78,35 @@ extension PlatformLineJoin {
         }
     }
 }
+
+#if os(iOS)
+extension PlatformMapFeature {
+    static func from(_ feature: MKMapFeatureAnnotation) -> PlatformMapFeature {
+        make(
+            featureType: feature.featureType,
+            coordinate: feature.coordinate,
+            title: (feature as MKAnnotation).title ?? nil,
+            category: feature.pointOfInterestCategory)
+    }
+
+    static func make(
+        featureType: MKMapFeatureAnnotation.FeatureType,
+        coordinate: CLLocationCoordinate2D,
+        title: String?,
+        category: MKPointOfInterestCategory?
+    ) -> PlatformMapFeature {
+        let type: PlatformMapFeatureType
+        switch featureType {
+        case .pointOfInterest: type = .pointOfInterest
+        case .territory: type = .territory
+        case .physicalFeature: type = .physicalFeature
+        @unknown default: type = .pointOfInterest
+        }
+        return PlatformMapFeature(
+            featureType: type,
+            coordinate: .from(coordinate),
+            title: title,
+            pointOfInterestCategory: category.flatMap(PlatformPointOfInterestCategory.init(mkCategory:)))
+    }
+}
+#endif

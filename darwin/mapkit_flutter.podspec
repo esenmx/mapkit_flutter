@@ -15,6 +15,7 @@ and modern MapKit configurations.
   s.author           = { 'Mehmet Esen' => 'mehmetesen@proton.me' }
   s.source           = { :path => '.' }
   s.source_files = 'mapkit_flutter/Sources/mapkit_flutter/**/*.swift'
+  s.resource_bundles = {'mapkit_flutter_privacy' => ['mapkit_flutter/Sources/mapkit_flutter/PrivacyInfo.xcprivacy']}
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'
   s.frameworks = 'MapKit', 'CoreLocation'
@@ -28,7 +29,6 @@ and modern MapKit configurations.
 
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'SWIFT_VERSION' => '6.0',
-    'OTHER_SWIFT_FLAGS' => '-warnings-as-errors'
+    'SWIFT_VERSION' => '6.0'
   }
 end

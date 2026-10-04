@@ -32,6 +32,10 @@ MKMapView(
 
 Run it on an iOS simulator or macOS (`flutter run -d macos`).
 
+The example builds through Swift Package Manager, which resolves the plugin by
+its directory name: the repository checkout must be a directory named
+`mapkit_flutter` (e.g. `git clone https://github.com/esenmx/mapkit_flutter.git`).
+
 Integration tests (real `MKMapView`, real pigeon channel) run one file per
 invocation, on macOS or on a simulator:
 

@@ -19,7 +19,7 @@ Frontmatter `status` is the plan's lifecycle, one owner per transition: `draft` 
 - [x] Phase 7: Packaging
 - [x] Phase 8: Repo meta, lint config, pubspec
 - [x] Phase 9: Docs and agent skill
-- [ ] Phase 10: CI
+- [x] Phase 10: CI
 - [ ] Phase 11: Release 0.4.0
 
 ## Problem

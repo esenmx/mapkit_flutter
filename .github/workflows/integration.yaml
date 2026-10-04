@@ -3,8 +3,11 @@ name: Integration
 on:
   push:
     branches: [master]
-    tags: ['v*']
+    # tags: ['v*']  # paused with tag-triggered publishing; uncomment to re-enable
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   integration:
@@ -12,11 +15,12 @@ jobs:
     # 60 min funds ~1 cold hang cycle (900s bound + recycle) plus bounded retries per file — not the absolute 3-attempt x 3-file worst case (~90 min); deliberate truncation.
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+      - run: flutter config --enable-swift-package-manager
       - run: flutter pub get
         working-directory: example
       - name: Boot iOS simulator
@@ -119,3 +123,14 @@ jobs:
               fi
             done
           done
+  native-ios:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: flutter config --enable-swift-package-manager
+      - run: flutter build ios --config-only --simulator
+        working-directory: example
+      - run: xcodebuild test -workspace example/ios/Runner.xcworkspace -scheme Runner -destination 'platform=iOS Simulator,name=iPhone 16' -quiet

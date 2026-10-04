@@ -17,7 +17,7 @@ Frontmatter `status` is the plan's lifecycle, one owner per transition: `draft` 
 - [x] Phase 5: Snapshot fidelity
 - [x] Phase 6: Selection, map-feature and continuous-camera callbacks; iOS 18 POI categories
 - [x] Phase 7: Packaging
-- [ ] Phase 8: Repo meta, lint config, pubspec
+- [x] Phase 8: Repo meta, lint config, pubspec
 - [ ] Phase 9: Docs and agent skill
 - [ ] Phase 10: CI
 - [ ] Phase 11: Release 0.4.0

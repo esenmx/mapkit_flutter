@@ -10,7 +10,7 @@ typedef Coordinate = CLLocationCoordinate2D;
 /// `CLLocationCoordinate2D(latitude:longitude:)`.
 ///
 /// Latitude is clamped to `[-90, 90]`; longitude is wrapped to `[-180, 180)`
-/// (180° east normalizes to `-180`).
+/// (180° east normalizes to `-180`); in-range values are stored verbatim.
 /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
 @immutable
 final class CLLocationCoordinate2D {
@@ -21,7 +21,9 @@ final class CLLocationCoordinate2D {
     : latitude = (latitude < -90.0
           ? -90.0
           : (90.0 < latitude ? 90.0 : latitude)),
-      longitude = (longitude + 180.0) % 360.0 - 180.0;
+      longitude = (longitude < -180.0 || longitude >= 180.0)
+          ? (longitude + 180.0) % 360.0 - 180.0
+          : longitude;
 
   @internal
   /// Creates a new CLLocationCoordinate2D object.

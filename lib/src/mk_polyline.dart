@@ -2,6 +2,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mapkit_flutter/src/_internal/unset.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -110,7 +111,8 @@ final class MKPolyline {
   /// overlay z-index; ties resolve by insertion.
   final int zIndex;
 
-  /// The consumeTapEvents property.
+  /// Whether this overlay consumes taps; also blocks the map's `onTap`
+  /// without a callback.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/consumetapevents
   final bool consumeTapEvents;
@@ -118,7 +120,7 @@ final class MKPolyline {
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level;
 
-  /// The onTap property.
+  /// Called when the overlay is tapped; implies `consumeTapEvents`.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/ontap
   final VoidCallback? onTap;
@@ -132,13 +134,13 @@ final class MKPolyline {
     double? lineWidth,
     CGLineCap? lineCap,
     CGLineJoin? lineJoin,
-    List<double>? lineDashPattern,
+    Object? lineDashPattern = unset,
     List<Color>? gradientColors,
     bool? isHidden,
     int? zIndex,
     bool? consumeTapEvents,
     MKOverlayLevel? level,
-    VoidCallback? onTap,
+    Object? onTap = unset,
   }) => (isGeodesic ? MKPolyline.geodesic : MKPolyline.new)(
     id: id,
     coordinates: coordinates ?? this.coordinates,
@@ -146,13 +148,15 @@ final class MKPolyline {
     lineWidth: lineWidth ?? this.lineWidth,
     lineCap: lineCap ?? this.lineCap,
     lineJoin: lineJoin ?? this.lineJoin,
-    lineDashPattern: lineDashPattern ?? this.lineDashPattern,
+    lineDashPattern: identical(lineDashPattern, unset)
+        ? this.lineDashPattern
+        : (lineDashPattern as List<num>?)?.map((d) => d.toDouble()).toList(),
     gradientColors: gradientColors ?? this.gradientColors,
     isHidden: isHidden ?? this.isHidden,
     zIndex: zIndex ?? this.zIndex,
     consumeTapEvents: consumeTapEvents ?? this.consumeTapEvents,
     level: level ?? this.level,
-    onTap: onTap ?? this.onTap,
+    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
   );
 
   @internal
@@ -167,7 +171,7 @@ final class MKPolyline {
     lineCap: lineCap,
     lineJoin: lineJoin,
     isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents,
+    consumeTapEvents: consumeTapEvents || onTap != null,
     isGeodesic: isGeodesic,
     level: level,
     zIndex: zIndex,
@@ -192,7 +196,8 @@ final class MKPolyline {
       other.isHidden == isHidden &&
       other.zIndex == zIndex &&
       other.consumeTapEvents == consumeTapEvents &&
-      other.level == level;
+      other.level == level &&
+      (other.onTap != null) == (onTap != null);
 
   @override
   int get hashCode => Object.hash(
@@ -209,6 +214,7 @@ final class MKPolyline {
     zIndex,
     consumeTapEvents,
     level,
+    onTap != null,
   );
 
   @override

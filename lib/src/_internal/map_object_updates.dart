@@ -1,5 +1,11 @@
 import 'package:meta/meta.dart';
 
+/// One object per id, the last occurrence winning — the same resolution the
+/// rebuild diff applies.
+@internal
+List<T> lastById<T>(Iterable<T> objects, String Function(T) idOf) =>
+    {for (final o in objects) idOf(o): o}.values.toList();
+
 /// Computes the add/change/remove delta between two snapshots of map objects,
 /// keyed by a stable string id. Shared by annotations and every overlay type so
 /// the diff lives in one place instead of one near-identical class per kind.

@@ -2,6 +2,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mapkit_flutter/src/_internal/unset.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -54,7 +55,8 @@ final class const MKPolygon({
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ishidden
   final bool isHidden = false,
 
-  /// The consumeTapEvents property.
+  /// Whether this overlay consumes taps; also blocks the map's `onTap`
+  /// without a callback.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/consumetapevents
   final bool consumeTapEvents = false,
@@ -62,7 +64,7 @@ final class const MKPolygon({
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level = .aboveRoads,
 
-  /// The onTap property.
+  /// Called when the overlay is tapped; implies `consumeTapEvents`.
   ///
   /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ontap
   final VoidCallback? onTap,
@@ -85,7 +87,7 @@ final class const MKPolygon({
     bool? isHidden,
     bool? consumeTapEvents,
     MKOverlayLevel? level,
-    VoidCallback? onTap,
+    Object? onTap = unset,
   }) => MKPolygon(
     id: id,
     coordinates: coordinates ?? this.coordinates,
@@ -97,7 +99,7 @@ final class const MKPolygon({
     isHidden: isHidden ?? this.isHidden,
     consumeTapEvents: consumeTapEvents ?? this.consumeTapEvents,
     level: level ?? this.level,
-    onTap: onTap ?? this.onTap,
+    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
   );
 
   @internal
@@ -115,7 +117,7 @@ final class const MKPolygon({
     lineWidth: lineWidth,
     zIndex: zIndex,
     isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents,
+    consumeTapEvents: consumeTapEvents || onTap != null,
     level: level,
   );
 
@@ -131,7 +133,8 @@ final class const MKPolygon({
       other.zIndex == zIndex &&
       other.isHidden == isHidden &&
       other.consumeTapEvents == consumeTapEvents &&
-      other.level == level;
+      other.level == level &&
+      (other.onTap != null) == (onTap != null);
 
   static bool _ringsEqual(
     List<List<CLLocationCoordinate2D>> a,
@@ -156,6 +159,7 @@ final class const MKPolygon({
     isHidden,
     consumeTapEvents,
     level,
+    onTap != null,
   );
 
   @override

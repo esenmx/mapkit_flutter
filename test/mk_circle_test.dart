@@ -47,4 +47,22 @@ void main() {
       check(circle('c') == circle('c', radius: 1)).isFalse();
     });
   });
+
+  group('tap consumption', () {
+    test('onTap implies consumeTapEvents on the wire', () {
+      final tappable = MKCircle(
+        id: const MKCircleId('c'),
+        center: applePark,
+        radius: 500,
+        onTap: () {},
+      );
+      check(tappable.consumeTapEvents).isFalse();
+      check(tappable.toPlatform().consumeTapEvents).isTrue();
+    });
+
+    test('clearing onTap makes the overlay unequal', () {
+      final tappable = circle('c').copyWith(onTap: () {});
+      check(tappable.copyWith(onTap: null) == tappable).isFalse();
+    });
+  });
 }

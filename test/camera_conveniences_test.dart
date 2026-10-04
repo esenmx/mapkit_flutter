@@ -110,5 +110,30 @@ void main() {
       await harness.controller.fitCoordinates(const []);
       check(harness.host.calls).isEmpty();
     });
+
+    test('pads each side by a fraction of the span', () async {
+      await harness.controller.fitCoordinates(
+        const [
+          CLLocationCoordinate2D(latitude: 10, longitude: 20),
+          CLLocationCoordinate2D(latitude: 30, longitude: 40),
+        ],
+        animated: false,
+        padding: 0.1,
+      );
+      final (region, _) = harness.expectSetRegion();
+      check(region.center.latitude).equals(20);
+      check(region.center.longitude).equals(30);
+      check(region.span.latitudeDelta).isCloseTo(24, 1e-9);
+      check(region.span.longitudeDelta).isCloseTo(24, 1e-9);
+    });
+
+    test('frames a single coordinate at the minimum span', () async {
+      await harness.controller.fitCoordinates(const [
+        CLLocationCoordinate2D(latitude: 10, longitude: 20),
+      ], animated: false);
+      final (region, _) = harness.expectSetRegion();
+      check(region.span.latitudeDelta).equals(0.005);
+      check(region.span.longitudeDelta).equals(0.005);
+    });
   });
 }

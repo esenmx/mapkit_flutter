@@ -2,9 +2,9 @@
 ///
 /// Each nullable `copyWith` parameter keeps its real type and defaults to the
 /// sentinel of that type; `identical(x, keepX)` tells an omitted argument
-/// (keep the field) from an explicit `null` (clear it). Top-level function
-/// tear-offs and const literals are canonical, so no caller-built value is
-/// identical to them.
+/// (keep the field) from an explicit `null` (clear it). Tear-offs and const
+/// literals are canonical: to collide, a caller would have to write this exact
+/// const literal (or tear off one of these internal functions).
 library;
 
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';

@@ -5,6 +5,7 @@
 ### Breaking
 
 - MKPointOfInterestCategory gained 33 values — exhaustive switches over it must handle them.
+- `copyWith(x: null)` now clears a nullable field instead of keeping it, so code that passes a possibly-null variable changes behaviour. Parameter types are unchanged from 0.3.7; omitting the argument still keeps the field.
 - The agent skill moved to skills/mapkit-flutter-scaffold/ (dart run skills@ get requires the package-name prefix).
 
 ### Added
@@ -33,7 +34,6 @@
 - Unmounting a map now releases its native MKMapView, host and location manager (channel handlers were never removed).
 - Geodesic polylines no longer corrupt memory on iOS/macOS 27 (MKGeodesicPolyline is no longer subclassed).
 - A rebuild that lands before the platform view finishes creating no longer leaves taps on stale callbacks.
-- `copyWith` can clear nullable fields with an explicit `null` (e.g. `copyWith(title: null)`).
 - In-range longitudes are stored verbatim (normalisation used to perturb them, e.g. 10.1 → 10.099999999999994).
 - `initialize` sends one object per id, last wins, like the rebuild diff; duplicate ids now assert in debug.
 - Toggling `onCalloutTap` on an existing annotation now reaches native.

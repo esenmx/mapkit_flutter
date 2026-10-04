@@ -2,7 +2,7 @@ import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart';
 
-import 'package:mapkit_flutter/src/_internal/unset.dart';
+import 'package:mapkit_flutter/src/_internal/copy_with_keep.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -114,54 +114,50 @@ final class const MKPointAnnotation({
   MKPointAnnotation copyWith({
     CLLocationCoordinate2D? coordinate,
     MKAnnotationIcon? icon,
-    Object? title = unset,
-    Object? subtitle = unset,
+    String? title = keepString,
+    String? subtitle = keepString,
     double? alpha,
     Offset? anchorPoint,
     bool? isDraggable,
     bool? isHidden,
     double? zPriority,
-    Object? clusteringIdentifier = unset,
-    Object? onTap = unset,
-    Object? onCalloutTap = unset,
-    Object? onDragStart = unset,
-    Object? onDrag = unset,
-    Object? onDragEnd = unset,
-    Object? onSelect = unset,
-    Object? onDeselect = unset,
+    String? clusteringIdentifier = keepString,
+    VoidCallback? onTap = keepCallback,
+    VoidCallback? onCalloutTap = keepCallback,
+    ValueChanged<CLLocationCoordinate2D>? onDragStart = keepCoordinateCallback,
+    ValueChanged<CLLocationCoordinate2D>? onDrag = keepCoordinateCallback,
+    ValueChanged<CLLocationCoordinate2D>? onDragEnd = keepCoordinateCallback,
+    VoidCallback? onSelect = keepCallback,
+    VoidCallback? onDeselect = keepCallback,
   }) => MKPointAnnotation(
     id: id,
     coordinate: coordinate ?? this.coordinate,
     icon: icon ?? this.icon,
-    title: identical(title, unset) ? this.title : title as String?,
-    subtitle: identical(subtitle, unset) ? this.subtitle : subtitle as String?,
+    title: identical(title, keepString) ? this.title : title,
+    subtitle: identical(subtitle, keepString) ? this.subtitle : subtitle,
     alpha: alpha ?? this.alpha,
     anchorPoint: anchorPoint ?? this.anchorPoint,
     isDraggable: isDraggable ?? this.isDraggable,
     isHidden: isHidden ?? this.isHidden,
     zPriority: zPriority ?? this.zPriority,
-    clusteringIdentifier: identical(clusteringIdentifier, unset)
+    clusteringIdentifier: identical(clusteringIdentifier, keepString)
         ? this.clusteringIdentifier
-        : clusteringIdentifier as String?,
-    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
-    onCalloutTap: identical(onCalloutTap, unset)
+        : clusteringIdentifier,
+    onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
+    onCalloutTap: identical(onCalloutTap, keepCallback)
         ? this.onCalloutTap
-        : onCalloutTap as VoidCallback?,
-    onDragStart: identical(onDragStart, unset)
+        : onCalloutTap,
+    onDragStart: identical(onDragStart, keepCoordinateCallback)
         ? this.onDragStart
-        : onDragStart as ValueChanged<CLLocationCoordinate2D>?,
-    onDrag: identical(onDrag, unset)
-        ? this.onDrag
-        : onDrag as ValueChanged<CLLocationCoordinate2D>?,
-    onDragEnd: identical(onDragEnd, unset)
+        : onDragStart,
+    onDrag: identical(onDrag, keepCoordinateCallback) ? this.onDrag : onDrag,
+    onDragEnd: identical(onDragEnd, keepCoordinateCallback)
         ? this.onDragEnd
-        : onDragEnd as ValueChanged<CLLocationCoordinate2D>?,
-    onSelect: identical(onSelect, unset)
-        ? this.onSelect
-        : onSelect as VoidCallback?,
-    onDeselect: identical(onDeselect, unset)
+        : onDragEnd,
+    onSelect: identical(onSelect, keepCallback) ? this.onSelect : onSelect,
+    onDeselect: identical(onDeselect, keepCallback)
         ? this.onDeselect
-        : onDeselect as VoidCallback?,
+        : onDeselect,
   );
 
   @internal

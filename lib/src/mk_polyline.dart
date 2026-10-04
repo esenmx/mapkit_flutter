@@ -2,7 +2,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
-import 'package:mapkit_flutter/src/_internal/unset.dart';
+import 'package:mapkit_flutter/src/_internal/copy_with_keep.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -134,13 +134,13 @@ final class MKPolyline {
     double? lineWidth,
     CGLineCap? lineCap,
     CGLineJoin? lineJoin,
-    Object? lineDashPattern = unset,
+    List<double>? lineDashPattern = keepDoubles,
     List<Color>? gradientColors,
     bool? isHidden,
     int? zIndex,
     bool? consumeTapEvents,
     MKOverlayLevel? level,
-    Object? onTap = unset,
+    VoidCallback? onTap = keepCallback,
   }) => (isGeodesic ? MKPolyline.geodesic : MKPolyline.new)(
     id: id,
     coordinates: coordinates ?? this.coordinates,
@@ -148,15 +148,15 @@ final class MKPolyline {
     lineWidth: lineWidth ?? this.lineWidth,
     lineCap: lineCap ?? this.lineCap,
     lineJoin: lineJoin ?? this.lineJoin,
-    lineDashPattern: identical(lineDashPattern, unset)
+    lineDashPattern: identical(lineDashPattern, keepDoubles)
         ? this.lineDashPattern
-        : (lineDashPattern as List<num>?)?.map((d) => d.toDouble()).toList(),
+        : lineDashPattern,
     gradientColors: gradientColors ?? this.gradientColors,
     isHidden: isHidden ?? this.isHidden,
     zIndex: zIndex ?? this.zIndex,
     consumeTapEvents: consumeTapEvents ?? this.consumeTapEvents,
     level: level ?? this.level,
-    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
+    onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
   @internal

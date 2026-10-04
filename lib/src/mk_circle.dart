@@ -2,7 +2,7 @@ import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
 
-import 'package:mapkit_flutter/src/_internal/unset.dart';
+import 'package:mapkit_flutter/src/_internal/copy_with_keep.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -86,7 +86,7 @@ final class const MKCircle({
     bool? isHidden,
     bool? consumeTapEvents,
     MKOverlayLevel? level,
-    Object? onTap = unset,
+    VoidCallback? onTap = keepCallback,
   }) => MKCircle(
     id: id,
     center: center ?? this.center,
@@ -98,7 +98,7 @@ final class const MKCircle({
     isHidden: isHidden ?? this.isHidden,
     consumeTapEvents: consumeTapEvents ?? this.consumeTapEvents,
     level: level ?? this.level,
-    onTap: identical(onTap, unset) ? this.onTap : onTap as VoidCallback?,
+    onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
   @internal

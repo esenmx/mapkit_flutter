@@ -20,7 +20,7 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
     /// view has real bounds so MapKit doesn't resolve it against a zero rect.
     private var pendingCamera: MKMapCamera?
 
-    fileprivate let locationManager = CLLocationManager()
+    let locationManager = CLLocationManager()
     private var pendingUserLocationRequest = false
 
     /// The last configuration Dart pushed.

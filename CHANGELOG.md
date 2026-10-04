@@ -5,6 +5,7 @@
 ### Breaking
 
 - MKPointOfInterestCategory gained 33 values — exhaustive switches over it must handle them.
+- The agent skill moved to skills/mapkit-flutter-scaffold/ (dart run skills@ get requires the package-name prefix).
 
 ### Added
 
@@ -24,6 +25,7 @@
 - `showsUserTrackingButton` works on macOS.
 - MKMapSnapshotOptions.showsBuildings has no effect (MapKit dropped it).
 - onCameraMove fires continuously (gestures, momentum, animations) on iOS and macOS via mapViewDidChangeVisibleRegion.
+- Docs: Look Around and showsUserTrackingButton platform notes corrected; per-platform differences table; deployment-target setup.
 
 ### Fixed
 
@@ -78,7 +80,7 @@
 
 ## 0.3.2
 
-- Docs: Updated scaffolder skill (`tool/skills/flutter-mapkit-scaffold/SKILL.md`) to document overlay tap interactions and macOS snapshot limitations.
+- Docs: Updated scaffolder skill (`skills/mapkit-flutter-scaffold/SKILL.md`) to document overlay tap interactions and macOS snapshot limitations.
 
 ## 0.3.1
 

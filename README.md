@@ -1,18 +1,27 @@
 # mapkit_flutter
 
-[![pub package](https://img.shields.io/pub/v/mapkit_flutter.svg)](https://pub.dev/packages/mapkit_flutter)
+[![pub package](https://img.shields.io/pub/v/mapkit_flutter.svg)](https://pub.dev/packages/mapkit_flutter) [![pub points](https://img.shields.io/pub/points/mapkit_flutter)](https://pub.dev/packages/mapkit_flutter/score) [![CI](https://github.com/esenmx/mapkit_flutter/actions/workflows/ci.yaml/badge.svg)](https://github.com/esenmx/mapkit_flutter/actions/workflows/ci.yaml) [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 MapKit for Flutter. Wraps `MKMapView` as a Flutter platform view on iOS and macOS, with annotations, overlays, clustering, Look Around, tile overlays, and the modern `MKMapConfiguration` family.
 
 **Every public type carries Apple's exact MapKit symbol name** — `MKMapCamera`, `MKCoordinateRegion`, `MKPolyline`, `CLLocationCoordinate2D`. If you (or your coding agent) know MapKit, you already know this API. The `MK` namespace also means zero import collisions with `google_maps_flutter`, `mapbox_maps_flutter`, or `flutter_map` in mixed-platform code — no `as mk` prefixes needed.
 
-> **Apple platforms only (iOS + macOS).** Apple's MapKit does not exist on Android. Pair this with `google_maps_flutter` behind a platform switch for cross-platform apps. Look Around is iOS-only (no macOS MapKit equivalent).
+> **Apple platforms only (iOS + macOS).** Apple's MapKit does not exist on Android. Pair this with `google_maps_flutter` behind a platform switch for cross-platform apps. Look Around is presented on iOS; on macOS `openLookAround` returns `false` (not wired yet).
 
 ## Install
 
 ```bash
 flutter pub add mapkit_flutter
 ```
+
+## Platform setup
+
+Raise the app's deployment targets to the plugin's floor:
+
+- **iOS 17.0** — `IPHONEOS_DEPLOYMENT_TARGET` on the Runner target (or Podfile `platform :ios, '17.0'`).
+- **macOS 14.0** — `MACOSX_DEPLOYMENT_TARGET` on the Runner target (or Podfile `platform :osx, '14.0'`).
+
+A Swift Package Manager app left on Flutter's default macOS 12.0 fails to build with "requires minimum platform version 14.0".
 
 Add to `ios/Runner/Info.plist` (on macOS, `macos/Runner/Info.plist` plus the Location sandbox entitlement) if you set `showsUserLocation: true`:
 
@@ -27,8 +36,21 @@ Add to `ios/Runner/Info.plist` (on macOS, `macos/Runner/Info.plist` plus the Loc
 |---|---|
 | iOS | 17.0 |
 | macOS | 14.0 |
-| Flutter / Dart | 3.41 / 3.10 |
 | Xcode | 16+ (the native code is Swift 6 language mode — data-race safety is compiler-enforced) |
+
+## Platform differences
+
+| | iOS | macOS |
+|---|---|---|
+| `onCalloutTap` | ✓ | ✗ (default callout) |
+| Image-icon `anchorPoint` | ✓ | ✗ (centered) |
+| `userTrackingMode: followWithHeading` | ✓ | falls back to `follow` |
+| Snapshot annotation/overlay compositing | ✓ | ✗ (base map only) |
+| `selectableMapFeatures` + `onMapFeatureSelected` | ✓ | ✗ |
+| `openLookAround` | ✓ | returns `false` |
+| `showsUserTrackingButton` | ✓ | ✓ |
+| `onCameraMove` | continuous | continuous |
+| `onDrag` | drag-state changes, not every movement | drag-state changes, not every movement |
 
 ## Quick start
 
@@ -108,7 +130,8 @@ MKMapView(
     maxCenterCoordinateDistance: 100000,
   ),
   cameraBoundary: someRegion,            // MKCoordinateRegion?
-  selectableMapFeatures: {MKMapFeatureOptions.pointsOfInterest},
+  selectableMapFeatures: {MKMapFeatureOptions.pointsOfInterest}, // iOS only
+  onMapFeatureSelected: (feature) => debugPrint('${feature.title}'),
 )
 ```
 
@@ -143,13 +166,15 @@ MKPointAnnotation(
   icon: MKAnnotationIcon.image(pngBytes),
 )
 
-// Callout + drag
+// Callout + selection + drag
 MKPointAnnotation(
   id: MKAnnotationId('apple-park'),
   coordinate: applePark,
   title: 'Apple Park',
   subtitle: 'One Apple Park Way',
-  onCalloutTap: () => Navigator.pushNamed(context, '/details'),
+  onCalloutTap: () => Navigator.pushNamed(context, '/details'), // iOS
+  onSelect: () => debugPrint('selected'),   // user or programmatic
+  onDeselect: () => debugPrint('deselected'),
   isDraggable: true,
   onDragEnd: (coordinate) => print('dropped $coordinate'),
 )
@@ -176,7 +201,7 @@ MKMapView(
       gradientColors: const [Colors.green, Colors.red], // MKGradientPolylineRenderer
       level: MKOverlayLevel.aboveLabels,
     ),
-    // Great-circle path, rendered by native MKGeodesicPolyline:
+    // Great-circle path, densified by native MKGeodesicPolyline:
     MKPolyline.geodesic(
       id: const MKPolylineId('sfo-nrt'),
       coordinates: const [sfo, nrt],
@@ -201,6 +226,8 @@ MKMapView(
 )
 ```
 
+`onTap` implies `consumeTapEvents`; only the top-most overlay under a tap fires.
+
 Tile overlays go through the controller (`MKTileOverlay(urlTemplate:)` semantics):
 
 ```dart
@@ -210,6 +237,12 @@ await controller.addTileOverlay(
     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   ),
 );
+```
+
+Models override `==`, so they can't be used in `const {…}` set literals — build the set without `const`. `copyWith` clears a nullable field when you pass `null` explicitly:
+
+```dart
+final untitled = annotation.copyWith(title: null);
 ```
 
 ## Controller — `MKMapView`'s imperative surface
@@ -259,7 +292,10 @@ await controller.zoomTo(14);
 await controller.zoomBy(2);
 await controller.zoomIn();
 await controller.scrollBy(80, -40);
-await controller.fitCoordinates(annotations.map((a) => a.coordinate));
+await controller.fitCoordinates(
+  annotations.map((a) => a.coordinate),
+  padding: 0.1, // 10% of the span on each side
+);
 final zoom = await controller.getZoomLevel();
 ```
 
@@ -291,13 +327,17 @@ The Dart↔Swift boundary is generated by [Pigeon](https://pub.dev/packages/pige
 
 The outputs (`lib/src/messages.g.dart`, `darwin/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift`) are committed and must not be hand-edited; CI regenerates and fails on drift. Wire types keep a `Platform` prefix so the generated Swift never shadows real MapKit symbols; public Dart names are restored via `typedef` (e.g. `MKUserTrackingMode`).
 
-## Claude Code skill
+## Agent skill
 
-A scaffold skill ships at [`skills/flutter-mapkit-scaffold/SKILL.md`](skills/flutter-mapkit-scaffold/SKILL.md). Drop it into your user skills and invoke with `/flutter-mapkit-scaffold`:
+This package ships an agent skill in `skills/mapkit-flutter-scaffold/`. Install it into your project's agent config with:
 
-```bash
-cp -R skills/flutter-mapkit-scaffold ~/.claude/skills/
+```sh
+dart run skills@ get --package mapkit_flutter --all
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

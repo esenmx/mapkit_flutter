@@ -18,7 +18,7 @@ Frontmatter `status` is the plan's lifecycle, one owner per transition: `draft` 
 - [x] Phase 6: Selection, map-feature and continuous-camera callbacks; iOS 18 POI categories
 - [x] Phase 7: Packaging
 - [x] Phase 8: Repo meta, lint config, pubspec
-- [ ] Phase 9: Docs and agent skill
+- [x] Phase 9: Docs and agent skill
 - [ ] Phase 10: CI
 - [ ] Phase 11: Release 0.4.0
 
@@ -762,6 +762,7 @@ Executor appends one bullet per discovery the plan didn't name: blocking and in-
 - Phase 5: the oracle's `xcrun simctl list devices booted … [0].udid` picks whichever simulator boots first; another executor had an iOS 27 `iPhone 16 Pro` booted, so the snapshot test ran on the explicit `iPhone 15` (iOS 17.5) UDID `E1C2FC5C-7A36-484B-A573-CC5E580C3C63`. Use an explicit UDID for Verification step 7 too, and boot it first: between runs the base `iPhone 15` was found shut down ("No supported devices found"); re-booted and re-ran. Closed.
 - Phase 6 (fix of the Phase 5 snippet): `UITraitCollection { traits in … }` in the nonisolated `makeSnapshotOptions` emits two Swift 6 warnings on the iOS 27 SDK ("main actor-isolated property 'userInterfaceStyle' / 'displayScale' can not be mutated from a nonisolated context": `UIMutableTraits` is `NS_SWIFT_UI_ACTOR`). The macOS-only warnings-as-errors build cannot see it. Replaced with `UITraitCollection(userInterfaceStyle:)` + `replacing(UITraitDisplayScale.self, value:)` (iOS 17 API, not deprecated); iOS build has 0 warnings, snapshot integration test re-run. CI never builds iOS with `SWIFT_TREAT_WARNINGS_AS_ERRORS`, so a regression there stays invisible; noted, not changed. Closed.
 - Phase 6: the native select/camera tests were red on behaviour (`onAnnotationSelect`/`onAnnotationDeselect` and `onCameraMove` expectations timed out); the camera test calls the delegate method as MapKit does (`(host as MKMapViewDelegate).mapViewDidChangeVisibleRegion?(…)`), so it compiled before the method existed. The iOS feature-payload test was red at compile time (`PlatformMapFeature has no member 'make'`); `testIOS18CategoryDroppedBeforeIOS18` cannot be red without contortion (the plugin doesn't compile until every new enum case is handled). The `MapKitViewHost.regionDidChangeAnimated` still sends one `onCameraMove` before `onCameraIdle`, now a duplicate of the last continuous move; the plan didn't remove it, kept. Closed.
+- Phase 9: the old-name sweep `rg -n 'flutter-mapkit-scaffold'` still matches this plan file (deleted in Phase 11); outside `plans/` it prints nothing. The snippet scratch gained `unused_field` in its own `ignore_for_file`: the verbatim, unchanged README Quick start assigns `_controller` without reading it (intentionally partial snippet, not drift). Closed.
 
 ## Execution prompt
 Paste as turn 1 of a fresh session:

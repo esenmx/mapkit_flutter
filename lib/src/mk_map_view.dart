@@ -61,7 +61,7 @@ final class const MKMapView({
   /// Requires `NSLocationWhenInUseUsageDescription` in `Info.plist`.
   final bool showsUserLocation = false,
 
-  /// `MKMapView.showsUserTrackingButton` (iOS 17).
+  /// `MKMapView.showsUserTrackingButton` (iOS 17 / macOS 14).
   final bool showsUserTrackingButton = false,
 
   /// The showsCompass property.
@@ -87,7 +87,7 @@ final class const MKMapView({
   final MKCoordinateRegion? cameraBoundary,
 
   /// Map features the user can tap to select
-  /// (`MKMapView.selectableMapFeatures`).
+  /// (`MKMapView.selectableMapFeatures`). iOS only.
   final Set<MKMapFeatureOptions> selectableMapFeatures = const {},
 
   /// The insetsLayoutMarginsFromSafeArea property.

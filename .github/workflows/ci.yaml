@@ -109,9 +109,15 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: { channel: stable, cache: true }
       - run: flutter pub get
-      - run: dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
-      - run: dart run build_runner build --delete-conflicting-outputs
-      - run: git diff --exit-code
+      - name: Pigeon outputs match the schema
+        run: |
+          dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
+          git diff --exit-code -- lib/src/messages.g.dart darwin/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift
+      - name: Mocks match the annotations
+        # Blank-line-insensitive: analyzer/source_gen versions differ in blank lines after the header.
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          git show HEAD:test/mk_map_view_controller_mock_test.mocks.dart | diff -B - test/mk_map_view_controller_mock_test.mocks.dart
   example-apple:
     name: example (iOS + macOS builds, native tests, macOS integration)
     runs-on: macos-15

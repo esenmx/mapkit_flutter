@@ -168,6 +168,38 @@ final class RunnerTests: XCTestCase {
         XCTAssertGreaterThan(polyline.pointCount, 2)
     }
 
+    func testPolygonSnapshotOutlineIsOneClosedRing() {
+        let polygon = FlutterPolygon(fromPlatform: PlatformPolygon(
+            id: "triangle",
+            coordinates: [
+                PlatformCoordinate(latitude: 0, longitude: 0),
+                PlatformCoordinate(latitude: 1, longitude: 0),
+                PlatformCoordinate(latitude: 0, longitude: 1),
+            ],
+            interiorPolygons: [],
+            fillColorArgb: 0xFF00_00FF,
+            strokeColorArgb: 0xFF00_00FF,
+            lineWidth: 1,
+            zIndex: 0,
+            isHidden: false,
+            consumeTapEvents: false,
+            level: .aboveRoads
+        ))
+        var elements: [String] = []
+
+        polygon.outlinePath { CGPoint(x: $0.longitude, y: $0.latitude) }.applyWithBlock { element in
+            let e = element.pointee
+            switch e.type {
+            case .moveToPoint: elements.append("M\(e.points[0].x),\(e.points[0].y)")
+            case .addLineToPoint: elements.append("L\(e.points[0].x),\(e.points[0].y)")
+            case .closeSubpath: elements.append("Z")
+            default: elements.append("?")
+            }
+        }
+
+        XCTAssertEqual(elements, ["M0.0,0.0", "L0.0,1.0", "L1.0,0.0", "Z"])
+    }
+
     func testCalloutToggleReachesNative() throws {
         let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
         try host.updateAnnotations(toAdd: [annotation("a")], toChange: [], idsToRemove: [])

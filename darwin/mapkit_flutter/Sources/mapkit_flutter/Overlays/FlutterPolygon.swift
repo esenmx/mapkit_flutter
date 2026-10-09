@@ -47,21 +47,11 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
     func getCAShapeLayer(snapshot: MKMapSnapshotter.Snapshot) -> CAShapeLayer {
         let shapeLayer = CAShapeLayer()
         #if os(iOS)
-        let path = UIBezierPath()
-
-        guard !isHidden, let first = coordinates.first else {
+        guard !isHidden, !coordinates.isEmpty else {
             return shapeLayer
         }
 
-        path.move(to: snapshot.point(for: first))
-        for coordinate in coordinates {
-            path.addLine(to: snapshot.point(for: coordinate))
-        }
-
-        path.addLine(to: snapshot.point(for: first))
-        path.close()
-
-        shapeLayer.path = path.cgPath
+        shapeLayer.path = outlinePath(snapshot.point(for:))
         shapeLayer.lineWidth = lineWidth
         shapeLayer.strokeColor = strokeColor?.cgColor ?? PlatformColor.clear.cgColor
         shapeLayer.fillColor = fillColor?.cgColor ?? PlatformColor.clear.cgColor
@@ -69,6 +59,18 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
         shapeLayer.lineJoin = .round
         #endif
         return shapeLayer
+    }
+
+    // One closed subpath: no zero-length first edge, and closeSubpath draws the closing edge once.
+    func outlinePath(_ point: (CLLocationCoordinate2D) -> CGPoint) -> CGPath {
+        let path = CGMutablePath()
+        guard let first = coordinates.first else { return path }
+        path.move(to: point(first))
+        for coordinate in coordinates.dropFirst() {
+            path.addLine(to: point(coordinate))
+        }
+        path.closeSubpath()
+        return path
     }
 }
 

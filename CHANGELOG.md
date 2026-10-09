@@ -44,6 +44,7 @@
 - Hidden overlays never take taps.
 - Re-adding a tile overlay with the same id (including the empty id) replaces it.
 - Snapshots now match the on-screen map: style (hybrid/imagery/muted/traffic/elevation/POI filter), rotated/pitched camera and dark mode.
+- Snapshot polygon outlines start without a zero-length edge and draw the closing edge once (visible with dash patterns and translucent strokes).
 - The podspec no longer forces -warnings-as-errors on CocoaPods consumers.
 
 ### Removed

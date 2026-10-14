@@ -23,10 +23,29 @@ void main() {
       const atNeg190 = CLLocationCoordinate2D(latitude: 0, longitude: -190);
       const at180 = CLLocationCoordinate2D(latitude: 0, longitude: 180);
       const at540 = CLLocationCoordinate2D(latitude: 0, longitude: 540);
+      const atSubNeg180 = CLLocationCoordinate2D(
+        latitude: 0,
+        longitude: -180.00000000000003,
+      );
       check(at190.longitude).equals(-170);
       check(atNeg190.longitude).equals(170);
       check(at180.longitude).equals(-180);
       check(at540.longitude).equals(-180);
+      check(atSubNeg180.longitude).equals(-180);
+      check(atSubNeg180.longitude).isLessThan(180);
+    });
+
+    test('rejects non-finite coordinates', () {
+      for (final bad in [
+        double.nan,
+        double.infinity,
+        double.negativeInfinity,
+      ]) {
+        check(() => CLLocationCoordinate2D(latitude: bad, longitude: 0))
+            .throws<AssertionError>();
+        check(() => CLLocationCoordinate2D(latitude: 0, longitude: bad))
+            .throws<AssertionError>();
+      }
     });
 
     test('round-trips through the platform type', () {

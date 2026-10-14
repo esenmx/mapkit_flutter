@@ -30,14 +30,14 @@ T requireRecordedArgs<T>(Object? args, {required String call}) {
 extension FakeHostApiExpectations on FakeHostApi {
   void expectCalls(List<String> names) => check(callNames).deepEquals(names);
 
-  PlatformMapViewCreationParams get initializeParams {
+  PlatformMapViewCreationParams initializeParams() {
     check(calls.single.$1).equals('initialize');
     return calls.requireSingleArgs<PlatformMapViewCreationParams>();
   }
 }
 
 extension FakeHostCallExpectations on List<(String, Object?)> {
-  RecordedCall get lastRecorded {
+  RecordedCall lastRecorded() {
     final (name, args) = last;
     return (name: name, args: args);
   }
@@ -53,7 +53,7 @@ extension FakeHostCallExpectations on List<(String, Object?)> {
   }
 
   T requireLastArgs<T>() {
-    final (:name, :args) = lastRecorded;
+    final (:name, :args) = lastRecorded();
     return requireRecordedArgs<T>(args, call: name);
   }
 
@@ -63,7 +63,7 @@ extension FakeHostCallExpectations on List<(String, Object?)> {
   }
 
   T expectLastArgs<T>(String name) {
-    check(lastRecorded.name).equals(name);
+    check(lastRecorded().name).equals(name);
     return requireLastArgs<T>();
   }
 }

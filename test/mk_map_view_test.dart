@@ -11,7 +11,7 @@ import '_helpers/platform_fixtures.dart';
 import '_helpers/recorded_call.dart';
 
 void main() {
-  late FakeHostApi host;
+  var host = FakeHostApi();
   var nextViewId = 0;
 
   setUp(() {
@@ -19,10 +19,18 @@ void main() {
     nextViewId++;
   });
 
-  late MKMapViewControllerImpl created;
+  MKMapViewControllerImpl? createdController;
+
+  MKMapViewControllerImpl requireCreated() {
+    final c = createdController;
+    if (c == null) {
+      fail('Expected MKMapViewControllerImpl to have been created');
+    }
+    return c;
+  }
 
   MKMapViewControllerImpl controllerFactory(MKMapViewEventSink sink) =>
-      created = MKMapViewControllerImpl(
+      createdController = MKMapViewControllerImpl(
         viewId: nextViewId,
         sink: sink,
         hostApi: host,
@@ -39,7 +47,11 @@ void main() {
     bool showsUserLocation = false,
     MKCameraZoomRange cameraZoomRange = const MKCameraZoomRange(),
     void Function(MKMapViewController)? onMapCreated,
+    VoidCallback? onCameraMoveStarted,
+    ValueChanged<MKMapCamera>? onCameraMove,
+    VoidCallback? onCameraIdle,
     void Function(CLLocationCoordinate2D)? onTap,
+    void Function(CLLocationCoordinate2D)? onLongPress,
     ValueChanged<String>? onDidFailLoadingMap,
     ValueChanged<String>? onDidFailToLocateUser,
     ValueChanged<MKMapFeature>? onMapFeatureSelected,
@@ -55,7 +67,11 @@ void main() {
       showsUserLocation: showsUserLocation,
       cameraZoomRange: cameraZoomRange,
       onMapCreated: onMapCreated,
+      onCameraMoveStarted: onCameraMoveStarted,
+      onCameraMove: onCameraMove,
+      onCameraIdle: onCameraIdle,
       onTap: onTap,
+      onLongPress: onLongPress,
       onDidFailLoadingMap: onDidFailLoadingMap,
       onDidFailToLocateUser: onDidFailToLocateUser,
       onMapFeatureSelected: onMapFeatureSelected,
@@ -89,7 +105,7 @@ void main() {
 
       check(fromCallback).isNotNull();
       check(host.callNames).deepEquals(['initialize']);
-      final params = host.initializeParams;
+      final params = host.initializeParams();
       check(params.initialCamera.distance).equals(sampleCamera.distance);
       check(params.annotations).length.equals(1);
       check(params.polylines).length.equals(1);
@@ -100,7 +116,7 @@ void main() {
       await tester.pumpWidget(map());
       await tester.pump();
 
-      final config = host.initializeParams.configuration;
+      final config = host.initializeParams().configuration;
       check(config.kind).equals(.standard);
       check(config.emphasisStyle).equals(.standard);
       check(config.elevationStyle).equals(.flat);
@@ -112,10 +128,17 @@ void main() {
       check(config.showsUserTrackingButton).isFalse();
       check(config.userTrackingMode).equals(.none);
       check(config.selectableMapFeatures).isEmpty();
-      check(config.pointOfInterestFilter).isNotNull();
-      check(config.pointOfInterestFilter!.mode).equals(.all);
-      check(config.cameraZoomRange).isNotNull();
-      check(config.cameraZoomRange!.minCenterCoordinateDistance).isNull();
+      check(config.pointOfInterestFilter)
+          .isNotNull()
+          .has((f) => f.mode, 'mode')
+          .equals(.all);
+      check(config.cameraZoomRange)
+          .isNotNull()
+          .has(
+            (r) => r.minCenterCoordinateDistance,
+            'minCenterCoordinateDistance',
+          )
+          .isNull();
       check(config.cameraBoundary).isNull();
     });
 
@@ -130,10 +153,13 @@ void main() {
       );
       await tester.pump();
 
-      final config = host.initializeParams.configuration;
+      final config = host.initializeParams().configuration;
       check(config.kind).equals(.hybrid);
       check(config.showsTraffic).isTrue();
-      check(config.pointOfInterestFilter!.mode).equals(.none);
+      check(config.pointOfInterestFilter)
+          .isNotNull()
+          .has((f) => f.mode, 'mode')
+          .equals(.none);
     });
   });
 
@@ -239,7 +265,13 @@ void main() {
       );
       check(config.isZoomEnabled).isFalse();
       check(config.showsUserLocation).isTrue();
-      check(config.cameraZoomRange!.minCenterCoordinateDistance).equals(500);
+      check(config.cameraZoomRange)
+          .isNotNull()
+          .has(
+            (r) => r.minCenterCoordinateDistance,
+            'minCenterCoordinateDistance',
+          )
+          .equals(500);
     });
 
     testWidgets('pushes a configuration update when the base style changes', (
@@ -272,14 +304,53 @@ void main() {
   });
 
   group('inbound events', () {
-    testWidgets('map taps reach the widget callback', (tester) async {
+    testWidgets('map taps and long presses reach the widget callbacks', (
+      tester,
+    ) async {
       CLLocationCoordinate2D? tapped;
-      await tester.pumpWidget(map(onTap: (c) => tapped = c));
+      CLLocationCoordinate2D? longPressed;
+      await tester.pumpWidget(
+        map(onTap: (c) => tapped = c, onLongPress: (c) => longPressed = c),
+      );
       await tester.pump();
 
-      created.eventHandler.onMapTap(platformCoord(1, 2));
-      const target = CLLocationCoordinate2D(latitude: 1, longitude: 2);
-      check(tapped).equals(target);
+      requireCreated().eventHandler
+        ..onMapTap(platformCoord(1, 2))
+        ..onMapLongPress(platformCoord(3, 4));
+      check(tapped)
+          .equals(const CLLocationCoordinate2D(latitude: 1, longitude: 2));
+      check(longPressed)
+          .equals(const CLLocationCoordinate2D(latitude: 3, longitude: 4));
+    });
+
+    testWidgets('camera lifecycle events reach the widget callbacks', (
+      tester,
+    ) async {
+      final events = <String>[];
+      MKMapCamera? movedCamera;
+      await tester.pumpWidget(
+        map(
+          onCameraMoveStarted: () => events.add('started'),
+          onCameraMove: (c) {
+            events.add('move');
+            movedCamera = c;
+          },
+          onCameraIdle: () => events.add('idle'),
+        ),
+      );
+      await tester.pump();
+
+      requireCreated().eventHandler
+        ..onCameraMoveStarted()
+        ..onCameraMove(platformCamera(latitude: 5, longitude: 6, distance: 700))
+        ..onCameraIdle();
+      check(events).deepEquals(['started', 'move', 'idle']);
+      check(movedCamera).equals(
+        const MKMapCamera(
+          centerCoordinate: CLLocationCoordinate2D(latitude: 5, longitude: 6),
+          distance: 700,
+        ),
+      );
     });
 
     testWidgets('annotation taps reach the matching annotation', (
@@ -294,7 +365,7 @@ void main() {
       await tester.pumpWidget(map(annotations: {tappable}));
       await tester.pump();
 
-      created.eventHandler
+      requireCreated().eventHandler
         ..onAnnotationTap('a')
         ..onAnnotationTap('missing');
       check(tapCount).equals(1);
@@ -321,9 +392,70 @@ void main() {
       await tester.pump();
 
       check(host.callNames).deepEquals(['initialize']);
-      created.eventHandler.onAnnotationTap('a');
+      requireCreated().eventHandler.onAnnotationTap('a');
       check(fired).equals('second');
     });
+
+    testWidgets(
+      'callout tap and drag callbacks fire the latest closures after a rebuild',
+      (tester) async {
+        final events = <String>[];
+        MKPointAnnotation interactive(String tag) => MKPointAnnotation(
+          id: const MKAnnotationId('a'),
+          coordinate: applePark,
+          onCalloutTap: () => events.add('callout-$tag'),
+          onDragStart: (c) => events.add('start-$tag:${c.latitude}'),
+          onDrag: (c) => events.add('drag-$tag:${c.latitude}'),
+          onDragEnd: (c) => events.add('end-$tag:${c.latitude}'),
+        );
+
+        await tester.pumpWidget(map(annotations: {interactive('first')}));
+        await tester.pump();
+        await tester.pumpWidget(map(annotations: {interactive('second')}));
+        await tester.pump();
+
+        requireCreated().eventHandler
+          ..onCalloutTap('a')
+          ..onAnnotationDragStart('a', platformCoord(1, 2))
+          ..onAnnotationDrag('a', platformCoord(2, 3))
+          ..onAnnotationDragEnd('a', platformCoord(3, 4));
+        check(events).deepEquals([
+          'callout-second',
+          'start-second:1.0',
+          'drag-second:2.0',
+          'end-second:3.0',
+        ]);
+      },
+    );
+
+    testWidgets(
+      'overlay tap callbacks fire the latest closures after a rebuild',
+      (tester) async {
+        final events = <String>[];
+        Widget buildOverlays(String tag) => map(
+          polylines: {
+            polyline('line').copyWith(onTap: () => events.add('line-$tag')),
+          },
+          polygons: {
+            polygon('poly').copyWith(onTap: () => events.add('poly-$tag')),
+          },
+          circles: {
+            circle('circ').copyWith(onTap: () => events.add('circ-$tag')),
+          },
+        );
+
+        await tester.pumpWidget(buildOverlays('first'));
+        await tester.pump();
+        await tester.pumpWidget(buildOverlays('second'));
+        await tester.pump();
+
+        requireCreated().eventHandler
+          ..onPolylineTap('line')
+          ..onPolygonTap('poly')
+          ..onCircleTap('circ');
+        check(events).deepEquals(['line-second', 'poly-second', 'circ-second']);
+      },
+    );
 
     testWidgets('failure events reach the widget callbacks', (tester) async {
       String? loadError;
@@ -336,7 +468,7 @@ void main() {
       );
       await tester.pump();
 
-      created.eventHandler
+      requireCreated().eventHandler
         ..onDidFailLoadingMap('offline')
         ..onDidFailToLocateUser('denied');
       check(loadError).equals('offline');
@@ -358,7 +490,7 @@ void main() {
       await tester.pumpWidget(map(annotations: {selectable('second')}));
       await tester.pump();
 
-      created.eventHandler
+      requireCreated().eventHandler
         ..onAnnotationSelect('a')
         ..onAnnotationDeselect('a')
         ..onAnnotationSelect('missing');
@@ -372,7 +504,7 @@ void main() {
       await tester.pumpWidget(map(onMapFeatureSelected: (f) => selected = f));
       await tester.pump();
 
-      created.eventHandler.onMapFeatureSelected(
+      requireCreated().eventHandler.onMapFeatureSelected(
         PlatformMapFeature(
           featureType: .territory,
           coordinate: platformCoord(1, 2),

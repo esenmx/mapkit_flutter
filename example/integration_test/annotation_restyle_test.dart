@@ -55,10 +55,10 @@ void main() {
     while (controller == null && DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    check(
-      controller,
-      because: 'platform view never reached onMapCreated',
-    ).isNotNull();
+    final ctrl = controller;
+    if (ctrl == null) {
+      fail('platform view never reached onMapCreated');
+    }
 
     // In-place restyle cycle: same id, new icon each frame. Includes clearing
     // tint and glyph back to null (reset to MapKit defaults).
@@ -85,20 +85,20 @@ void main() {
     });
 
     // Selection still round-trips on the reused, restyled annotation.
-    await controller!.showCallout(id);
+    await ctrl.showCallout(id);
     var shown = false;
     while (!shown && DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 150));
-      shown = await controller!.isCalloutShown(id);
+      shown = await ctrl.isCalloutShown(id);
     }
     check(shown, because: 'callout never opened on the reused pin').isTrue();
 
-    await controller!.hideCallout(id);
+    await ctrl.hideCallout(id);
     await tester.pump(const Duration(milliseconds: 300));
-    check(await controller!.isCalloutShown(id)).isFalse();
+    check(await ctrl.isCalloutShown(id)).isFalse();
 
     // The channel is still responsive after every restyle.
-    check((await controller!.camera).distance).isGreaterThan(0);
+    check((await ctrl.camera).distance).isGreaterThan(0);
     check(tester.takeException()).isNull();
   });
 }

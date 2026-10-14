@@ -1,5 +1,5 @@
 import 'package:checks/checks.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -63,7 +63,7 @@ void main() {
       polygons: const {},
       circles: const {},
     );
-    final polylines = harness.host.initializeParams.polylines;
+    final polylines = harness.host.initializeParams().polylines;
     check(polylines).length.equals(1);
     check(polylines.single.strokeColorArgb).equals(0xFF0000FF);
   });

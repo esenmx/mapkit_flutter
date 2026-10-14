@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:mapkit_flutter/src/_internal/map_object_updates.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/exceptions.dart';
@@ -38,24 +38,17 @@ final class const MKMapView({
   final MKMapConfiguration preferredConfiguration =
       const MKStandardMapConfiguration(),
 
-  /// The isZoomEnabled property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/iszoomenabled
+  /// Whether pinch/scroll zoom gestures are enabled (`MKMapView.isZoomEnabled`).
   final bool isZoomEnabled = true,
 
-  /// The isScrollEnabled property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/isscrollenabled
+  /// Whether pan/scroll gestures are enabled (`MKMapView.isScrollEnabled`).
   final bool isScrollEnabled = true,
 
-  /// The isRotateEnabled property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/isrotateenabled
+  /// Whether two-finger rotation gestures are enabled
+  /// (`MKMapView.isRotateEnabled`).
   final bool isRotateEnabled = true,
 
-  /// The isPitchEnabled property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/ispitchenabled
+  /// Whether two-finger tilt gestures are enabled (`MKMapView.isPitchEnabled`).
   final bool isPitchEnabled = true,
 
   /// Requires `NSLocationWhenInUseUsageDescription` in `Info.plist`.
@@ -64,19 +57,15 @@ final class const MKMapView({
   /// `MKMapView.showsUserTrackingButton` (iOS 17 / macOS 14).
   final bool showsUserTrackingButton = false,
 
-  /// The showsCompass property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/showscompass
+  /// Whether the compass control appears when the map is rotated away from
+  /// north (`MKMapView.showsCompass`).
   final bool showsCompass = true,
 
-  /// The showsScale property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/showsscale
+  /// Whether the distance scale indicator appears while zooming
+  /// (`MKMapView.showsScale`).
   final bool showsScale = false,
 
-  /// The userTrackingMode property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/usertrackingmode
+  /// How the camera tracks the user's location (`MKMapView.userTrackingMode`).
   final MKUserTrackingMode userTrackingMode = .none,
 
   /// Camera distance limits in meters (`MKMapView.cameraZoomRange`).
@@ -90,45 +79,33 @@ final class const MKMapView({
   /// (`MKMapView.selectableMapFeatures`). iOS only.
   final Set<MKMapFeatureOptions> selectableMapFeatures = const {},
 
-  /// The insetsLayoutMarginsFromSafeArea property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/insetslayoutmarginsfromsafearea
+  /// Whether layout margins include the safe area insets
+  /// (`UIView.insetsLayoutMarginsFromSafeArea`). iOS only.
   final bool insetsLayoutMarginsFromSafeArea = true,
 
-  /// The annotations property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/annotations
+  /// Point annotations displayed on the map, diffed by [MKAnnotationId].
   final Set<MKPointAnnotation> annotations = const {},
 
-  /// The polylines property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/polylines
+  /// Polyline overlays displayed on the map, diffed by [MKPolylineId].
   final Set<MKPolyline> polylines = const {},
 
-  /// The polygons property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/polygons
+  /// Polygon overlays displayed on the map, diffed by [MKPolygonId].
   final Set<MKPolygon> polygons = const {},
 
-  /// The circles property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/circles
+  /// Circle overlays displayed on the map, diffed by [MKCircleId].
   final Set<MKCircle> circles = const {},
 
-  /// The gestureRecognizers property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/gesturerecognizers
+  /// Gesture recognizers that participate in the platform view's gesture
+  /// arena.
   final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers =
       const {},
 
-  /// Creates a new Function object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Called once with the [MKMapViewController] when the native map view is
+  /// ready.
   final void Function(MKMapViewController controller)? onMapCreated,
 
-  /// The onCameraMoveStarted property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameramovestarted
+  /// Called when the camera begins moving
+  /// (`MKMapViewDelegate.mapView(_:regionWillChangeAnimated:)`).
   final VoidCallback? onCameraMoveStarted,
 
   /// Fires every frame the visible region changes — gestures, momentum and
@@ -136,19 +113,15 @@ final class const MKMapView({
   /// (`MKMapViewDelegate.mapViewDidChangeVisibleRegion(_:)`).
   final void Function(MKMapCamera camera)? onCameraMove,
 
-  /// The onCameraIdle property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview/oncameraidle
+  /// Called when the camera finishes moving
+  /// (`MKMapViewDelegate.mapView(_:regionDidChangeAnimated:)`).
   final VoidCallback? onCameraIdle,
 
-  /// Creates a new Function object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Called when the user taps the map at `coordinate` (when not consumed by
+  /// an annotation or overlay).
   final void Function(CLLocationCoordinate2D coordinate)? onTap,
 
-  /// Creates a new Function object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Called when the user long-presses the map at `coordinate`.
   final void Function(CLLocationCoordinate2D coordinate)? onLongPress,
 
   /// Map content failed to load, e.g. no network
@@ -172,9 +145,7 @@ final class const MKMapView({
   final MKMapViewControllerImpl Function(MKMapViewEventSink sink)?
   debugControllerFactory,
 }) extends StatefulWidget {
-  /// Creates a new MKMapView object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapview
+  /// Creates an Apple MapKit view widget.
   this;
 
   @override
@@ -185,10 +156,10 @@ final class _MKMapViewState extends State<MKMapView>
     implements MKMapViewEventSink {
   MKMapViewControllerImpl? _controller;
 
-  late Map<MKAnnotationId, MKPointAnnotation> _annotations;
-  late Map<MKPolylineId, MKPolyline> _polylines;
-  late Map<MKPolygonId, MKPolygon> _polygons;
-  late Map<MKCircleId, MKCircle> _circles;
+  Map<MKAnnotationId, MKPointAnnotation> _annotations = const {};
+  Map<MKPolylineId, MKPolyline> _polylines = const {};
+  Map<MKPolygonId, MKPolygon> _polygons = const {};
+  Map<MKCircleId, MKCircle> _circles = const {};
 
   @override
   void initState() {
@@ -268,7 +239,8 @@ final class _MKMapViewState extends State<MKMapView>
       MKMapEmphasisStyle emphasisStyle,
       bool showsTraffic,
       PlatformPointOfInterestFilter? pointOfInterestFilter,
-    ) = widget.preferredConfiguration._platformProperties;
+    ) = widget.preferredConfiguration
+        ._platformProperties();
 
     return PlatformMapConfiguration(
       kind: kind,
@@ -459,7 +431,7 @@ final class _MKMapViewState extends State<MKMapView>
 
 extension on MKMapConfiguration {
   (PlatformMapKind, MKMapEmphasisStyle, bool, PlatformPointOfInterestFilter?)
-  get _platformProperties => switch (this) {
+  _platformProperties() => switch (this) {
     MKStandardMapConfiguration(
       :final emphasisStyle,
       :final showsTraffic,

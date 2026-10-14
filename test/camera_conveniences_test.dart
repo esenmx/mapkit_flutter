@@ -10,13 +10,11 @@ import '_helpers/recorded_call.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late ControllerHarness harness;
-
-  setUp(() => harness = ControllerHarness(viewId: 2));
-  tearDown(() => harness.dispose());
+  ControllerHarness buildHarness() => ControllerHarness.autoTearDown(viewId: 2);
 
   group('getZoomLevel', () {
     test('derives the level from the host camera distance', () async {
+      final harness = buildHarness();
       harness.host.camera = platformCamera(distance: 591657550.5);
       check(await harness.controller.getZoomLevel()).isCloseTo(1, 1e-9);
       harness.expectCalls(['getCamera']);
@@ -25,6 +23,7 @@ void main() {
 
   group('zoomTo', () {
     test('reads the camera, then sets it at the requested level', () async {
+      final harness = buildHarness();
       await harness.controller.zoomTo(10, animated: false);
       harness.expectCalls(['getCamera', 'setCamera']);
       final (camera, animated) = harness.expectSetCamera();
@@ -33,6 +32,7 @@ void main() {
     });
 
     test('preserves center, heading, and pitch', () async {
+      final harness = buildHarness();
       harness.host.camera = platformCamera(
         latitude: 10,
         longitude: 20,
@@ -50,12 +50,14 @@ void main() {
 
   group('zoomBy', () {
     test('halves the distance per level zoomed in', () async {
+      final harness = buildHarness();
       await harness.controller.zoomBy(1);
       harness.expectCalls(['getCamera', 'setCamera']);
       check(harness.expectSetCamera().$1.distance).isCloseTo(500, 1e-9);
     });
 
     test('zoomIn and zoomOut are one level each way', () async {
+      final harness = buildHarness();
       await harness.controller.zoomIn();
       check(harness.expectSetCamera().$1.distance).isCloseTo(500, 1e-9);
 
@@ -67,6 +69,7 @@ void main() {
 
   group('scrollBy', () {
     test('converts the shifted center point back to a coordinate', () async {
+      final harness = buildHarness();
       harness.host
         ..point = platformPoint(100, 200)
         ..coordinate = platformCoord(5, 6);
@@ -88,6 +91,7 @@ void main() {
     });
 
     test('is a no-op while the view has no layout', () async {
+      final harness = buildHarness();
       harness.host.point = null;
       await harness.controller.scrollBy(10, 10);
       harness.expectCalls(['getCamera', 'convertToPoint']);
@@ -96,6 +100,7 @@ void main() {
 
   group('fitCoordinates', () {
     test('sets the containing region', () async {
+      final harness = buildHarness();
       await harness.controller.fitCoordinates(const [
         CLLocationCoordinate2D(latitude: 10, longitude: 20),
         CLLocationCoordinate2D(latitude: 30, longitude: 40),
@@ -107,11 +112,13 @@ void main() {
     });
 
     test('is a no-op for an empty set', () async {
+      final harness = buildHarness();
       await harness.controller.fitCoordinates(const []);
       check(harness.host.calls).isEmpty();
     });
 
     test('pads each side by a fraction of the span', () async {
+      final harness = buildHarness();
       await harness.controller.fitCoordinates(
         const [
           CLLocationCoordinate2D(latitude: 10, longitude: 20),
@@ -128,6 +135,7 @@ void main() {
     });
 
     test('frames a single coordinate at the minimum span', () async {
+      final harness = buildHarness();
       await harness.controller.fitCoordinates(const [
         CLLocationCoordinate2D(latitude: 10, longitude: 20),
       ], animated: false);

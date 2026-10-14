@@ -28,5 +28,8 @@ Future<Uint8List> renderCircleMarkerPng(Color color, {int size = 96}) async {
   final image = await recorder.endRecording().toImage(size, size);
   final data = await image.toByteData(format: .png);
   image.dispose();
-  return data!.buffer.asUint8List();
+  if (data == null) {
+    throw StateError('Failed to encode circle marker image to PNG');
+  }
+  return Uint8List.sublistView(data);
 }

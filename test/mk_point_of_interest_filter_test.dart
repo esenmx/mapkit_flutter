@@ -60,5 +60,21 @@ void main() {
             const .excluding([.cafe]),
       ).isFalse();
     });
+
+    test('toString describes each filter variant', () {
+      check(MKPointOfInterestFilter.includingAll.toString())
+          .equals('MKPointOfInterestFilter.includingAll');
+      check(MKPointOfInterestFilter.excludingAll.toString())
+          .equals('MKPointOfInterestFilter.excludingAll');
+      check(const MKPointOfInterestFilter.including([.cafe]).toString()).equals(
+        'MKPointOfInterestFilter.including('
+        '${const [MKPointOfInterestCategory.cafe]})',
+      );
+      check(const MKPointOfInterestFilter.excluding([.nightlife]).toString())
+          .equals(
+            'MKPointOfInterestFilter.excluding('
+            '${const [MKPointOfInterestCategory.nightlife]})',
+          );
+    });
   });
 }

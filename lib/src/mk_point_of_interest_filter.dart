@@ -26,19 +26,15 @@ sealed class MKPointOfInterestFilter {
   static const MKPointOfInterestFilter excludingAll =
       ExcludingAllPointsOfInterest();
 
+  /// Converts this filter to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformPointOfInterestFilter toPlatform();
 }
 
 /// Shows every point-of-interest category
 /// ([MKPointOfInterestFilter.includingAll]).
 final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
-  /// Creates a new IncludingAllPointsOfInterest object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Creates a filter that includes every point-of-interest category.
   const new();
 
   @override
@@ -50,13 +46,14 @@ final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
 
   @override
   int get hashCode => 0;
+
+  @override
+  String toString() => 'MKPointOfInterestFilter.includingAll';
 }
 
 /// Hides all points of interest ([MKPointOfInterestFilter.excludingAll]).
 final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
-  /// Creates a new ExcludingAllPointsOfInterest object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Creates a filter that excludes every point-of-interest category.
   const new();
 
   @override
@@ -68,18 +65,17 @@ final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
 
   @override
   int get hashCode => 1;
+
+  @override
+  String toString() => 'MKPointOfInterestFilter.excludingAll';
 }
 
 /// Shows only the listed [categories].
 final class const IncludingPointsOfInterest(
-  /// The categories property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Categories included by this filter.
   final List<MKPointOfInterestCategory> categories,
 ) extends MKPointOfInterestFilter {
-  /// Creates a new IncludingPointsOfInterest object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Creates a filter that includes only [categories].
   this;
 
   @override
@@ -93,18 +89,17 @@ final class const IncludingPointsOfInterest(
 
   @override
   int get hashCode => Object.hash('including', .hashAll(categories));
+
+  @override
+  String toString() => 'MKPointOfInterestFilter.including($categories)';
 }
 
 /// Shows every category except the listed [categories].
 final class const ExcludingPointsOfInterest(
-  /// The categories property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Categories excluded by this filter.
   final List<MKPointOfInterestCategory> categories,
 ) extends MKPointOfInterestFilter {
-  /// Creates a new ExcludingPointsOfInterest object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Creates a filter that excludes [categories].
   this;
 
   @override
@@ -118,4 +113,7 @@ final class const ExcludingPointsOfInterest(
 
   @override
   int get hashCode => Object.hash('excluding', .hashAll(categories));
+
+  @override
+  String toString() => 'MKPointOfInterestFilter.excluding($categories)';
 }

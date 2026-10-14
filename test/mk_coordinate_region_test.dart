@@ -11,10 +11,10 @@ void main() {
     test('single coordinate yields a zero span centered on it', () {
       const point = CLLocationCoordinate2D(latitude: 10, longitude: 20);
       final region = MKCoordinateRegion.containing(const [point]);
-      check(region).isNotNull();
-      check(region!.center).equals(point);
       const zeroSpan = MKCoordinateSpan(latitudeDelta: 0, longitudeDelta: 0);
-      check(region.span).equals(zeroSpan);
+      check(region).isNotNull()
+        ..has((r) => r.center, 'center').equals(point)
+        ..has((r) => r.span, 'span').equals(zeroSpan);
     });
 
     test('spans the extremes with the midpoint as center', () {
@@ -23,12 +23,13 @@ void main() {
         CLLocationCoordinate2D(latitude: 30, longitude: 40),
         CLLocationCoordinate2D(latitude: 15, longitude: 25),
       ]);
-      check(region).isNotNull();
       const mid = CLLocationCoordinate2D(latitude: 20, longitude: 30);
-      check(region!.center).equals(mid);
-      check(
-        region.span,
-      ).equals(const MKCoordinateSpan(latitudeDelta: 20, longitudeDelta: 20));
+      check(region).isNotNull()
+        ..has((r) => r.center, 'center').equals(mid)
+        ..has(
+          (r) => r.span,
+          'span',
+        ).equals(const MKCoordinateSpan(latitudeDelta: 20, longitudeDelta: 20));
     });
   });
 

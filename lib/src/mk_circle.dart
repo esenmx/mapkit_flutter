@@ -8,9 +8,7 @@ import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 
-/// Type definition for MKCircleId.
-///
-/// See: https://developer.apple.com/documentation/mapkit/mkcircleid
+/// Typed identifier for an [MKCircle].
 typedef MKCircleId = MapItemId<MKCircle>;
 
 /// A circle of a fixed [radius] in meters centered on a coordinate, mirroring
@@ -19,27 +17,19 @@ typedef MKCircleId = MapItemId<MKCircle>;
 /// See: https://developer.apple.com/documentation/mapkit/mkcircle
 @immutable
 final class const MKCircle({
-  /// The id property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/id
+  /// Unique identifier used to diff this circle across rebuilds.
   required final MKCircleId id,
 
-  /// The center property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/center
+  /// Center coordinate of the circle.
   required final CLLocationCoordinate2D center,
 
   /// Radius in meters.
   required final double radius,
 
-  /// The fillColor property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/fillcolor
+  /// Interior fill color (`MKCircleRenderer.fillColor`).
   final Color fillColor = const Color(0x00000000),
 
-  /// The strokeColor property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/strokecolor
+  /// Outline stroke color (`MKCircleRenderer.strokeColor`).
   final Color strokeColor = const Color(0xFF000000),
 
   /// Stroke width in points (`lineWidth`).
@@ -49,33 +39,31 @@ final class const MKCircle({
   /// overlay z-index; ties resolve by insertion.
   final int zIndex = 0,
 
-  /// The isHidden property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/ishidden
+  /// Whether the circle is hidden on the map.
   final bool isHidden = false,
 
   /// Whether this overlay consumes taps; also blocks the map's `onTap`
   /// without a callback.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/consumetapevents
   final bool consumeTapEvents = false,
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level = .aboveRoads,
 
   /// Called when the overlay is tapped; implies `consumeTapEvents`.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle/ontap
   final VoidCallback? onTap,
 }) {
-  /// Creates a new MKCircle object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcircle
-  this : assert(radius >= 0, 'radius must be >= 0 meters');
+  /// Creates a circle overlay centered on [center] with [radius] meters.
+  this
+    : assert(
+        radius >= 0 && radius < double.infinity,
+        'radius must be a finite value >= 0 meters',
+      ),
+      assert(
+        lineWidth >= 0 && lineWidth < double.infinity,
+        'lineWidth must be a finite value >= 0',
+      );
 
-  /// Creates a new With object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Returns a copy with the given fields replaced.
   MKCircle copyWith({
     CLLocationCoordinate2D? center,
     double? radius,
@@ -101,10 +89,8 @@ final class const MKCircle({
     onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
+  /// Converts this circle to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCircle toPlatform() => PlatformCircle(
     id: id.value,
     center: center.toPlatform(),

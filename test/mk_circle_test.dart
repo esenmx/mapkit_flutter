@@ -29,14 +29,24 @@ void main() {
       check(platform.isHidden).isFalse();
     });
 
-    test('rejects a negative radius', () {
-      check(
-        () => MKCircle(
-          id: const MKCircleId('bad'),
-          center: applePark,
-          radius: -1,
-        ),
-      ).throws<AssertionError>();
+    test('rejects negative or non-finite radius and lineWidth', () {
+      for (final bad in [-1.0, double.nan, double.infinity]) {
+        check(
+          () => MKCircle(
+            id: const MKCircleId('bad'),
+            center: applePark,
+            radius: bad,
+          ),
+        ).throws<AssertionError>();
+        check(
+          () => MKCircle(
+            id: const MKCircleId('bad'),
+            center: applePark,
+            radius: 100,
+            lineWidth: bad,
+          ),
+        ).throws<AssertionError>();
+      }
     });
   });
 

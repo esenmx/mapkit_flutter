@@ -31,10 +31,31 @@ void main() {
       check(moved.pitch).equals(sampleCamera.pitch);
     });
 
-    test('rejects a non-positive distance', () {
-      MKMapCamera zeroDistance() =>
-          MKMapCamera(centerCoordinate: applePark, distance: 0);
-      check(zeroDistance).throws<AssertionError>();
+    test('rejects non-positive or non-finite parameters', () {
+      check(() => MKMapCamera(centerCoordinate: applePark, distance: 0))
+          .throws<AssertionError>();
+      for (final bad in [
+        double.nan,
+        double.infinity,
+        double.negativeInfinity,
+      ]) {
+        check(() => MKMapCamera(centerCoordinate: applePark, distance: bad))
+            .throws<AssertionError>();
+        check(
+          () => MKMapCamera(
+            centerCoordinate: applePark,
+            distance: 1000,
+            heading: bad,
+          ),
+        ).throws<AssertionError>();
+        check(
+          () => MKMapCamera(
+            centerCoordinate: applePark,
+            distance: 1000,
+            pitch: bad,
+          ),
+        ).throws<AssertionError>();
+      }
     });
 
     test('round-trips through the platform type', () {

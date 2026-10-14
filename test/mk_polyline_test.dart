@@ -28,8 +28,7 @@ void main() {
       check(platform.lineWidth).equals(4);
       check(platform.lineCap).equals(.butt);
       check(platform.lineJoin).equals(.miter);
-      check(platform.lineDashPattern).isNotNull();
-      check(platform.lineDashPattern!).deepEquals([6, 3]);
+      check(platform.lineDashPattern).isNotNull().deepEquals([6, 3]);
       check(platform.zIndex).equals(2);
       check(platform.level).equals(.aboveLabels);
       check(platform.consumeTapEvents).isTrue();
@@ -51,8 +50,28 @@ void main() {
         coordinates: [applePark, infiniteLoop],
         gradientColors: [Color(0xFFFF0000), Color(0xFF00FF00)],
       ).toPlatform();
-      check(platform.gradientColorsArgb).isNotNull();
-      check(platform.gradientColorsArgb!).deepEquals([0xFFFF0000, 0xFF00FF00]);
+      check(platform.gradientColorsArgb)
+          .isNotNull()
+          .deepEquals([0xFFFF0000, 0xFF00FF00]);
+    });
+
+    test('rejects negative or non-finite lineWidth', () {
+      for (final bad in [-1.0, double.nan, double.infinity]) {
+        check(
+          () => MKPolyline(
+            id: const MKPolylineId('bad'),
+            coordinates: const [applePark, infiniteLoop],
+            lineWidth: bad,
+          ),
+        ).throws<AssertionError>();
+        check(
+          () => MKPolyline.geodesic(
+            id: const MKPolylineId('bad'),
+            coordinates: const [applePark, infiniteLoop],
+            lineWidth: bad,
+          ),
+        ).throws<AssertionError>();
+      }
     });
   });
 

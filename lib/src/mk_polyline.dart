@@ -8,9 +8,7 @@ import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 
-/// Type definition for MKPolylineId.
-///
-/// See: https://developer.apple.com/documentation/mapkit/mkpolylineid
+/// Typed identifier for an [MKPolyline].
 typedef MKPolylineId = MapItemId<MKPolyline>;
 
 /// A connected sequence of line segments through geographical [coordinates],
@@ -39,7 +37,11 @@ final class MKPolyline {
     this.consumeTapEvents = false,
     this.level = .aboveRoads,
     this.onTap,
-  }) : isGeodesic = false;
+  }) : assert(
+         lineWidth >= 0 && lineWidth < double.infinity,
+         'lineWidth must be a finite value >= 0',
+       ),
+       isGeodesic = false;
 
   /// Polyline whose segments follow the shortest path over the globe,
   /// mirroring `MKGeodesicPolyline`.
@@ -58,19 +60,19 @@ final class MKPolyline {
     this.consumeTapEvents = false,
     this.level = .aboveRoads,
     this.onTap,
-  }) : isGeodesic = true;
+  }) : assert(
+         lineWidth >= 0 && lineWidth < double.infinity,
+         'lineWidth must be a finite value >= 0',
+       ),
+       isGeodesic = true;
 
-  /// The id property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/id
+  /// Unique identifier used to diff this polyline across rebuilds.
   final MKPolylineId id;
 
   /// The vertices of the polyline. Fewer than two coordinates draws
   /// nothing — on the live map and in snapshots (matches
   /// `MKPolylineRenderer`; a single point no longer renders a dot in
   /// snapshots).
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/coordinates
   final List<CLLocationCoordinate2D> coordinates;
 
   /// Whether segments follow great-circle paths (`MKGeodesicPolyline`).
@@ -87,9 +89,7 @@ final class MKPolyline {
   /// joins, mirrored here.
   final CGLineCap lineCap;
 
-  /// The lineJoin property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/linejoin
+  /// Stroke corner-join style (`MKOverlayPathRenderer.lineJoin`).
   final CGLineJoin lineJoin;
 
   /// Alternating dash/gap lengths in points (`lineDashPattern`), e.g.
@@ -102,9 +102,7 @@ final class MKPolyline {
   /// [strokeColor]. Requires at least two colors.
   final List<Color> gradientColors;
 
-  /// The isHidden property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/ishidden
+  /// Whether the polyline is hidden on the map.
   final bool isHidden;
 
   /// Flutter-side insertion-order hint between overlays. MapKit has no
@@ -113,21 +111,15 @@ final class MKPolyline {
 
   /// Whether this overlay consumes taps; also blocks the map's `onTap`
   /// without a callback.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/consumetapevents
   final bool consumeTapEvents;
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level;
 
   /// Called when the overlay is tapped; implies `consumeTapEvents`.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolyline/ontap
   final VoidCallback? onTap;
 
-  /// Creates a new With object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Returns a copy with the given fields replaced.
   MKPolyline copyWith({
     List<CLLocationCoordinate2D>? coordinates,
     Color? strokeColor,
@@ -159,10 +151,8 @@ final class MKPolyline {
     onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
+  /// Converts this polyline to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformPolyline toPlatform() => PlatformPolyline(
     id: id.value,
     coordinates: coordinates.map((c) => c.toPlatform()).toList(),

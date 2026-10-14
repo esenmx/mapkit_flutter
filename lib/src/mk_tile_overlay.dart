@@ -4,9 +4,7 @@ import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 import 'package:meta/meta.dart';
 
-/// Type definition for MKTileOverlayId.
-///
-/// See: https://developer.apple.com/documentation/mapkit/mktileoverlayid
+/// Typed identifier for an [MKTileOverlay].
 typedef MKTileOverlayId = MapItemId<MKTileOverlay>;
 
 /// Raster tile overlay drawn over the base map, mirroring
@@ -17,9 +15,7 @@ typedef MKTileOverlayId = MapItemId<MKTileOverlay>;
 /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
 @immutable
 final class const MKTileOverlay({
-  /// The id property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay/id
+  /// Unique identifier used to add or remove this tile overlay.
   required final MKTileOverlayId id,
 
   /// Slippy-map URL template, e.g.
@@ -48,17 +44,15 @@ final class const MKTileOverlay({
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level = .aboveRoads,
 }) {
-  /// Creates a new MKTileOverlay object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
+  /// Creates a raster tile overlay for [urlTemplate].
   this
     : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]'),
-      assert(minimumZ <= maximumZ, 'minimumZ must be <= maximumZ');
+      assert(minimumZ >= 0, 'minimumZ must be >= 0'),
+      assert(minimumZ <= maximumZ, 'minimumZ must be <= maximumZ'),
+      assert(tileSize > 0, 'tileSize must be > 0');
 
+  /// Converts this tile overlay to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformTileOverlay toPlatform() => PlatformTileOverlay(
     id: id.value,
     urlTemplate: urlTemplate,

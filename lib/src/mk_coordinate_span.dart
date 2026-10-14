@@ -7,36 +7,33 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
 @immutable
 final class const MKCoordinateSpan({
-  /// The latitudeDelta property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/latitudedelta
+  /// North-to-south span in degrees in `[0, 180]`.
   required final double latitudeDelta,
 
-  /// The longitudeDelta property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan/longitudedelta
+  /// East-to-west span in degrees in `[0, 360]`.
   required final double longitudeDelta,
 }) {
-  /// Creates a new MKCoordinateSpan object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
+  /// Creates a coordinate span with [latitudeDelta] in `[0, 180]` and
+  /// [longitudeDelta] in `[0, 360]`.
   this
-    : assert(latitudeDelta >= 0, 'latitudeDelta must be >= 0'),
-      assert(longitudeDelta >= 0, 'longitudeDelta must be >= 0');
+    : assert(
+        latitudeDelta >= 0 && latitudeDelta <= 180,
+        'latitudeDelta must be in [0, 180]',
+      ),
+      assert(
+        longitudeDelta >= 0 && longitudeDelta <= 360,
+        'longitudeDelta must be in [0, 360]',
+      );
 
+  /// Constructs a coordinate span from its Pigeon wire representation.
   @internal
-  /// Creates a new MKCoordinateSpan object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
   factory fromPlatform(PlatformCoordinateSpan p) => MKCoordinateSpan(
     latitudeDelta: p.latitudeDelta,
     longitudeDelta: p.longitudeDelta,
   );
 
+  /// Converts this coordinate span to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCoordinateSpan toPlatform() => PlatformCoordinateSpan(
     latitudeDelta: latitudeDelta,
     longitudeDelta: longitudeDelta,

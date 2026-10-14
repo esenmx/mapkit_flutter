@@ -37,6 +37,18 @@ void main() {
       check(platform.lineWidth).equals(3);
       check(platform.isHidden).isFalse();
     });
+
+    test('rejects negative or non-finite lineWidth', () {
+      for (final bad in [-1.0, double.nan, double.infinity]) {
+        check(
+          () => MKPolygon(
+            id: const MKPolygonId('bad'),
+            coordinates: const [applePark, infiniteLoop],
+            lineWidth: bad,
+          ),
+        ).throws<AssertionError>();
+      }
+    });
   });
 
   group('equality', () {

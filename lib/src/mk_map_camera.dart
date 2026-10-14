@@ -11,9 +11,7 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
 @immutable
 final class const MKMapCamera({
-  /// The centerCoordinate property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera/centercoordinate
+  /// Ground coordinate at the center of the viewport.
   required final CLLocationCoordinate2D centerCoordinate,
 
   /// `MKMapCamera.centerCoordinateDistance` — meters between the camera and
@@ -26,15 +24,23 @@ final class const MKMapCamera({
   /// Tilt in degrees (0 = looking straight down).
   final double pitch = 0.0,
 }) {
-  /// Creates a new MKMapCamera object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
-  this : assert(distance > 0, 'distance must be > 0 meters');
+  /// Creates a camera looking at [centerCoordinate] from [distance] meters.
+  this
+    : assert(
+        distance > 0 && distance < double.infinity,
+        'distance must be a finite value > 0 meters',
+      ),
+      assert(
+        heading > double.negativeInfinity && heading < double.infinity,
+        'heading must be finite',
+      ),
+      assert(
+        pitch > double.negativeInfinity && pitch < double.infinity,
+        'pitch must be finite',
+      );
 
+  /// Constructs a camera from its Pigeon wire representation.
   @internal
-  /// Creates a new MKMapCamera object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
   factory fromPlatform(PlatformMapCamera p) => MKMapCamera(
     centerCoordinate: .fromPlatform(p.centerCoordinate),
     distance: p.distance,
@@ -67,9 +73,7 @@ final class const MKMapCamera({
 
   static double _log2(double x) => log(x) / 0.6931471805599453;
 
-  /// Creates a new With object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Returns a copy with the given fields replaced.
   MKMapCamera copyWith({
     CLLocationCoordinate2D? centerCoordinate,
     double? distance,
@@ -82,10 +86,8 @@ final class const MKMapCamera({
     pitch: pitch ?? this.pitch,
   );
 
+  /// Converts this camera to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformMapCamera toPlatform() => PlatformMapCamera(
     centerCoordinate: centerCoordinate.toPlatform(),
     distance: distance,

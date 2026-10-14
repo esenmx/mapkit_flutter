@@ -9,25 +9,17 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
 @immutable
 final class const MKCoordinateRegion({
-  /// The center property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/center
+  /// Center coordinate of the region.
   required final CLLocationCoordinate2D center,
 
-  /// The span property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion/span
+  /// Latitude and longitude span of the region.
   required final MKCoordinateSpan span,
 }) {
-  /// Creates a new MKCoordinateRegion object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
+  /// Creates a coordinate region centered at [center] with [span].
   this;
 
+  /// Constructs a coordinate region from its Pigeon wire representation.
   @internal
-  /// Creates a new MKCoordinateRegion object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcoordinateregion
   factory fromPlatform(PlatformCoordinateRegion p) => MKCoordinateRegion(
     center: .fromPlatform(p.center),
     span: .fromPlatform(p.span),
@@ -75,10 +67,8 @@ final class const MKCoordinateRegion({
     return latOk && lngDistance.abs() <= span.longitudeDelta / 2;
   }
 
+  /// Converts this coordinate region to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCoordinateRegion toPlatform() => PlatformCoordinateRegion(
     center: center.toPlatform(),
     span: span.toPlatform(),

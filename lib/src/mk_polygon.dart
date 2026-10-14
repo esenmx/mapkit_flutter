@@ -8,9 +8,7 @@ import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
 
-/// Type definition for MKPolygonId.
-///
-/// See: https://developer.apple.com/documentation/mapkit/mkpolygonid
+/// Typed identifier for an [MKPolygon].
 typedef MKPolygonId = MapItemId<MKPolygon>;
 
 /// A filled, closed shape defined by an outer ring of [coordinates], with
@@ -20,27 +18,19 @@ typedef MKPolygonId = MapItemId<MKPolygon>;
 /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
 @immutable
 final class const MKPolygon({
-  /// The id property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/id
+  /// Unique identifier used to diff this polygon across rebuilds.
   required final MKPolygonId id,
 
-  /// The coordinates property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/coordinates
+  /// Outer ring vertices of the polygon.
   required final List<CLLocationCoordinate2D> coordinates,
 
   /// Rings cut out of the filled shape (`MKPolygon.interiorPolygons`).
   final List<List<CLLocationCoordinate2D>> interiorPolygons = const [],
 
-  /// The fillColor property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/fillcolor
+  /// Interior fill color (`MKPolygonRenderer.fillColor`).
   final Color fillColor = const Color(0x00000000),
 
-  /// The strokeColor property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/strokecolor
+  /// Outline stroke color (`MKPolygonRenderer.strokeColor`).
   final Color strokeColor = const Color(0xFF000000),
 
   /// Stroke width in points (`lineWidth`).
@@ -50,33 +40,28 @@ final class const MKPolygon({
   /// overlay z-index; ties resolve by insertion.
   final int zIndex = 0,
 
-  /// The isHidden property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ishidden
+  /// Whether the polygon is hidden on the map.
   final bool isHidden = false,
 
   /// Whether this overlay consumes taps; also blocks the map's `onTap`
   /// without a callback.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/consumetapevents
   final bool consumeTapEvents = false,
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level = .aboveRoads,
 
   /// Called when the overlay is tapped; implies `consumeTapEvents`.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon/ontap
   final VoidCallback? onTap,
 }) {
-  /// Creates a new MKPolygon object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
-  this;
+  /// Creates a polygon overlay with an outer [coordinates] ring and optional
+  /// [interiorPolygons] cutout rings.
+  this
+    : assert(
+        lineWidth >= 0 && lineWidth < double.infinity,
+        'lineWidth must be a finite value >= 0',
+      );
 
-  /// Creates a new With object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Returns a copy with the given fields replaced.
   MKPolygon copyWith({
     List<CLLocationCoordinate2D>? coordinates,
     List<List<CLLocationCoordinate2D>>? interiorPolygons,
@@ -102,10 +87,8 @@ final class const MKPolygon({
     onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
+  /// Converts this polygon to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformPolygon toPlatform() => PlatformPolygon(
     id: id.value,
     coordinates: coordinates.map((c) => c.toPlatform()).toList(),

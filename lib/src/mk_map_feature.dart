@@ -22,15 +22,11 @@ final class const MKMapFeature({
   /// territory, a physical feature or a category this package doesn't know.
   final MKPointOfInterestCategory? pointOfInterestCategory,
 }) {
-  /// Creates a new MKMapFeature object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapfeatureannotation
+  /// Creates a selected map feature description.
   this;
 
+  /// Constructs a map feature from its Pigeon wire representation.
   @internal
-  /// Creates a new MKMapFeature object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapfeatureannotation
   factory fromPlatform(PlatformMapFeature p) => MKMapFeature(
     featureType: p.featureType,
     coordinate: .fromPlatform(p.coordinate),

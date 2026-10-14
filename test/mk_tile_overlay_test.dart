@@ -40,13 +40,27 @@ void main() {
       check(platform.alpha).equals(1);
     });
 
-    test('rejects an inverted z range', () {
+    test('rejects an invalid z range or tileSize', () {
       check(
         () => MKTileOverlay(
           id: const MKTileOverlayId('bad'),
           urlTemplate: 'https://t/{z}/{x}/{y}.png',
           minimumZ: 10,
           maximumZ: 3,
+        ),
+      ).throws<AssertionError>();
+      check(
+        () => MKTileOverlay(
+          id: const MKTileOverlayId('bad'),
+          urlTemplate: 'https://t/{z}/{x}/{y}.png',
+          minimumZ: -1,
+        ),
+      ).throws<AssertionError>();
+      check(
+        () => MKTileOverlay(
+          id: const MKTileOverlayId('bad'),
+          urlTemplate: 'https://t/{z}/{x}/{y}.png',
+          tileSize: 0,
         ),
       ).throws<AssertionError>();
     });

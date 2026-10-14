@@ -23,12 +23,21 @@ void main() {
       check(a.hashCode).equals(b.hashCode);
     });
 
-    test('rejects min above max', () {
+    test('rejects min above max, negative, or non-finite distances', () {
       check(
         () => MKCameraZoomRange(
           minCenterCoordinateDistance: 2,
           maxCenterCoordinateDistance: 1,
         ),
+      ).throws<AssertionError>();
+      check(() => MKCameraZoomRange(minCenterCoordinateDistance: -1))
+          .throws<AssertionError>();
+      check(() => MKCameraZoomRange(maxCenterCoordinateDistance: -1))
+          .throws<AssertionError>();
+      check(() => MKCameraZoomRange(minCenterCoordinateDistance: double.nan))
+          .throws<AssertionError>();
+      check(
+        () => MKCameraZoomRange(maxCenterCoordinateDistance: double.infinity),
       ).throws<AssertionError>();
     });
 

@@ -12,9 +12,7 @@ final class const MKMapSnapshotOptions({
   /// configuration.
   final bool showsBuildings = true,
 
-  /// The showsPointsOfInterest property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotoptions/showspointsofinterest
+  /// Whether points of interest appear in the snapshot.
   final bool showsPointsOfInterest = true,
 
   /// Whether the plugin draws the current annotations into the snapshot.
@@ -25,15 +23,11 @@ final class const MKMapSnapshotOptions({
   /// iOS only; macOS snapshots contain the base map.
   final bool showsOverlays = true,
 }) {
-  /// Creates a new MKMapSnapshotOptions object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapsnapshotoptions
+  /// Creates options controlling what a map snapshot includes.
   this;
 
+  /// Converts these snapshot options to their Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformSnapshotOptions toPlatform() => PlatformSnapshotOptions(
     showsBuildings: showsBuildings,
     showsPointsOfInterest: showsPointsOfInterest,

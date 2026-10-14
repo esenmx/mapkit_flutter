@@ -10,31 +10,38 @@ import 'package:meta/meta.dart';
 /// See: https://developer.apple.com/documentation/mapkit/mkmapview/camerazoomrange
 @immutable
 final class const MKCameraZoomRange({
-  /// The minCenterCoordinateDistance property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcamerazoomrange/mincentercoordinatedistance
+  /// Minimum camera center-coordinate distance in meters, or `null` if
+  /// unbounded.
   final double? minCenterCoordinateDistance,
 
-  /// The maxCenterCoordinateDistance property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcamerazoomrange/maxcentercoordinatedistance
+  /// Maximum camera center-coordinate distance in meters, or `null` if
+  /// unbounded.
   final double? maxCenterCoordinateDistance,
 }) {
-  /// Creates a new MKCameraZoomRange object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkcamerazoomrange
+  /// Creates a camera zoom range with optional minimum and maximum center
+  /// distances in meters.
   this
     : assert(
+        minCenterCoordinateDistance == null ||
+            (minCenterCoordinateDistance >= 0 &&
+                minCenterCoordinateDistance < double.infinity),
+        'minCenterCoordinateDistance must be a finite value >= 0',
+      ),
+      assert(
+        maxCenterCoordinateDistance == null ||
+            (maxCenterCoordinateDistance >= 0 &&
+                maxCenterCoordinateDistance < double.infinity),
+        'maxCenterCoordinateDistance must be a finite value >= 0',
+      ),
+      assert(
         minCenterCoordinateDistance == null ||
             maxCenterCoordinateDistance == null ||
             minCenterCoordinateDistance <= maxCenterCoordinateDistance,
         'minCenterCoordinateDistance must be <= maxCenterCoordinateDistance',
       );
 
+  /// Converts this zoom range to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCameraZoomRange toPlatform() => PlatformCameraZoomRange(
     minCenterCoordinateDistance: minCenterCoordinateDistance,
     maxCenterCoordinateDistance: maxCenterCoordinateDistance,

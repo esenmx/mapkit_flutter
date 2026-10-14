@@ -5,14 +5,10 @@ import 'package:flutter/foundation.dart';
 /// `MKPolylineId`. Use the per-type typedefs, not `MapItemId` directly.
 @immutable
 final class const MapItemId<T>(
-  /// The value property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Underlying string identifier.
   final String value,
 ) {
-  /// Creates a new MapItemId object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Wraps [value] as a typed identifier.
   this;
 
   @override

@@ -8,9 +8,7 @@ import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_annotation_icon.dart';
 
-/// Type definition for MKAnnotationId.
-///
-/// See: https://developer.apple.com/documentation/mapkit/mkannotationid
+/// Typed identifier for an [MKPointAnnotation].
 typedef MKAnnotationId = MapItemId<MKPointAnnotation>;
 
 /// A pin or custom marker at a geographical [coordinate], mirroring
@@ -21,19 +19,13 @@ typedef MKAnnotationId = MapItemId<MKPointAnnotation>;
 /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation
 @immutable
 final class const MKPointAnnotation({
-  /// The id property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/id
+  /// Unique identifier used to diff this annotation across rebuilds.
   required final MKAnnotationId id,
 
-  /// The coordinate property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/coordinate
+  /// Geographical position of the annotation.
   required final CLLocationCoordinate2D coordinate,
 
-  /// The icon property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/icon
+  /// Visual appearance of the annotation view.
   final MKAnnotationIcon icon = const .marker(),
 
   /// Callout title (`MKAnnotation.title`). A non-null title enables the
@@ -56,9 +48,7 @@ final class const MKPointAnnotation({
   /// (`MKAnnotationView.isDraggable`).
   final bool isDraggable = false,
 
-  /// The isHidden property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ishidden
+  /// Whether the annotation view is hidden on the map.
   final bool isHidden = false,
 
   /// Display priority for overlap stacking
@@ -71,30 +61,20 @@ final class const MKPointAnnotation({
   /// `null` means the annotation never clusters.
   final String? clusteringIdentifier,
 
-  /// The onTap property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ontap
+  /// Called when the user taps the annotation view.
   final VoidCallback? onTap,
 
   /// Called when the callout bubble is tapped. iOS only (macOS shows
   /// MapKit's default callout).
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/oncallouttap
   final VoidCallback? onCalloutTap,
 
-  /// The onDragStart property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondragstart
+  /// Called with the starting coordinate when a drag begins.
   final ValueChanged<CLLocationCoordinate2D>? onDragStart,
 
-  /// The onDrag property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondrag
+  /// Called with the live coordinate while dragging.
   final ValueChanged<CLLocationCoordinate2D>? onDrag,
 
-  /// The onDragEnd property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation/ondragend
+  /// Called with the final coordinate when a drag ends.
   final ValueChanged<CLLocationCoordinate2D>? onDragEnd,
 
   /// `mapView(_:didSelect:)` — user or programmatic, after `onTap`.
@@ -103,14 +83,10 @@ final class const MKPointAnnotation({
   /// `mapView(_:didDeselect:)`.
   final VoidCallback? onDeselect,
 }) {
-  /// Creates a new MKPointAnnotation object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation
+  /// Creates a point annotation at [coordinate].
   this : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]');
 
-  /// Creates a new With object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Returns a copy with the given fields replaced.
   MKPointAnnotation copyWith({
     CLLocationCoordinate2D? coordinate,
     MKAnnotationIcon? icon,
@@ -160,10 +136,8 @@ final class const MKPointAnnotation({
         : onDeselect,
   );
 
+  /// Converts this annotation to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformAnnotation toPlatform() => PlatformAnnotation(
     id: id.value,
     coordinate: coordinate.toPlatform(),

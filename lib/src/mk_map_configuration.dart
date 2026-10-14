@@ -15,9 +15,7 @@ sealed class const MKMapConfiguration({
   /// Flat versus realistic 3-D terrain (`MKMapConfiguration.elevationStyle`).
   required final MKMapElevationStyle elevationStyle,
 }) {
-  /// Creates a new MKMapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkmapconfiguration
+  /// Creates a map configuration with [elevationStyle].
   this;
 }
 
@@ -29,19 +27,13 @@ final class const MKStandardMapConfiguration({
   /// Label and feature emphasis; `standard` maps to Apple's `.default`.
   final MKMapEmphasisStyle emphasisStyle = .standard,
 
-  /// The pointOfInterestFilter property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/pointofinterestfilter
+  /// Which point-of-interest categories appear on the map.
   final MKPointOfInterestFilter pointOfInterestFilter = .includingAll,
 
-  /// The showsTraffic property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration/showstraffic
+  /// Whether live traffic conditions are drawn on the map.
   final bool showsTraffic = false,
 }) extends MKMapConfiguration {
-  /// Creates a new MKStandardMapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkstandardmapconfiguration
+  /// Creates a standard road-and-label map configuration.
   this;
 
   @override
@@ -63,7 +55,9 @@ final class const MKStandardMapConfiguration({
   @override
   String toString() =>
       'MKStandardMapConfiguration(elevationStyle: ${elevationStyle.name}, '
-      'emphasisStyle: ${emphasisStyle.name}, showsTraffic: $showsTraffic)';
+      'emphasisStyle: ${emphasisStyle.name}, '
+      'pointOfInterestFilter: $pointOfInterestFilter, '
+      'showsTraffic: $showsTraffic)';
 }
 
 /// Satellite imagery with roads and labels overlaid
@@ -72,19 +66,13 @@ final class const MKStandardMapConfiguration({
 final class const MKHybridMapConfiguration({
   super.elevationStyle = .flat,
 
-  /// The pointOfInterestFilter property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration/pointofinterestfilter
+  /// Which point-of-interest categories appear on the map.
   final MKPointOfInterestFilter pointOfInterestFilter = .includingAll,
 
-  /// The showsTraffic property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration/showstraffic
+  /// Whether live traffic conditions are drawn on the map.
   final bool showsTraffic = false,
 }) extends MKMapConfiguration {
-  /// Creates a new MKHybridMapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkhybridmapconfiguration
+  /// Creates a hybrid satellite-and-label map configuration.
   this;
 
   @override
@@ -101,6 +89,7 @@ final class const MKHybridMapConfiguration({
   @override
   String toString() =>
       'MKHybridMapConfiguration(elevationStyle: ${elevationStyle.name}, '
+      'pointOfInterestFilter: $pointOfInterestFilter, '
       'showsTraffic: $showsTraffic)';
 }
 
@@ -108,9 +97,7 @@ final class const MKHybridMapConfiguration({
 /// See: https://developer.apple.com/documentation/mapkit/mkimagerymapconfiguration
 final class const MKImageryMapConfiguration({super.elevationStyle = .flat})
     extends MKMapConfiguration {
-  /// Creates a new MKImageryMapConfiguration object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit/mkimagerymapconfiguration
+  /// Creates a satellite imagery map configuration.
   this;
 
   @override

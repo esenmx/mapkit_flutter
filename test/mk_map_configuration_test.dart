@@ -22,6 +22,15 @@ void main() {
             const MKStandardMapConfiguration(),
       ).isFalse();
     });
+
+    test('toString includes pointOfInterestFilter', () {
+      const config = MKStandardMapConfiguration(
+        pointOfInterestFilter: .excludingAll,
+      );
+      check(
+        config.toString(),
+      ).contains('pointOfInterestFilter: MKPointOfInterestFilter.excludingAll');
+    });
   });
 
   group('MKHybridMapConfiguration', () {
@@ -35,6 +44,13 @@ void main() {
         const MKHybridMapConfiguration(showsTraffic: true) ==
             const MKHybridMapConfiguration(),
       ).isFalse();
+    });
+
+    test('toString includes pointOfInterestFilter', () {
+      const config = MKHybridMapConfiguration();
+      check(
+        config.toString(),
+      ).contains('pointOfInterestFilter: MKPointOfInterestFilter.includingAll');
     });
   });
 

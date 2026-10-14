@@ -45,6 +45,7 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
     private func registerDefaultAnnotationViews() {
         self.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: "FlutterMarkerAnnotationView")
         self.register(MKAnnotationView.self, forAnnotationViewWithReuseIdentifier: "FlutterCustomAnnotationView")
+        self.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: "mapkit.cluster")
     }
 
     #if os(iOS)

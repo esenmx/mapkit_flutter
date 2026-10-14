@@ -24,9 +24,12 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     var flutterApi: MapKitFlutterApi
     private let hostMessenger: ConnectionTrackingMessenger
     var currentlySelectedAnnotation: String?
+    var suppressSelectionCallbacksForAnnotationId: String?
     var tileOverlays: [String: FlutterTileOverlay] = [:]
     var annotationsById: [String: FlutterAnnotation] = [:]
-    private var overlaysById: [String: any FlutterOverlay] = [:]
+    var polylinesById: [String: any FlutterOverlay] = [:]
+    var polygonsById: [String: any FlutterOverlay] = [:]
+    var circlesById: [String: any FlutterOverlay] = [:]
 
     public convenience init(withFrame frame: CGRect, withRegistrar registrar: FlutterPluginRegistrar, withId id: Int64) {
         #if os(iOS)
@@ -66,9 +69,21 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         self.mapView.apply(configuration: params.configuration)
         self.mapView.setInitialCamera(params.initialCamera)
         self.annotationsToAdd(params.annotations)
-        params.polylines.forEach { self.addOverlay(makeStyledPolyline(fromPlatform: $0)) }
-        params.polygons.forEach { self.addOverlay(FlutterPolygon(fromPlatform: $0)) }
-        params.circles.forEach { self.addOverlay(FlutterCircle(fromPlatform: $0)) }
+        self.applyOverlayUpdate(
+            into: &self.polylinesById,
+            adding: params.polylines.map { makeStyledPolyline(fromPlatform: $0) },
+            changing: [],
+            removing: [])
+        self.applyOverlayUpdate(
+            into: &self.polygonsById,
+            adding: params.polygons.map(FlutterPolygon.init(fromPlatform:)),
+            changing: [],
+            removing: [])
+        self.applyOverlayUpdate(
+            into: &self.circlesById,
+            adding: params.circles.map(FlutterCircle.init(fromPlatform:)),
+            changing: [],
+            removing: [])
     }
 
     func setCamera(camera: PlatformMapCamera, animated: Bool) throws {
@@ -114,6 +129,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
     func updatePolylines(toAdd: [PlatformPolyline], toChange: [PlatformPolyline], idsToRemove: [String]) throws {
         self.applyOverlayUpdate(
+            into: &self.polylinesById,
             adding: toAdd.map { makeStyledPolyline(fromPlatform: $0) },
             changing: toChange.map { makeStyledPolyline(fromPlatform: $0) },
             removing: idsToRemove)
@@ -121,6 +137,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
     func updatePolygons(toAdd: [PlatformPolygon], toChange: [PlatformPolygon], idsToRemove: [String]) throws {
         self.applyOverlayUpdate(
+            into: &self.polygonsById,
             adding: toAdd.map(FlutterPolygon.init(fromPlatform:)),
             changing: toChange.map(FlutterPolygon.init(fromPlatform:)),
             removing: idsToRemove)
@@ -128,6 +145,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
     func updateCircles(toAdd: [PlatformCircle], toChange: [PlatformCircle], idsToRemove: [String]) throws {
         self.applyOverlayUpdate(
+            into: &self.circlesById,
             adding: toAdd.map(FlutterCircle.init(fromPlatform:)),
             changing: toChange.map(FlutterCircle.init(fromPlatform:)),
             removing: idsToRemove)
@@ -157,6 +175,8 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
                     return
                 }
                 completion(.success(data))
+            } catch let error as MapKitHostError {
+                completion(.failure(error))
             } catch {
                 completion(.failure(self.mapKitError("snapshot-failed", error.localizedDescription)))
             }
@@ -180,7 +200,10 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
                     completion(.success(false))
                     return
                 }
-                let presenter = host.presentedViewController ?? host
+                var presenter = host
+                while let next = presenter.presentedViewController, !next.isBeingDismissed {
+                    presenter = next
+                }
                 presenter.present(vc, animated: true) {
                     completion(.success(true))
                 }
@@ -224,25 +247,33 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         hostMessenger.removeAllHandlers()
         mapView.tearDown()
         annotationsById.removeAll()
-        overlaysById.removeAll()
+        polylinesById.removeAll()
+        polygonsById.removeAll()
+        circlesById.removeAll()
         tileOverlays.removeAll()
         currentlySelectedAnnotation = nil
+        suppressSelectionCallbacksForAnnotationId = nil
     }
 
-    private func addOverlay(_ overlay: any FlutterOverlay) {
-        self.overlaysById[overlay.id] = overlay
-        self.mapView.addFlutterOverlay(overlay)
-    }
-
-    private func applyOverlayUpdate(adding: [any FlutterOverlay], changing: [any FlutterOverlay], removing: [String]) {
+    private func applyOverlayUpdate(
+        into store: inout [String: any FlutterOverlay],
+        adding: [any FlutterOverlay],
+        changing: [any FlutterOverlay],
+        removing: [String]
+    ) {
         var overlaysToRemove: [MKOverlay] = []
         for id in removing {
-            if let overlay = self.overlaysById.removeValue(forKey: id) {
+            if let overlay = store.removeValue(forKey: id) {
                 overlaysToRemove.append(overlay)
             }
         }
         for new in changing {
-            if let old = self.overlaysById[new.id] {
+            if let old = store.removeValue(forKey: new.id) {
+                overlaysToRemove.append(old)
+            }
+        }
+        for new in adding {
+            if let old = store.removeValue(forKey: new.id) {
                 overlaysToRemove.append(old)
             }
         }
@@ -252,10 +283,12 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         }
 
         for new in changing {
-            self.addOverlay(new)
+            store[new.id] = new
+            self.mapView.addFlutterOverlay(new)
         }
         for new in adding {
-            self.addOverlay(new)
+            store[new.id] = new
+            self.mapView.addFlutterOverlay(new)
         }
     }
 }
@@ -355,13 +388,15 @@ extension MapKitViewHost {
     }
 
     private func takeSnapshot(options: PlatformSnapshotOptions) async throws -> FlutterStandardTypedData? {
+        let input = snapshotInput(options)
+        guard input.size.width > 0, input.size.height > 0 else {
+            throw mapKitError("snapshot-failed", "Map view has zero size.")
+        }
         // Caller-side options exist only for `size`/`mapRect` in the
         // compositing pass below; the snapshotter gets its own copy off-actor.
-        let snapshotOptions = MKMapSnapshotter.Options()
-        snapshotOptions.region = self.mapView.region
-        snapshotOptions.size = self.mapView.frame.size
+        let snapshotOptions = Self.makeSnapshotOptions(input)
 
-        let snapshot = try await Self.startSnapshot(snapshotInput(options))
+        let snapshot = try await Self.startSnapshot(input)
 
         #if os(iOS)
         let image = UIGraphicsImageRenderer(size: snapshotOptions.size).image { context in
@@ -430,7 +465,7 @@ extension MapKitViewHost {
                 y: point.y - annotation.anchorPoint.y * image.size.height
             )
             guard CGRect(origin: origin, size: image.size).intersects(bounds) else { return }
-            image.draw(at: origin)
+            image.draw(at: origin, blendMode: .normal, alpha: CGFloat(annotation.alpha))
         }
     }
 

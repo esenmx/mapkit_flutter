@@ -74,4 +74,19 @@ final class RunnerTests: XCTestCase {
             XCTAssertNil(PlatformPointOfInterestCategory.golf.mkCategory)
         }
     }
+
+    func testCalloutRecognizerRemovedWhenCalloutDisabled() throws {
+        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        try host.updateAnnotations(toAdd: [annotation("a", callout: true)], toChange: [], idsToRemove: [])
+        let view = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
+
+        host.mapView(host.mapView, didSelect: view)
+        XCTAssertEqual((view.gestureRecognizers ?? []).filter { $0 is InfoWindowTapGestureRecognizer }.count, 1)
+
+        if let flutterAnnotation = host.annotationsById["a"] {
+            flutterAnnotation.calloutConsumesTapEvents = false
+            host.syncCalloutTapGestureRecognizer(for: flutterAnnotation, on: view)
+        }
+        XCTAssertEqual((view.gestureRecognizers ?? []).filter { $0 is InfoWindowTapGestureRecognizer }.count, 0)
+    }
 }

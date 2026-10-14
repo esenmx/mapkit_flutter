@@ -1,7 +1,8 @@
-import 'dart:typed_data';
 import 'dart:ui' show Color, PlatformDispatcher;
 
 import 'package:checks/checks.dart';
+import 'package:flutter/foundation.dart' show FlutterError;
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -39,8 +40,7 @@ void main() {
       final png = Uint8List.fromList([1, 2, 3]);
       final platform = MKAnnotationIcon.image(png).toPlatform();
       check(platform.type).equals(PlatformAnnotationIconType.image);
-      check(platform.imageBytes).isNotNull();
-      check(platform.imageBytes!).deepEquals(png);
+      check(platform.imageBytes).isNotNull().deepEquals(png);
       check(platform.markerTintArgb).isNull();
     });
 
@@ -56,7 +56,25 @@ void main() {
       TestWidgetsFlutterBinding.ensureInitialized();
       final platform = MKAnnotationIcon.image(.fromList([1])).toPlatform();
       check(platform.imagePixelRatio)
-          .equals(PlatformDispatcher.instance.implicitView!.devicePixelRatio);
+          .equals(PlatformDispatcher.instance.implicitView?.devicePixelRatio);
+    });
+  });
+
+  group('MKAnnotationIcon.asset', () {
+    test('loads from key.bundle and slices ByteData view bounds', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final backing = Uint8List.fromList([99, 10, 20, 30, 88]);
+      final sliced = ByteData.sublistView(backing, 1, 4);
+      final bundle = _FakeAssetBundle({'packages/demo/pin.png': sliced});
+
+      final icon = await MKAnnotationIcon.asset(
+        'pin.png',
+        bundle: bundle,
+        package: 'demo',
+      );
+      final platform = icon.toPlatform();
+      check(platform.imageBytes).isNotNull().deepEquals([10, 20, 30]);
+      check(platform.imagePixelRatio).equals(1);
     });
   });
 
@@ -90,4 +108,22 @@ void main() {
       check(const MKAnnotationIcon.marker() == .image(Uint8List(0))).isFalse();
     });
   });
+}
+
+final class _FakeAssetBundle(final Map<String, ByteData> _assets)
+    extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async {
+    if (key == 'AssetManifest.bin') {
+      return const StandardMessageCodec().encodeMessage(
+            const <String, List<Object>>{},
+          ) ??
+          ByteData(0);
+    }
+    final data = _assets[key];
+    if (data == null) {
+      throw FlutterError('Unable to load asset: "$key".');
+    }
+    return data;
+  }
 }

@@ -58,10 +58,10 @@ final class MKAnnotationIcon {
     );
     final provider = AssetImage(name, bundle: bundle, package: package);
     final key = await provider.obtainKey(config);
-    final data = await (bundle ?? rootBundle).load(key.name);
+    final data = await key.bundle.load(key.name);
     // key.scale is the resolved variant's scale (1x/2x/3x), which is the
     // ratio of the bytes actually loaded — not necessarily the screen's.
-    return .image(data.buffer.asUint8List(), imagePixelRatio: key.scale);
+    return .image(Uint8List.sublistView(data), imagePixelRatio: key.scale);
   }
 
   final PlatformAnnotationIconType _type;
@@ -72,10 +72,8 @@ final class MKAnnotationIcon {
   final Uint8List? _imageBytes;
   final double? _imagePixelRatio;
 
+  /// Converts this icon to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformAnnotationIcon toPlatform() => PlatformAnnotationIcon(
     type: _type,
     markerTintArgb: _markerTintColor?.toARGB32(),

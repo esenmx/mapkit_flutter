@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `MKMapView` imports `package:flutter/widgets.dart` instead of `package:flutter/material.dart`.
+- `MKStandardMapConfiguration.toString()` and `MKHybridMapConfiguration.toString()` include `pointOfInterestFilter`; `MKPointOfInterestFilter` subclasses override `toString()`.
+
+### Fixed
+
+- Cross-type overlay ID collisions in `MapKitViewHost` so polylines, polygons, and circles have independent ID namespaces.
+- `MKAnnotationIcon.asset` slices `ByteData` views via `Uint8List.sublistView` and loads from the resolved `AssetBundleKey.bundle`.
+- `CLLocationCoordinate2D` asserts (debug) that latitude and longitude are finite, and wraps `-180.00000000000003` to `-180.0` instead of `180.0`.
+- Added debug finiteness and range assertions on `MKMapCamera`, `MKCoordinateSpan`, `MKCameraZoomRange`, `MKPolyline`, `MKPolygon`, `MKCircle`, and `MKTileOverlay`.
+- Native `AnnotationController`: gate `onCalloutTapped` on `calloutConsumesTapEvents`, ignore `selectAnnotation` on hidden annotations and reset `selectedProgrammatically` if selection is ignored, suppress spurious selection callbacks during icon-type swap of a selected annotation, update `MKMarkerAnnotationView` callouts in place, and register cluster reuse identifier once on `FlutterMapView` init.
+- Native `takeSnapshot`: guard against zero-size map view, project using the snapshot's camera/region options, honor custom annotation image `alpha` on iOS, and render interior polygon holes with `evenOdd` fill rule.
+- `openLookAround` walks the full `presentedViewController` chain before presenting.
+
 ## 0.4.0 - 2026-10-04
 
 ### Breaking

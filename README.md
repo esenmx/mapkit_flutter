@@ -55,7 +55,7 @@ Add to `ios/Runner/Info.plist` (on macOS, `macos/Runner/Info.plist` plus the Loc
 ## Quick start
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 
 class MapPage extends StatefulWidget {
@@ -176,7 +176,7 @@ MKPointAnnotation(
   onSelect: () => debugPrint('selected'),   // user or programmatic
   onDeselect: () => debugPrint('deselected'),
   isDraggable: true,
-  onDragEnd: (coordinate) => print('dropped $coordinate'),
+  onDragEnd: (coordinate) => debugPrint('dropped $coordinate'),
 )
 ```
 

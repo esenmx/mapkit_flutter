@@ -8,6 +8,7 @@
 // success reply, and the native tap is injected on the FlutterApi channel.
 import 'dart:async';
 
+import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,14 +27,17 @@ const _hostMethods = [
   'updateMapConfiguration',
 ];
 
-void main() {
-  late Completer<void> createGate;
-  late int viewId;
-  late List<String> hostCalls;
+typedef _PreCreationRig = ({
+  Completer<void> createGate,
+  List<String> hostCalls,
+  Future<void> Function(String id) nativeTap,
+});
 
-  void installMocks(WidgetTester tester) {
-    createGate = Completer<void>();
-    hostCalls = [];
+void main() {
+  _PreCreationRig installMocks(WidgetTester tester) {
+    final createGate = Completer<void>();
+    final hostCalls = <String>[];
+    var viewId = 0;
     final messenger = tester.binding.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
       call,
@@ -53,16 +57,18 @@ void main() {
       }
       return null;
     });
-  }
 
-  Future<void> nativeTap(WidgetTester tester, String id) async {
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap.'
-      '$viewId',
-      _codec.encodeMessage(<Object?>[id]),
-      (_) {},
-    );
-    await tester.pump();
+    Future<void> nativeTap(String id) async {
+      await messenger.handlePlatformMessage(
+        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap.'
+        '$viewId',
+        _codec.encodeMessage(<Object?>[id]),
+        (_) {},
+      );
+      await tester.pump();
+    }
+
+    return (createGate: createGate, hostCalls: hostCalls, nativeTap: nativeTap);
   }
 
   MKPointAnnotation ann(String id, VoidCallback onTap) => MKPointAnnotation(
@@ -79,20 +85,20 @@ void main() {
   testWidgets(
     'rebuild before platform-view creation: taps reach the current callbacks',
     (tester) async {
-      installMocks(tester);
+      final rig = installMocks(tester);
       final taps = <String>[];
       await tester.pumpWidget(map({ann('a', () => taps.add('a-old'))}));
       // Rebuild while `create` is still in flight.
       await tester.pumpWidget(
         map({ann('a', () => taps.add('a-new')), ann('b', () => taps.add('b'))}),
       );
-      createGate.complete();
+      rig.createGate.complete();
       await tester.pumpAndSettle();
-      expect(hostCalls, contains('initialize'));
+      check(rig.hostCalls).contains('initialize');
 
-      await nativeTap(tester, 'b');
-      await nativeTap(tester, 'a');
-      expect(taps, ['b', 'a-new']);
+      await rig.nativeTap('b');
+      await rig.nativeTap('a');
+      check(taps).deepEquals(['b', 'a-new']);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
@@ -100,25 +106,25 @@ void main() {
   testWidgets('control: the same rebuild after creation dispatches correctly', (
     tester,
   ) async {
-    installMocks(tester);
+    final rig = installMocks(tester);
     final taps = <String>[];
     await tester.pumpWidget(map({ann('a', () => taps.add('a-old'))}));
-    createGate.complete();
+    rig.createGate.complete();
     await tester.pumpAndSettle();
     await tester.pumpWidget(
       map({ann('a', () => taps.add('a-new')), ann('b', () => taps.add('b'))}),
     );
     await tester.pumpAndSettle();
 
-    await nativeTap(tester, 'b');
-    await nativeTap(tester, 'a');
-    expect(taps, ['b', 'a-new']);
+    await rig.nativeTap('b');
+    await rig.nativeTap('a');
+    check(taps).deepEquals(['b', 'a-new']);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('control: unmount before creation never wires a controller', (
     tester,
   ) async {
-    installMocks(tester);
+    final rig = installMocks(tester);
     var created = 0;
     await tester.pumpWidget(
       Directionality(
@@ -130,9 +136,9 @@ void main() {
       ),
     );
     await tester.pumpWidget(const SizedBox());
-    createGate.complete();
+    rig.createGate.complete();
     await tester.pumpAndSettle();
-    expect(created, 0);
-    expect(hostCalls, isEmpty);
+    check(created).equals(0);
+    check(rig.hostCalls).isEmpty();
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 }

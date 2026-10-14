@@ -9,15 +9,32 @@ import 'recording_sink.dart';
 
 /// Bundles a [FakeHostApi], [RecordingSink], and [MKMapViewController] for
 /// outbound/inbound channel tests.
-final class ControllerHarness({final int viewId = 1, RecordingSink? sink}) {
-  final RecordingSink sink = sink ?? RecordingSink();
-  final FakeHostApi host = FakeHostApi();
+final class ControllerHarness {
+  factory({int viewId = 1, RecordingSink? sink}) {
+    final effectiveSink = sink ?? RecordingSink();
+    final host = FakeHostApi();
+    return ControllerHarness._(
+      sink: effectiveSink,
+      host: host,
+      controller: MKMapViewControllerImpl(
+        viewId: viewId,
+        sink: effectiveSink,
+        hostApi: host,
+      ),
+    );
+  }
 
-  late final MKMapViewControllerImpl controller = MKMapViewControllerImpl(
-    viewId: viewId,
-    sink: sink,
-    hostApi: host,
-  );
+  factory autoTearDown({int viewId = 1, RecordingSink? sink}) {
+    final harness = ControllerHarness(viewId: viewId, sink: sink);
+    addTearDown(harness.dispose);
+    return harness;
+  }
+
+  new _({required this.sink, required this.host, required this.controller});
+
+  final RecordingSink sink;
+  final FakeHostApi host;
+  final MKMapViewControllerImpl controller;
 
   Future<void> dispose() => controller.dispose();
 
@@ -33,7 +50,7 @@ final class ControllerHarness({final int viewId = 1, RecordingSink? sink}) {
       host.calls.expectLastArgs<RegionCall>('setRegion');
 
   void expectLastCall(String name) =>
-      check(host.calls.lastRecorded.name).equals(name);
+      check(host.calls.lastRecorded().name).equals(name);
 
   T expectLast<T>(String name) => host.calls.expectLastArgs<T>(name);
 

@@ -95,19 +95,19 @@ void main() {
     while (controller == null && DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    check(
-      controller,
-      because: 'platform view never reached onMapCreated',
-    ).isNotNull();
+    final ctrl = controller;
+    if (ctrl == null) {
+      fail('platform view never reached onMapCreated');
+    }
 
     // The visible region becomes meaningful once the view has layout; a cold
     // simulator can take a while, so this wait gets its own deadline.
     final regionDeadline = DateTime.now().add(const Duration(seconds: 45));
-    var region = await controller!.region;
+    var region = await ctrl.region;
     while (region.span.latitudeDelta == 0 &&
         DateTime.now().isBefore(regionDeadline)) {
       await tester.pump(const Duration(milliseconds: 250));
-      region = await controller!.region;
+      region = await ctrl.region;
     }
     check(
       region.span.latitudeDelta,
@@ -137,7 +137,7 @@ void main() {
       required bool annotations,
       required bool overlays,
     }) async {
-      final bytes = await controller!.takeSnapshot(
+      final bytes = await ctrl.takeSnapshot(
         MKMapSnapshotOptions(
           showsBuildings: false,
           showsPointsOfInterest: false,
@@ -147,18 +147,6 @@ void main() {
       );
       return .decode(bytes);
     }
-
-    // Projects a coordinate into snapshot pixel space via the live view
-    // (same region and size as the snapshotter) and a pt→px scale factor.
-    late final double pxPerPt;
-    Future<Offset> project(CLLocationCoordinate2D coordinate) async {
-      final pt = await controller!.convertToPoint(coordinate);
-      check(pt, because: 'coordinate failed to project').isNotNull();
-      return pt! * pxPerPt;
-    }
-
-    Rect around(Offset px, double radiusPt) =>
-        .fromCircle(center: px, radius: radiusPt * pxPerPt);
 
     // --- Annotation culling -------------------------------------------------
     await pump(
@@ -182,7 +170,20 @@ void main() {
     final annotationsOff = await snap(annotations: false, overlays: false);
     check(annotationsOn.width).equals(annotationsOff.width);
     check(annotationsOn.height).equals(annotationsOff.height);
-    pxPerPt = annotationsOn.width / viewSize.width;
+    final pxPerPt = annotationsOn.width / viewSize.width;
+
+    // Projects a coordinate into snapshot pixel space via the live view
+    // (same region and size as the snapshotter) and a pt→px scale factor.
+    Future<Offset> project(CLLocationCoordinate2D coordinate) async {
+      final pt = await ctrl.convertToPoint(coordinate);
+      if (pt == null) {
+        fail('coordinate failed to project');
+      }
+      return pt * pxPerPt;
+    }
+
+    Rect around(Offset px, double radiusPt) =>
+        .fromCircle(center: px, radius: radiusPt * pxPerPt);
 
     final centerPx = await project(center);
     final edgePx = await project(edgeCoordinate);
@@ -290,7 +291,10 @@ final class _Rgba {
     final frame = await codec.getNextFrame();
     final image = frame.image;
     final data = await image.toByteData(format: .rawRgba);
-    final rgba = _Rgba(data!.buffer.asUint8List(), image.width, image.height);
+    if (data == null) {
+      throw StateError('Failed to decode snapshot RGBA bytes');
+    }
+    final rgba = _Rgba(Uint8List.sublistView(data), image.width, image.height);
     image.dispose();
     codec.dispose();
     return rgba;

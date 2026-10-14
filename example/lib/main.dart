@@ -271,7 +271,7 @@ class _HomePageState extends State<HomePage> {
     final data = await image.toByteData(format: .png);
     image.dispose();
     if (mounted) setState(() => _captureChild = null);
-    return data?.buffer.asUint8List();
+    return data == null ? null : Uint8List.sublistView(data);
   }
 
   // ------------------------- Map controls -------------------------
@@ -285,21 +285,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Frame all pins with breathing room so edge markers aren't flush against
-  /// the screen borders (the tight `containing` region gets inflated ~20%).
+  /// the screen borders.
   void _fitAnnotations() {
-    final region = MKCoordinateRegion.containing([
+    _controller?.fitCoordinates([
       for (final (_, coord, _) in _pins) coord,
-    ]);
-    if (region == null) return;
-    _controller?.setRegion(
-      MKCoordinateRegion(
-        center: region.center,
-        span: MKCoordinateSpan(
-          latitudeDelta: region.span.latitudeDelta * 1.4,
-          longitudeDelta: region.span.longitudeDelta * 1.4,
-        ),
-      ),
-    );
+    ], padding: 0.2);
   }
 
   Future<void> _openLookAround() async {

@@ -33,29 +33,29 @@ void main() {
     while (controller == null && DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    check(
-      controller,
-      because: 'platform view never reached onMapCreated',
-    ).isNotNull();
+    final ctrl = controller;
+    if (ctrl == null) {
+      fail('platform view never reached onMapCreated');
+    }
 
     // The visible region becomes meaningful once the view has layout.
-    var region = await controller!.region;
+    var region = await ctrl.region;
     while (region.span.latitudeDelta == 0 &&
         DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 250));
-      region = await controller!.region;
+      region = await ctrl.region;
     }
     check(region.span.latitudeDelta).isGreaterThan(0);
     check(region.center.latitude).isCloseTo(applePark.latitude, 0.05);
 
     // setCamera → camera round-trip through the host API. MapKit may adjust
     // the exact distance, so assertions stay tolerant.
-    await controller!.setCamera(
+    await ctrl.setCamera(
       const MKMapCamera(centerCoordinate: applePark, distance: 5000),
       animated: false,
     );
     await tester.pump(const Duration(seconds: 1));
-    final camera = await controller!.camera;
+    final camera = await ctrl.camera;
     final center = camera.centerCoordinate;
     check(center.latitude).isCloseTo(applePark.latitude, 0.05);
     check(center.longitude).isCloseTo(applePark.longitude, 0.05);

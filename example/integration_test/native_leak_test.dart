@@ -3,6 +3,7 @@
 // channel still replies, the host (and its MKMapView + CLLocationManager) is
 // still alive. On macOS this also catches a nil handler left registered on a
 // channel: the next message to it crashes the app.
+import 'package:checks/checks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,7 +25,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('disposed maps stop answering host calls', (tester) async {
-    expect(await answers(999), isFalse, reason: 'control: unknown id');
+    check(await answers(999), because: 'control: unknown id').isFalse();
 
     final live = <int>[];
     for (var round = 0; round < 3; round++) {
@@ -55,7 +56,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 500));
     }
     debugPrint('leak-oracle map view ids seen alive while mounted: $live');
-    expect(live, hasLength(3), reason: 'probe found each mounted map');
+    check(live, because: 'probe found each mounted map').length.equals(3);
 
     final stillAnswering = [
       for (final id in live)
@@ -64,6 +65,6 @@ void main() {
     debugPrint(
       'leak-oracle ids still answering after unmount: $stillAnswering',
     );
-    expect(stillAnswering, isEmpty, reason: 'native hosts leaked');
+    check(stillAnswering, because: 'native hosts leaked').isEmpty();
   });
 }

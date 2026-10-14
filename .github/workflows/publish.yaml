@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -34,7 +34,7 @@ jobs:
           fi
       - run: flutter pub get
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: git ls-files -z -- '*.dart' | xargs -0 -r dart format --output=none --set-exit-if-changed
       - name: Verify analysis
         run: flutter analyze --fatal-infos --fatal-warnings
 
@@ -48,7 +48,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dart-lang/setup-dart@v1
       - uses: subosito/flutter-action@v2
         with:

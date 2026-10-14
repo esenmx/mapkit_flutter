@@ -10,17 +10,21 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
     var id: String = ""
     var zIndex: Int = 0
     var coordinates: [CLLocationCoordinate2D] = []
+    var interiorRings: [[CLLocationCoordinate2D]] = []
     var overlayLevel: MKOverlayLevel = .aboveRoads
 
     convenience init(fromPlatform data: PlatformPolygon) {
         let outerPoints = data.coordinates.map(\.clCoordinate)
-        let interiorPolygons = data.interiorPolygons.compactMap { ring -> MKPolygon? in
+        let rings = data.interiorPolygons.compactMap { ring -> [CLLocationCoordinate2D]? in
             let coords = ring.map(\.clCoordinate)
-            guard !coords.isEmpty else { return nil }
-            return MKPolygon(coordinates: coords, count: coords.count)
+            return coords.isEmpty ? nil : coords
+        }
+        let interiorPolygons = rings.map { coords in
+            MKPolygon(coordinates: coords, count: coords.count)
         }
         self.init(coordinates: outerPoints, count: outerPoints.count, interiorPolygons: interiorPolygons)
         self.coordinates = outerPoints
+        self.interiorRings = rings
         self.strokeColor = PlatformColor(argb: data.strokeColorArgb)
         self.fillColor = PlatformColor(argb: data.fillColorArgb)
         self.isConsumingTapEvents = data.consumeTapEvents
@@ -52,6 +56,7 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
         }
 
         shapeLayer.path = outlinePath(snapshot.point(for:))
+        shapeLayer.fillRule = .evenOdd
         shapeLayer.lineWidth = lineWidth
         shapeLayer.strokeColor = strokeColor?.cgColor ?? PlatformColor.clear.cgColor
         shapeLayer.fillColor = fillColor?.cgColor ?? PlatformColor.clear.cgColor
@@ -61,16 +66,27 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
         return shapeLayer
     }
 
-    // One closed subpath: no zero-length first edge, and closeSubpath draws the closing edge once.
+    // One closed subpath per ring: no zero-length first edge, and closeSubpath draws the closing edge once.
     func outlinePath(_ point: (CLLocationCoordinate2D) -> CGPoint) -> CGPath {
         let path = CGMutablePath()
-        guard let first = coordinates.first else { return path }
+        Self.addRing(coordinates, to: path, point: point)
+        for ring in interiorRings {
+            Self.addRing(ring, to: path, point: point)
+        }
+        return path
+    }
+
+    private static func addRing(
+        _ ring: [CLLocationCoordinate2D],
+        to path: CGMutablePath,
+        point: (CLLocationCoordinate2D) -> CGPoint
+    ) {
+        guard let first = ring.first else { return }
         path.move(to: point(first))
-        for coordinate in coordinates.dropFirst() {
+        for coordinate in ring.dropFirst() {
             path.addLine(to: point(coordinate))
         }
         path.closeSubpath()
-        return path
     }
 }
 

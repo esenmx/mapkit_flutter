@@ -380,6 +380,213 @@ final class RunnerTests: XCTestCase {
         await fulfillment(of: [moved], timeout: 2)
         XCTAssertEqual(messenger.args(of: "onCameraMove").count, before + 1)
     }
+
+    func testCrossTypeOverlaysShareIdIndependently() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let poly = PlatformPolyline(
+            id: "zone",
+            coordinates: [
+                PlatformCoordinate(latitude: 0, longitude: 0),
+                PlatformCoordinate(latitude: 1, longitude: 1),
+            ],
+            strokeColorArgb: 0xFF00_00FF,
+            lineWidth: 2,
+            lineCap: .round,
+            lineJoin: .round,
+            isHidden: false,
+            consumeTapEvents: false,
+            isGeodesic: false,
+            level: .aboveRoads,
+            zIndex: 0
+        )
+        let gon = PlatformPolygon(
+            id: "zone",
+            coordinates: [
+                PlatformCoordinate(latitude: 0, longitude: 0),
+                PlatformCoordinate(latitude: 1, longitude: 0),
+                PlatformCoordinate(latitude: 0, longitude: 1),
+            ],
+            interiorPolygons: [],
+            fillColorArgb: 0xFF00_00FF,
+            strokeColorArgb: 0xFF00_00FF,
+            lineWidth: 1,
+            zIndex: 0,
+            isHidden: false,
+            consumeTapEvents: false,
+            level: .aboveRoads
+        )
+
+        try host.updatePolylines(toAdd: [poly], toChange: [], idsToRemove: [])
+        try host.updatePolygons(toAdd: [gon], toChange: [], idsToRemove: [])
+        try host.updateCircles(toAdd: [circle("zone")], toChange: [], idsToRemove: [])
+        XCTAssertEqual(host.mapView.overlays.count, 3)
+
+        try host.updatePolylines(toAdd: [], toChange: [], idsToRemove: ["zone"])
+        XCTAssertEqual(host.mapView.overlays.count, 2)
+        XCTAssertNil(host.polylinesById["zone"])
+        XCTAssertNotNil(host.polygonsById["zone"])
+        XCTAssertNotNil(host.circlesById["zone"])
+    }
+
+    func testPolygonOutlineIncludesInteriorHoleAndEvenOddFillRule() {
+        let polygon = FlutterPolygon(fromPlatform: PlatformPolygon(
+            id: "donut",
+            coordinates: [
+                PlatformCoordinate(latitude: 0, longitude: 0),
+                PlatformCoordinate(latitude: 4, longitude: 0),
+                PlatformCoordinate(latitude: 0, longitude: 4),
+            ],
+            interiorPolygons: [
+                [
+                    PlatformCoordinate(latitude: 1, longitude: 1),
+                    PlatformCoordinate(latitude: 2, longitude: 1),
+                    PlatformCoordinate(latitude: 1, longitude: 2),
+                ],
+            ],
+            fillColorArgb: 0xFF00_00FF,
+            strokeColorArgb: 0xFF00_00FF,
+            lineWidth: 1,
+            zIndex: 0,
+            isHidden: false,
+            consumeTapEvents: false,
+            level: .aboveRoads
+        ))
+        var elements: [String] = []
+        polygon.outlinePath { CGPoint(x: $0.longitude, y: $0.latitude) }.applyWithBlock { element in
+            let e = element.pointee
+            switch e.type {
+            case .moveToPoint: elements.append("M\(e.points[0].x),\(e.points[0].y)")
+            case .addLineToPoint: elements.append("L\(e.points[0].x),\(e.points[0].y)")
+            case .closeSubpath: elements.append("Z")
+            default: elements.append("?")
+            }
+        }
+
+        XCTAssertEqual(
+            elements,
+            ["M0.0,0.0", "L0.0,4.0", "L4.0,0.0", "Z", "M1.0,1.0", "L1.0,2.0", "L2.0,1.0", "Z"]
+        )
+    }
+
+    func testHiddenAnnotationSelectionIsIgnoredAndResetsFlag() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        var hidden = annotation("hidden")
+        hidden = PlatformAnnotation(
+            id: hidden.id,
+            coordinate: hidden.coordinate,
+            icon: hidden.icon,
+            calloutConsumesTapEvents: false,
+            alpha: 1,
+            anchorPointX: 0.5,
+            anchorPointY: 1,
+            isDraggable: false,
+            isHidden: true,
+            zPriority: 500
+        )
+        try host.updateAnnotations(toAdd: [hidden, annotation("unattached")], toChange: [], idsToRemove: [])
+
+        host.selectAnnotation(with: "hidden")
+
+        XCTAssertEqual(host.annotationsById["hidden"]?.selectedProgrammatically, false)
+        XCTAssertNil(host.currentlySelectedAnnotation)
+
+        if let unattached = host.annotationsById["unattached"] {
+            host.mapView.removeAnnotation(unattached)
+            unattached.selectedProgrammatically = true
+        }
+        host.selectAnnotation(with: "unattached")
+        XCTAssertEqual(host.annotationsById["unattached"]?.selectedProgrammatically, false)
+    }
+
+    func testIconTypeSwapWhileSelectedSuppressesSelectionCallbacks() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        try host.updateAnnotations(toAdd: [annotation("a", title: "Pin")], toChange: [], idsToRemove: [])
+        let initialView = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
+        let initialSelected = messenger.expectation(for: "onAnnotationSelect", in: self)
+        host.mapView(host.mapView, didSelect: initialView)
+        await fulfillment(of: [initialSelected], timeout: 2)
+
+        let selectCountBefore = messenger.args(of: "onAnnotationSelect").count
+        let deselectCountBefore = messenger.args(of: "onAnnotationDeselect").count
+
+        let customIcon = PlatformAnnotation(
+            id: "a",
+            coordinate: PlatformCoordinate(latitude: 1, longitude: 2),
+            icon: PlatformAnnotationIcon(type: .image),
+            title: "Pin",
+            calloutConsumesTapEvents: false,
+            alpha: 1,
+            anchorPointX: 0.5,
+            anchorPointY: 1,
+            isDraggable: true,
+            isHidden: false,
+            zPriority: 500
+        )
+        try host.updateAnnotations(toAdd: [], toChange: [customIcon], idsToRemove: [])
+        try await Task.sleep(for: .milliseconds(100))
+
+        XCTAssertEqual(messenger.args(of: "onAnnotationSelect").count, selectCountBefore)
+        XCTAssertEqual(messenger.args(of: "onAnnotationDeselect").count, deselectCountBefore)
+        XCTAssertNil(host.suppressSelectionCallbacksForAnnotationId)
+    }
+
+    func testIconTypeSwapToHiddenSendsDeselect() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        try host.updateAnnotations(toAdd: [annotation("a", title: "Pin")], toChange: [], idsToRemove: [])
+        let initialView = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
+        let initialSelected = messenger.expectation(for: "onAnnotationSelect", in: self)
+        host.mapView(host.mapView, didSelect: initialView)
+        await fulfillment(of: [initialSelected], timeout: 2)
+
+        let deselected = messenger.expectation(for: "onAnnotationDeselect", in: self)
+        let hiddenCustomIcon = PlatformAnnotation(
+            id: "a",
+            coordinate: PlatformCoordinate(latitude: 1, longitude: 2),
+            icon: PlatformAnnotationIcon(type: .image),
+            title: "Pin",
+            calloutConsumesTapEvents: false,
+            alpha: 1,
+            anchorPointX: 0.5,
+            anchorPointY: 1,
+            isDraggable: true,
+            isHidden: true,
+            zPriority: 500
+        )
+        try host.updateAnnotations(toAdd: [], toChange: [hiddenCustomIcon], idsToRemove: [])
+        await fulfillment(of: [deselected], timeout: 2)
+
+        XCTAssertEqual(messenger.args(of: "onAnnotationDeselect").count, 1)
+        XCTAssertNil(host.currentlySelectedAnnotation)
+    }
+
+    func testTakeSnapshotRejectsZeroSizedMapView() {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        host.mapView.frame = .zero
+        let exp = expectation(description: "snapshot fails on zero size")
+
+        host.takeSnapshot(
+            options: PlatformSnapshotOptions(
+                showsBuildings: true,
+                showsPointsOfInterest: true,
+                showsAnnotations: true,
+                showsOverlays: true
+            )
+        ) { result in
+            switch result {
+            case .success:
+                XCTFail("Expected failure for zero-sized map view")
+            case .failure(let error as MapKitHostError):
+                XCTAssertEqual(error.code, "snapshot-failed")
+            case .failure(let error):
+                XCTFail("Unexpected error type: \(error)")
+            }
+            exp.fulfill()
+        }
+
+        wait(for: [exp], timeout: 2)
+    }
 }
 
 final class CountingMapView: FlutterMapView {

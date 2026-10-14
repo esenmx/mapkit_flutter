@@ -22,25 +22,19 @@ extension MapKitViewHost {
         guard let annotation = view.annotation as? FlutterAnnotation else { return }
         let id = annotation.id
         self.currentlySelectedAnnotation = id
+        #if os(iOS)
+        self.syncCalloutTapGestureRecognizer(for: annotation, on: view)
+        #endif
+        if self.suppressSelectionCallbacksForAnnotationId == id {
+            annotation.selectedProgrammatically = false
+            return
+        }
         if !annotation.selectedProgrammatically {
             self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
         } else {
             annotation.selectedProgrammatically = false
         }
         self.flutterApi.send { try await $0.onAnnotationSelect(annotationId: id) }
-
-        #if os(iOS)
-        // Callout tap forwarding is bridged via a tap recognizer on iOS;
-        // the macOS callout uses MapKit's default behavior. One recognizer
-        // per view: reselecting must not stack another.
-        if annotation.calloutConsumesTapEvents,
-           !(view.gestureRecognizers ?? []).contains(where: { $0 is InfoWindowTapGestureRecognizer }) {
-            let tapGestureRecognizer = InfoWindowTapGestureRecognizer(target: self, action: #selector(onCalloutTapped))
-            tapGestureRecognizer.annotationId = id
-            tapGestureRecognizer.annotationView = view
-            view.addGestureRecognizer(tapGestureRecognizer)
-        }
-        #endif
     }
 
     public func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
@@ -54,6 +48,9 @@ extension MapKitViewHost {
             view.removeGestureRecognizer(recognizer)
         }
         #endif
+        if self.suppressSelectionCallbacksForAnnotationId == id {
+            return
+        }
         self.flutterApi.send { try await $0.onAnnotationDeselect(annotationId: id) }
     }
 
@@ -90,7 +87,6 @@ extension MapKitViewHost {
 
     private func getClusterAnnotationView(cluster: MKClusterAnnotation) -> MKAnnotationView {
         let id = "mapkit.cluster"
-        self.mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: id)
         let view = self.mapView.dequeueReusableAnnotationView(withIdentifier: id, for: cluster) as? MKMarkerAnnotationView
             ?? MKMarkerAnnotationView(annotation: cluster, reuseIdentifier: id)
         view.markerTintColor = .systemBlue
@@ -104,7 +100,6 @@ extension MapKitViewHost {
         if annotation.icon.isCustomImage {
             let customView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterCustomAnnotationView", for: annotation)
             customView.image = annotation.icon.image
-            self.initInfoWindow(annotation: annotation, annotationView: customView)
             #if os(iOS)
             // Native normalized anchor (`MKAnnotationView.anchorPoint`,
             // iOS-only) replaces the old manual centerOffset math. macOS
@@ -118,6 +113,7 @@ extension MapKitViewHost {
             self.applyMarkerStyle(markerView, annotation.icon)
             view = markerView
         }
+        self.initInfoWindow(annotation: annotation, annotationView: view)
         view.annotation = annotation
         view.isHidden = annotation.isHidden
         view.zPriority = MKAnnotationViewZPriority(rawValue: Float(annotation.zPriority))
@@ -160,9 +156,11 @@ extension MapKitViewHost {
     }
 
     func selectAnnotation(with id: String) {
-        if let annotation: FlutterAnnotation = self.getAnnotation(with: id) {
-            annotation.selectedProgrammatically = true
-            self.mapView.selectAnnotation(annotation, animated: true)
+        guard let annotation = self.getAnnotation(with: id), !annotation.isHidden else { return }
+        annotation.selectedProgrammatically = true
+        self.mapView.selectAnnotation(annotation, animated: true)
+        if !self.isAnnotationSelected(with: id) {
+            annotation.selectedProgrammatically = false
         }
     }
 
@@ -209,11 +207,31 @@ extension MapKitViewHost {
 
     #if os(iOS)
     @objc func onCalloutTapped(infoWindowTap: InfoWindowTapGestureRecognizer) {
-        guard let annotationId = infoWindowTap.annotationId else { return }
-        if self.currentlySelectedAnnotation == annotationId {
-            self.flutterApi.send { try await $0.onCalloutTap(annotationId: annotationId) }
-        } else {
+        guard let annotationId = infoWindowTap.annotationId,
+              self.currentlySelectedAnnotation == annotationId,
+              let annotation = self.getAnnotation(with: annotationId),
+              annotation.calloutConsumesTapEvents else {
             infoWindowTap.annotationView?.removeGestureRecognizer(infoWindowTap)
+            return
+        }
+        self.flutterApi.send { try await $0.onCalloutTap(annotationId: annotationId) }
+    }
+
+    func syncCalloutTapGestureRecognizer(for annotation: FlutterAnnotation, on view: MKAnnotationView) {
+        // Callout tap forwarding is bridged via a tap recognizer on iOS;
+        // the macOS callout uses MapKit's default behavior. One recognizer
+        // per view: reselecting must not stack another.
+        if annotation.calloutConsumesTapEvents, self.currentlySelectedAnnotation == annotation.id {
+            if !(view.gestureRecognizers ?? []).contains(where: { $0 is InfoWindowTapGestureRecognizer }) {
+                let tapGestureRecognizer = InfoWindowTapGestureRecognizer(target: self, action: #selector(onCalloutTapped))
+                tapGestureRecognizer.annotationId = annotation.id
+                tapGestureRecognizer.annotationView = view
+                view.addGestureRecognizer(tapGestureRecognizer)
+            }
+        } else {
+            for recognizer in view.gestureRecognizers ?? [] where recognizer is InfoWindowTapGestureRecognizer {
+                view.removeGestureRecognizer(recognizer)
+            }
         }
     }
     #endif
@@ -245,11 +263,22 @@ extension MapKitViewHost {
         // Replace the annotation so the delegate builds a fresh view of the
         // correct kind instead of forcing an image onto a marker view.
         if oldAnnotation.icon.iconType != annotation.icon.iconType {
-            let isSelected = self.isAnnotationSelected(with: annotation.id)
+            let wasSelected = self.isAnnotationSelected(with: annotation.id) || self.currentlySelectedAnnotation == annotation.id
+            let shouldReselect = wasSelected && !annotation.isHidden
+            if shouldReselect {
+                self.suppressSelectionCallbacksForAnnotationId = annotation.id
+            }
+            defer {
+                self.suppressSelectionCallbacksForAnnotationId = nil
+            }
             self.removeAnnotation(id: annotation.id)
             self.addAnnotation(annotation)
-            if isSelected {
+            if shouldReselect {
                 self.selectAnnotation(with: annotation.id)
+            } else if wasSelected && self.currentlySelectedAnnotation == annotation.id {
+                self.currentlySelectedAnnotation = nil
+                let id = annotation.id
+                self.flutterApi.send { try await $0.onAnnotationDeselect(annotationId: id) }
             }
             return
         }
@@ -275,6 +304,10 @@ extension MapKitViewHost {
         oldAnnotation.clusteringIdentifier = annotation.clusteringIdentifier
         oldAnnotation.icon = annotation.icon
 
+        if annotation.isHidden && self.isAnnotationSelected(with: annotation.id) {
+            self.hideAnnotation(with: annotation.id)
+        }
+
         // Re-apply the view-level properties the annotation view captured at
         // creation time.
         if let view = self.mapView.view(for: oldAnnotation) {
@@ -289,15 +322,13 @@ extension MapKitViewHost {
                 view.anchorPoint = annotation.anchorPoint
                 #endif
             }
-            switch view {
-            case let marker as MKMarkerAnnotationView:
+            if let marker = view as? MKMarkerAnnotationView {
                 self.applyMarkerStyle(marker, annotation.icon)
-            default:
-                // The backing FlutterAnnotation could have swapped custom <-> marker;
-                // we have to re-initialize the view's window so the old state
-                // isn't left stale on the live view.
-                self.initInfoWindow(annotation: annotation, annotationView: view)
             }
+            self.initInfoWindow(annotation: annotation, annotationView: view)
+            #if os(iOS)
+            self.syncCalloutTapGestureRecognizer(for: oldAnnotation, on: view)
+            #endif
         }
     }
 

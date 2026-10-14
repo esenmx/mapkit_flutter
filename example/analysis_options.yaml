@@ -1,6 +1,12 @@
+include: package:flutter_lints/flutter.yaml
+
 analyzer:
   exclude:
     - build/**
     - ios/**
     - macos/**
-include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    public_member_api_docs: false
+

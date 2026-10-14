@@ -14,38 +14,39 @@ typedef Coordinate = CLLocationCoordinate2D;
 /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
 @immutable
 final class CLLocationCoordinate2D {
-  /// Creates a new CLLocationCoordinate2D object.
-  ///
-  /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
+  /// Creates a coordinate clamping [latitude] to `[-90, 90]` and wrapping
+  /// [longitude] into `[-180, 180)`.
   const new({required double latitude, required double longitude})
-    : latitude = (latitude < -90.0
+    : assert(
+        latitude > double.negativeInfinity && latitude < double.infinity,
+        'latitude must be finite',
+      ),
+      assert(
+        longitude > double.negativeInfinity && longitude < double.infinity,
+        'longitude must be finite',
+      ),
+      latitude = (latitude < -90.0
           ? -90.0
           : (90.0 < latitude ? 90.0 : latitude)),
       longitude = (longitude < -180.0 || longitude >= 180.0)
-          ? (longitude + 180.0) % 360.0 - 180.0
+          ? (((longitude + 180.0) % 360.0 - 180.0) >= 180.0
+                ? -180.0
+                : ((longitude + 180.0) % 360.0 - 180.0))
           : longitude;
 
+  /// Constructs a coordinate from its Pigeon wire representation.
   @internal
-  /// Creates a new CLLocationCoordinate2D object.
-  ///
-  /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
   factory fromPlatform(PlatformCoordinate p) =>
       CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude);
 
-  /// The latitude property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Latitude in degrees in `[-90, 90]`.
   final double latitude;
 
-  /// The longitude property.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
+  /// Longitude in degrees in `[-180, 180)`.
   final double longitude;
 
+  /// Converts this coordinate to its Pigeon wire representation.
   @internal
-  /// Creates a new Platform object.
-  ///
-  /// See: https://developer.apple.com/documentation/mapkit
   PlatformCoordinate toPlatform() =>
       PlatformCoordinate(latitude: latitude, longitude: longitude);
 

@@ -1,5 +1,6 @@
 // Value-type regressions: copyWith clearing nullable fields, longitude
 // normalisation leaving in-range values untouched, and signed-zero equality.
+import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 
@@ -17,12 +18,11 @@ void main() {
           clusteringIdentifier: 'shops',
         );
         final b = a.copyWith(clusteringIdentifier: null, title: null);
-        expect(
+        check(
+          because: 'cannot leave a cluster',
           b.clusteringIdentifier,
-          isNull,
-          reason: 'cannot leave a cluster',
-        );
-        expect(b.title, isNull, reason: 'cannot drop the callout title');
+        ).isNull();
+        check(because: 'cannot drop the callout title', b.title).isNull();
       },
     );
 
@@ -34,7 +34,7 @@ void main() {
           coordinates: [here, here],
           lineDashPattern: [6, 3],
         );
-        expect(dashed.copyWith(lineDashPattern: null).lineDashPattern, isNull);
+        check(dashed.copyWith(lineDashPattern: null).lineDashPattern).isNull();
       },
     );
   });
@@ -42,7 +42,7 @@ void main() {
   group('longitude normalisation keeps in-range values verbatim', () {
     test('an in-range longitude is stored verbatim', () {
       const c = CLLocationCoordinate2D(latitude: 0, longitude: 10.1);
-      expect(c.longitude, 10.1);
+      check(c.longitude).equals(10.1);
     });
 
     test('control: the README longitude survives verbatim', () {
@@ -50,7 +50,7 @@ void main() {
         latitude: 37.334922,
         longitude: -122.009033,
       );
-      expect(c.longitude, -122.009033);
+      check(c.longitude).equals(-122.009033);
     });
   });
 
@@ -59,7 +59,7 @@ void main() {
     // ignore: prefer_int_literals
     const a = CLLocationCoordinate2D(latitude: -0.0, longitude: -0.0);
     const b = CLLocationCoordinate2D(latitude: 0, longitude: 0);
-    expect(a, b);
-    expect(a.hashCode, b.hashCode);
+    check(a).equals(b);
+    check(a.hashCode).equals(b.hashCode);
   });
 }

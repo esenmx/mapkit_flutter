@@ -108,6 +108,7 @@ Value types validate in every build mode and throw an `ArgumentError` for input 
 
 The base style is a sealed `preferredConfiguration` (exactly `MKMapView.preferredConfiguration`); view-level switches are direct parameters with their `MKMapView` property names:
 
+<!-- no-compile -->
 ```dart
 MKMapView(
   initialCamera: ...,
@@ -146,6 +147,7 @@ MKMapView(
 
 `MKPointAnnotation` merges the annotation (`coordinate`, `title`, `subtitle`) with its `MKAnnotationView` presentation (`alpha`, `isDraggable`, `zPriority`, `clusteringIdentifier`…) — Flutter is declarative, so there is no separate view object.
 
+<!-- no-compile -->
 ```dart
 // System balloon marker (MKMarkerAnnotationView)
 MKPointAnnotation(id: MKAnnotationId('home'), coordinate: home)
@@ -194,6 +196,7 @@ Annotations sharing a `clusteringIdentifier` cluster natively when they crowd. I
 
 `MKPolyline`, `MKPolygon`, `MKCircle`, `MKTileOverlay` — each merges its renderer's stroke/fill vocabulary (`strokeColor`, `lineWidth`, `lineDashPattern`):
 
+<!-- no-compile -->
 ```dart
 MKMapView(
   initialCamera: ...,
@@ -241,13 +244,17 @@ Only overlays with `consumeTapEvents: true` capture taps; the top-most capturing
 Tile overlays go through the controller (`MKTileOverlay(urlTemplate:)` semantics):
 
 ```dart
-await controller.addTileOverlay(
-  MKTileOverlay(
-    id: const MKTileOverlayId('osm'),
-    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  ),
-);
-final removed = await controller.removeTileOverlay(const MKTileOverlayId('osm'));
+Future<void> addOsm(MKMapViewController controller) async {
+  await controller.addTileOverlay(
+    MKTileOverlay(
+      id: const MKTileOverlayId('osm'),
+      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    ),
+  );
+  final removed = await controller.removeTileOverlay(
+    const MKTileOverlayId('osm'),
+  );
+}
 ```
 
 Adding an id that is already on the map throws (`duplicate-id`); remove it first to replace it. `removeTileOverlay` returns `false` when the id isn't on the map.
@@ -255,27 +262,34 @@ Adding an id that is already on the map throws (`duplicate-id`); remove it first
 Models override `==`, so they can't be used in `const {…}` set literals — build the set without `const`. `copyWith` clears a nullable field when you pass `null` explicitly:
 
 ```dart
-final untitled = annotation.copyWith(title: null);
+MKPointAnnotation untitled(MKPointAnnotation annotation) =>
+    annotation.copyWith(title: null);
 ```
 
 ## Controller — `MKMapView`'s imperative surface
 
 ```dart
-final MKMapCamera? camera = await controller.camera;         // MKMapView.camera
-final MKCoordinateRegion? region = await controller.region;  // MKMapView.region
-await controller.setCamera(camera!, animated: true);         // setCamera(_:animated:)
-await controller.setRegion(region!, animated: true);         // setRegion(_:animated:)
-await controller.setCenter(coordinate, animated: true);      // setCenter(_:animated:)
-await controller.convertToPoint(coordinate);                 // convert(_:toPointTo:)
-await controller.convertToCoordinate(offset);                // convert(_:toCoordinateFrom:)
-final bool selected =
-    await controller.selectAnnotation(MKAnnotationId('a'));  // selectAnnotation(_:animated:)
-await controller.deselectAnnotation(MKAnnotationId('a'));    // deselectAnnotation(_:animated:)
-await controller.isAnnotationSelected(MKAnnotationId('a'));  // selectedAnnotations
-await controller.openLookAround(coordinate);                 // MKLookAroundViewController
-final Uint8List png = await controller.takeSnapshot(
-  const MKMapSnapshotOptions(showsPointsOfInterest: false),  // MKMapSnapshotter.Options
-);
+Future<void> tour(
+  MKMapViewController controller,
+  Coordinate coordinate,
+  Offset offset,
+) async {
+  final MKMapCamera? camera = await controller.camera;         // MKMapView.camera
+  final MKCoordinateRegion? region = await controller.region;  // MKMapView.region
+  await controller.setCamera(camera!, animated: true);         // setCamera(_:animated:)
+  await controller.setRegion(region!, animated: true);         // setRegion(_:animated:)
+  await controller.setCenter(coordinate, animated: true);      // setCenter(_:animated:)
+  await controller.convertToPoint(coordinate);                 // convert(_:toPointTo:)
+  await controller.convertToCoordinate(offset);                // convert(_:toCoordinateFrom:)
+  final bool selected =
+      await controller.selectAnnotation(MKAnnotationId('a'));  // selectAnnotation(_:animated:)
+  await controller.deselectAnnotation(MKAnnotationId('a'));    // deselectAnnotation(_:animated:)
+  await controller.isAnnotationSelected(MKAnnotationId('a'));  // selectedAnnotations
+  await controller.openLookAround(coordinate);                 // MKLookAroundViewController
+  final Uint8List png = await controller.takeSnapshot(
+    const MKMapSnapshotOptions(showsPointsOfInterest: false),  // MKMapSnapshotter.Options
+  );
+}
 ```
 
 `camera`, `region` and the conversions return `null` before the view's first layout — there is no meaningful camera for a zero-sized view yet. `selectAnnotation` / `deselectAnnotation` return `false` when the id isn't on the map (e.g. racing a rebuild that removed it) and `selectAnnotation` also for a hidden annotation, so you can tell whether anything happened.
@@ -284,6 +298,7 @@ Mutations run on an internal serial queue — concurrent calls execute in source
 
 `MKMapViewController` is an interface, so the code you write against it is unit-testable without a platform view:
 
+<!-- no-compile -->
 ```dart
 @GenerateNiceMocks([MockSpec<MKMapViewController>()])
 void main() {
@@ -303,15 +318,20 @@ void main() {
 The canonical API is the MapKit mirror above. If you think in google_maps_flutter terms, the exported `CameraConveniences` extension layers that dialect on top — implemented purely over the canonical calls, no extra platform surface:
 
 ```dart
-await controller.zoomTo(14);
-await controller.zoomBy(2);
-await controller.zoomIn();
-await controller.scrollBy(80, -40);
-await controller.fitCoordinates(
-  annotations.map((a) => a.coordinate),
-  padding: 0.1, // 10% of the span on each side
-);
-final zoom = await controller.getZoomLevel();
+Future<void> frame(
+  MKMapViewController controller,
+  Set<MKPointAnnotation> annotations,
+) async {
+  await controller.zoomTo(14);
+  await controller.zoomBy(2);
+  await controller.zoomIn();
+  await controller.scrollBy(80, -40);
+  await controller.fitCoordinates(
+    annotations.map((a) => a.coordinate),
+    padding: 0.1, // 10% of the span on each side
+  );
+  final zoom = await controller.getZoomLevel();
+}
 ```
 
 Zoom levels are a Web-Mercator convenience (`MKMapCamera.withZoomLevel` / `camera.zoomLevel`); MapKit's native unit is `distance` in meters. The camera-relative helpers throw a `StateError` before the view's first layout, and `fitCoordinates` throws an `ArgumentError` for an empty list or a negative `padding` / `minimumSpan`.
@@ -338,10 +358,12 @@ Native failures surface as a `MapKitPlatformException` with a stable `code` plus
 | `invalid-argument` | a zoom range or camera boundary MapKit rejects |
 
 ```dart
-try {
-  final png = await controller.takeSnapshot();
-} on MapKitPlatformException catch (e) {
-  debugPrint('${e.code}: ${e.message}');
+Future<void> snapshot(MKMapViewController controller) async {
+  try {
+    final png = await controller.takeSnapshot();
+  } on MapKitPlatformException catch (e) {
+    debugPrint('${e.code}: ${e.message}');
+  }
 }
 ```
 

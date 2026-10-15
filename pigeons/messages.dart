@@ -689,7 +689,6 @@ abstract class MapKitFlutterApi {
     String annotationId,
     PlatformCoordinate coordinate,
   );
-  void onAnnotationDrag(String annotationId, PlatformCoordinate coordinate);
   void onAnnotationDragEnd(String annotationId, PlatformCoordinate coordinate);
   void onCalloutTap(String annotationId);
   void onPolylineTap(String polylineId);

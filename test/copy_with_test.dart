@@ -30,7 +30,6 @@ void main() {
       calloutConsumesTapEvents: true,
       onCalloutTap: tap,
       onDragStart: onCoordinate,
-      onDrag: onCoordinate,
       onDragEnd: onCoordinate,
       onSelect: tap,
       onDeselect: tap,
@@ -70,13 +69,6 @@ void main() {
         read: (a) => a.onDragStart,
         clear: (a) => a.copyWith(onDragStart: null),
         set: (a) => a.copyWith(onDragStart: nextOnCoordinate),
-        next: nextOnCoordinate,
-      ),
-      (
-        name: 'onDrag',
-        read: (a) => a.onDrag,
-        clear: (a) => a.copyWith(onDrag: null),
-        set: (a) => a.copyWith(onDrag: nextOnCoordinate),
         next: nextOnCoordinate,
       ),
       (

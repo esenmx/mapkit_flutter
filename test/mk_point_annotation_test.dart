@@ -94,7 +94,6 @@ void main() {
         coordinate: applePark,
         onSelect: () {},
         onDragStart: (_) {},
-        onDrag: (_) {},
         onDragEnd: (_) {},
       );
       // Distinct closure instances, identical visuals → equal, so a closure

@@ -53,7 +53,6 @@ Like `MKMapView`, the map never asks for location permission itself: request whe
 | `openLookAround` | ✓ | throws `unsupported-platform` |
 | `showsUserTrackingButton` | ✓ | ✓ |
 | `onCameraMove` | continuous | continuous |
-| `onDrag` | drag-state changes, not every movement | drag-state changes, not every movement |
 
 "Throws" means building `MKMapView` with that setting on macOS throws a `MapKitUnsupportedPlatformException` naming it.
 

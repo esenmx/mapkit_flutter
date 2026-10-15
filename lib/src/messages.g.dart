@@ -2309,8 +2309,6 @@ abstract class MapKitFlutterApi {
     PlatformCoordinate coordinate,
   );
 
-  void onAnnotationDrag(String annotationId, PlatformCoordinate coordinate);
-
   void onAnnotationDragEnd(String annotationId, PlatformCoordinate coordinate);
 
   void onCalloutTap(String annotationId);
@@ -2527,33 +2525,6 @@ abstract class MapKitFlutterApi {
               args[1]! as PlatformCoordinate;
           try {
             api.onAnnotationDragStart(arg_annotationId, arg_coordinate);
-            return wrapResponse(empty: true);
-          } on PlatformException catch (e) {
-            return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
-          }
-        });
-      }
-    }
-    {
-      final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDrag$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
-      if (api == null) {
-        pigeonVar_channel.setMessageHandler(null);
-      } else {
-        pigeonVar_channel.setMessageHandler((Object? message) async {
-          final List<Object?> args = message! as List<Object?>;
-          final String arg_annotationId = args[0]! as String;
-          final PlatformCoordinate arg_coordinate =
-              args[1]! as PlatformCoordinate;
-          try {
-            api.onAnnotationDrag(arg_annotationId, arg_coordinate);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

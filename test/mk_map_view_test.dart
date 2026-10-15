@@ -405,7 +405,6 @@ void main() {
           calloutConsumesTapEvents: true,
           onCalloutTap: () => events.add('callout-$tag'),
           onDragStart: (c) => events.add('start-$tag:${c.latitude}'),
-          onDrag: (c) => events.add('drag-$tag:${c.latitude}'),
           onDragEnd: (c) => events.add('end-$tag:${c.latitude}'),
         );
 
@@ -417,14 +416,10 @@ void main() {
         requireCreated().eventHandler
           ..onCalloutTap('a')
           ..onAnnotationDragStart('a', platformCoord(1, 2))
-          ..onAnnotationDrag('a', platformCoord(2, 3))
           ..onAnnotationDragEnd('a', platformCoord(3, 4));
-        check(events).deepEquals([
-          'callout-second',
-          'start-second:1.0',
-          'drag-second:2.0',
-          'end-second:3.0',
-        ]);
+        check(
+          events,
+        ).deepEquals(['callout-second', 'start-second:1.0', 'end-second:3.0']);
       },
     );
 

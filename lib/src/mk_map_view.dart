@@ -458,10 +458,6 @@ final class _MKMapViewState extends State<MKMapView>
   ) => _annotations[id]?.onDragStart?.call(coordinate);
 
   @override
-  void onAnnotationDrag(MKAnnotationId id, CLLocationCoordinate2D coordinate) =>
-      _annotations[id]?.onDrag?.call(coordinate);
-
-  @override
   void onAnnotationDragEnd(
     MKAnnotationId id,
     CLLocationCoordinate2D coordinate,

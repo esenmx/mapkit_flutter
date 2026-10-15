@@ -9,6 +9,7 @@ Misuse now fails loudly in every build mode instead of being clamped, ignored or
 - **Value types validate in all build modes and lost their `const` constructors.** `CLLocationCoordinate2D`, `MKCoordinateSpan`, `MKCameraZoomRange`, `MKMapCamera`, `MKPointAnnotation`, `MKPolyline`, `MKPolygon`, `MKCircle` and `MKTileOverlay` throw an `ArgumentError` for non-finite numbers, out-of-range spans/alpha/zoom levels, negative widths or radii, and a zoom range whose minimum exceeds its maximum — release builds no longer pass them through to MapKit. Migration: drop `const` from these constructor calls; `MKMapView(cameraZoomRange:)` defaults to the new `MKCameraZoomRange.unbounded` constant.
 - `CLLocationCoordinate2D` rejects a latitude outside `[-90, 90]` instead of clamping it (swapped arguments used to land on a pole). Longitude still wraps into `[-180, 180)`.
 - `MKPolyline` rejects a single `gradientColors` entry (it used to draw `strokeColor` silently); pass none or at least two.
+- `MKPolyline` rejects a `lineDashPattern` with a negative or non-finite length, or with only zeros (CoreGraphics drew such a line as nothing). Dotted patterns like `[0, 15]` stay valid.
 - Duplicate ids within one of `MKMapView`'s sets throw an `ArgumentError` in all build modes (release builds used to keep only the last object).
 - Tap capture is explicit: overlays send `consumeTapEvents` as given (`onTap` no longer implies it) and `onTap` without `consumeTapEvents: true` throws. `MKPointAnnotation` gains `calloutConsumesTapEvents` (default `false`), and `onCalloutTap` requires it. Equality no longer tracks callback presence. Migration: add `consumeTapEvents: true` next to an overlay's `onTap`, and `calloutConsumesTapEvents: true` next to `onCalloutTap`.
 - `MKPointAnnotation.onTap` is removed — it was `mapView(_:didSelect:)` minus programmatic selections. Use `onSelect`, which fires for a user tap and for `selectAnnotation`.
@@ -46,9 +47,9 @@ Misuse now fails loudly in every build mode instead of being clamped, ignored or
 - `CLLocationCoordinate2D` wraps `-180.00000000000003` to `-180.0` instead of `180.0`.
 - Native `AnnotationController`: gate `onCalloutTapped` on `calloutConsumesTapEvents`, suppress spurious selection callbacks during icon-type swap of a selected annotation, update `MKMarkerAnnotationView` callouts in place, and register cluster reuse identifier once on `FlutterMapView` init.
 - Native `takeSnapshot`: guard against zero-size map view, project using the snapshot's camera/region options, honor custom annotation image `alpha` on iOS, and render interior polygon holes with `evenOdd` fill rule.
-- `openLookAround` walks the full `presentedViewController` chain before presenting, and throws `MapKitPlatformException` (`look-around-failed`) when UIKit rejects the presentation; its future used to never complete.
-- A camera move made before the first layout (`setCamera` / `setRegion` / `setCenter`, e.g. from `onMapCreated`) is no longer overridden by `initialCamera` when the view gets its size.
-- Snapshots draw a polyline's `gradientColors` along its length; they used to draw the plain `strokeColor`.
+- `openLookAround` walks the full `presentedViewController` chain before presenting, waits out a running transition (UIKit postponed the presentation, so the future failed and Look Around appeared anyway), and throws `MapKitPlatformException` (`look-around-failed`) when UIKit rejects the presentation; its future used to never complete.
+- A camera move made before the first layout (`setCamera` / `setRegion` / `setCenter`, e.g. from `onMapCreated`) is no longer overridden by `initialCamera` when the view gets its size, including a move that lands between the resize and the layout pass.
+- Snapshots draw a polyline's `gradientColors` along its length, including the tips of sharp miter joins; they used to draw the plain `strokeColor`.
 
 ## 0.4.0 - 2026-10-04
 

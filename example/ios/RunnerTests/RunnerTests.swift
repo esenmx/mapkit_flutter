@@ -208,6 +208,26 @@ final class LookAroundPresentationTests: XCTestCase {
         XCTAssertIdentical(root.presentedViewController, vc)
         root.dismiss(animated: false)
     }
+
+    func testPresentationOverAnInFlightPresentationReportsOnce() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        let root = UIViewController()
+        window.rootViewController = root
+        window.makeKeyAndVisible()
+        addTeardownBlock { @MainActor in window.isHidden = true }
+        var results: [Result<Bool, Error>] = []
+
+        root.present(UIViewController(), animated: true)
+        MapKitViewHost.present(UIViewController(), over: root) { results.append($0) }
+
+        try await Task.sleep(for: .seconds(2))
+        XCTAssertEqual(results.count, 1, "completions: \(results)")
+        guard case .success(true) = results.first else {
+            return XCTFail("UIKit presented Look Around but the result is \(results)")
+        }
+        root.dismiss(animated: false)
+    }
 }
 
 /// A 400×400 pt ocean map at 0°,0° spanning 1°: 400 points per degree.

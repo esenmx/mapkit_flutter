@@ -12,10 +12,13 @@ import FlutterMacOS
 class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
     weak var flutterApi: MapKitFlutterApi?
 
-    /// Camera moves made before the first layout pass, oldest first; replayed
-    /// once the view has real bounds so MapKit doesn't resolve them against a
-    /// zero rect, and so a move made in `onMapCreated` outlives the initial camera.
-    private var pendingMoves: [CameraMove] = []
+    /// Camera moves made while the view has no size, oldest first; replayed
+    /// once it has real bounds so MapKit doesn't resolve them against a zero
+    /// rect, and so a move made in `onMapCreated` outlives the initial camera.
+    /// At most one move of each kind, in camera, region, center order: a camera
+    /// move sets every camera property, a region move the center and zoom, a
+    /// center move only the center, so each drops the queued moves it overwrites.
+    private(set) var pendingMoves: [CameraMove] = []
 
     /// The last configuration Dart pushed.
     private(set) var appliedConfiguration: PlatformMapConfiguration?
@@ -70,12 +73,29 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
         case center(CLLocationCoordinate2D)
     }
 
-    /// Applies `move` now and, before the first layout, queues it for replay.
+    /// Applies `move` now and, while the view has no size, queues it for
+    /// replay. Once sized, queued moves replay first, even before the next
+    /// layout pass, so they never land on top of a later move.
     func move(_ move: CameraMove, animated: Bool) {
-        if !hasLayout {
-            pendingMoves.append(move)
+        guard hasLayout else {
+            enqueue(move)
+            apply(move, animated: false)
+            return
         }
-        apply(move, animated: animated && hasLayout)
+        reapplyPendingCamera()
+        apply(move, animated: animated)
+    }
+
+    private func enqueue(_ move: CameraMove) {
+        switch move {
+        case .camera:
+            pendingMoves = []
+        case .region:
+            pendingMoves.removeAll { if case .camera = $0 { false } else { true } }
+        case .center:
+            pendingMoves.removeAll { if case .center = $0 { true } else { false } }
+        }
+        pendingMoves.append(move)
     }
 
     private func apply(_ move: CameraMove, animated: Bool) {

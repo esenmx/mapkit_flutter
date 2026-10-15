@@ -874,6 +874,54 @@ final class NaturalApiTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(try host.getCamera()).distance, 500_000, accuracy: 5_000)
     }
 
+    func testCameraMoveBetweenResizeAndFirstLayoutWins() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        try host.setCamera(
+            camera: PlatformMapCamera(
+                centerCoordinate: PlatformCoordinate(latitude: 40, longitude: 20), distance: 50_000, heading: 0, pitch: 0),
+            animated: false)
+
+        layOut(host)
+
+        let center = try XCTUnwrap(try host.getCamera()).centerCoordinate
+        XCTAssertEqual(center.latitude, 40, accuracy: 0.01)
+        XCTAssertEqual(center.longitude, 20, accuracy: 0.01)
+    }
+
+    func testCameraMovesWhileZeroSizedStayBoundedAndKeepTheirEffect() throws {
+        let camera = PlatformMapCamera(
+            centerCoordinate: PlatformCoordinate(latitude: 30, longitude: 30), distance: 80_000, heading: 0, pitch: 0)
+        let region = PlatformCoordinateRegion(
+            center: PlatformCoordinate(latitude: 35, longitude: 25), span: PlatformCoordinateSpan(latitudeDelta: 2, longitudeDelta: 2))
+        func moves(_ host: MapKitViewHost) throws {
+            for i in 0..<50 {
+                try host.setCenter(coordinate: PlatformCoordinate(latitude: Double(i % 7), longitude: 1), animated: false)
+                try host.setRegion(region: region, animated: false)
+                try host.setCamera(camera: camera, animated: false)
+            }
+            try host.setRegion(region: region, animated: false)
+            try host.setCenter(coordinate: PlatformCoordinate(latitude: 41, longitude: 21), animated: false)
+        }
+        let reference = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        layOut(reference)
+        try moves(reference)
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        layOut(host)
+        host.mapView.frame = .zero
+
+        try moves(host)
+        XCTAssertLessThanOrEqual(host.mapView.pendingMoves.count, 3)
+        layOut(host)
+
+        let want = try XCTUnwrap(try reference.getCamera())
+        let got = try XCTUnwrap(try host.getCamera())
+        XCTAssertEqual(got.centerCoordinate.latitude, 41, accuracy: 0.01)
+        XCTAssertEqual(got.centerCoordinate.longitude, 21, accuracy: 0.01)
+        XCTAssertEqual(got.distance, want.distance, accuracy: want.distance * 0.01)
+    }
+
     func testImageAnchorPointIsHonoredOnMacOS() throws {
         let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
         func pin(_ anchorY: Double) -> PlatformAnnotation {
@@ -1059,6 +1107,28 @@ final class SnapshotCompositingTests: XCTestCase {
         XCTAssertFalse(isGreen(middle), "gradient line drawn in its plain stroke color: \(middle)")
         XCTAssertGreaterThan(middle.redComponent, 0.3, "middle \(middle)")
         XCTAssertGreaterThan(middle.blueComponent, 0.3, "middle \(middle)")
+    }
+
+    func testSnapshotPaintsSharpMiterJoinTipsOfGradientPolylines() throws {
+        let host = oceanHost()
+        try host.updatePolylines(toAdd: [PlatformPolyline(
+            id: "spike",
+            coordinates: [
+                PlatformCoordinate(latitude: 0.3, longitude: -0.08), PlatformCoordinate(latitude: -0.3, longitude: 0),
+                PlatformCoordinate(latitude: 0.3, longitude: 0.08),
+            ],
+            strokeColorArgb: 0xFF00_FF00, lineWidth: 12, lineCap: .butt, lineJoin: .miter, isHidden: false,
+            consumeTapEvents: false, isGeodesic: false, level: .aboveRoads, zIndex: 0,
+            gradientColorsArgb: [0xFFFF_0000, 0xFF00_00FF])], toChange: [], idsToRemove: [])
+        let joint = topLeft(host, -0.3, 0)
+
+        let rep = try snapshot(host, annotations: false, overlays: true)
+
+        // The miter tip reaches 6 / sin(7.6°) ≈ 45 pt below the joint; the segment strokes end ~13 pt below it.
+        let tip = try color(rep, at: CGPoint(x: joint.x, y: joint.y + 30))
+        XCTAssertGreaterThan(tip.redComponent, 0.3, "miter tip \(tip)")
+        XCTAssertGreaterThan(tip.blueComponent, 0.3, "miter tip \(tip)")
+        XCTAssertLessThan(tip.greenComponent, 0.3, "miter tip left unpainted: \(tip)")
     }
 
     func testSnapshotLeavesPolygonHolesOpen() throws {

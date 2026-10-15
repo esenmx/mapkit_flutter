@@ -92,6 +92,42 @@ void main() {
     });
   });
 
+  group('lineDashPattern', () {
+    for (final bad in <List<double>>[
+      [0],
+      [0, 0],
+      [-1, 3],
+      [6, double.nan],
+      [double.infinity, 3],
+    ]) {
+      test('rejects $bad on both constructors', () {
+        for (final create in [MKPolyline.new, MKPolyline.geodesic]) {
+          check(
+                () => create(
+                  id: const MKPolylineId('dash'),
+                  coordinates: [applePark, infiniteLoop],
+                  lineDashPattern: bad,
+                ),
+              )
+              .throws<ArgumentError>()
+              .has((e) => e.name, 'name')
+              .equals('lineDashPattern');
+        }
+      });
+    }
+
+    test('copyWith rejects an all-zero pattern', () {
+      check(() => polyline('p').copyWith(lineDashPattern: const [0, 0]))
+          .throws<ArgumentError>();
+    });
+
+    test('accepts a dotted pattern with zero-length dashes', () {
+      check(
+        polyline('p').copyWith(lineDashPattern: const [0, 15]).lineDashPattern,
+      ).isNotNull().deepEquals([0, 15]);
+    });
+  });
+
   group('MKPolyline.geodesic', () {
     test('flags the wire payload without mutating coordinates', () {
       final platform = MKPolyline.geodesic(

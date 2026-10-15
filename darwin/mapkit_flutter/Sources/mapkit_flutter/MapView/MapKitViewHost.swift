@@ -220,8 +220,10 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     #if os(iOS)
-    /// UIKit drops a presentation it rejects (presenter off-window or mid-transition)
-    /// without calling back; an accepted one links `vc` to its presenter synchronously.
+    /// UIKit drops a presentation it rejects (presenter off-window) without
+    /// calling back, and postpones one made mid-transition without linking it;
+    /// an accepted one links `vc` to its presenter synchronously. So a running
+    /// transition is waited out first, and `completion` runs at most once.
     static func present(
         _ vc: UIViewController, over host: UIViewController, completion: @escaping (Result<Bool, Error>) -> Void
     ) {
@@ -229,11 +231,18 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         while let next = presenter.presentedViewController, !next.isBeingDismissed {
             presenter = next
         }
+        if let transition = presenter.transitionCoordinator {
+            transition.animate(alongsideTransition: nil) { _ in
+                present(vc, over: host, completion: completion)
+            }
+            return
+        }
+        let report = ReportOnce(completion)
         presenter.present(vc, animated: true) {
-            completion(.success(true))
+            report(.success(true))
         }
         if vc.presentingViewController == nil {
-            completion(.failure(mapKitError(
+            report(.failure(mapKitError(
                 .lookAroundFailed, "UIKit rejected presenting Look Around from \(type(of: presenter)).")))
         }
     }
@@ -570,6 +579,23 @@ extension MapKitViewHost {
 extension MapKitViewHost: @preconcurrency FlutterPlatformView {
     public func view() -> UIView {
         return contentView
+    }
+}
+#endif
+
+#if os(iOS)
+@MainActor
+private final class ReportOnce {
+    private var completion: ((Result<Bool, Error>) -> Void)?
+
+    init(_ completion: @escaping (Result<Bool, Error>) -> Void) {
+        self.completion = completion
+    }
+
+    func callAsFunction(_ result: Result<Bool, Error>) {
+        let completion = self.completion
+        self.completion = nil
+        completion?(result)
     }
 }
 #endif

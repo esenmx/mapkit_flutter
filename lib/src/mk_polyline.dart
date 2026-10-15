@@ -26,7 +26,8 @@ final class MKPolyline {
   /// Straight-segment polyline (`MKPolyline`).
   ///
   /// Throws [ArgumentError] for a negative or non-finite [lineWidth], a
-  /// single [gradientColors] entry, or an [onTap] without
+  /// [lineDashPattern] with a negative or non-finite length or only zeros,
+  /// a single [gradientColors] entry, or an [onTap] without
   /// [consumeTapEvents].
   new({
     required this.id,
@@ -69,6 +70,18 @@ final class MKPolyline {
 
   void _validate() {
     checkNonNegative(lineWidth, 'lineWidth');
+    if (lineDashPattern case final pattern? when pattern.isNotEmpty) {
+      for (final length in pattern) {
+        checkNonNegative(length, 'lineDashPattern');
+      }
+      if (!pattern.any((length) => length > 0)) {
+        throw ArgumentError.value(
+          pattern,
+          'lineDashPattern',
+          'needs a dash or gap longer than 0',
+        );
+      }
+    }
     checkTapCallback(onTap, consumeTapEvents: consumeTapEvents);
     if (gradientColors.length == 1) {
       throw ArgumentError.value(
@@ -106,7 +119,8 @@ final class MKPolyline {
   final CGLineJoin lineJoin;
 
   /// Alternating dash/gap lengths in points (`lineDashPattern`), e.g.
-  /// `[6, 3]`. `null` strokes solid. Dotted: `[0, lineWidth * 1.5]` with
+  /// `[6, 3]`. `null` or empty strokes solid. Every length is finite and
+  /// `>= 0`, with at least one `> 0`. Dotted: `[0, lineWidth * 1.5]` with
   /// [CGLineCap.round].
   final List<double>? lineDashPattern;
 

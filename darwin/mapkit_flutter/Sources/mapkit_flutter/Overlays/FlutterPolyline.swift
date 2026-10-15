@@ -126,18 +126,36 @@ extension StyledPolyline {
             let unit = CGPoint(x: (b.x - a.x) / (to - from), y: (b.y - a.y) / (to - from))
             let segment = CGMutablePath()
             segment.addLines(between: [a, b])
-            context.saveGState()
-            context.addPath(segment.copy(strokingWithWidth: lineWidth * 2 + 2, lineCap: .round, lineJoin: .round, miterLimit: 10))
-            context.clip()
-            context.drawLinearGradient(
-                gradient,
-                start: CGPoint(x: a.x - unit.x * from, y: a.y - unit.y * from),
-                end: CGPoint(x: a.x + unit.x * (1 - from), y: a.y + unit.y * (1 - from)),
-                options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-            context.restoreGState()
+            var clips = [segment.copy(strokingWithWidth: lineWidth * 2 + 2, lineCap: .round, lineJoin: .round, miterLimit: 10)]
+            // A miter tip reaches up to miterLimit / 2 line widths past the joint, beyond the round segment clip.
+            if lineJoinType == .miter, let previous = points[..<i].last(where: { $0 != a }) {
+                let back = Self.unitVector(from: a, to: previous)
+                let ahead = Self.unitVector(from: a, to: b)
+                let corner = CGMutablePath()
+                corner.addLines(between: [
+                    CGPoint(x: a.x + back.x, y: a.y + back.y), a, CGPoint(x: a.x + ahead.x, y: a.y + ahead.y),
+                ])
+                clips.append(corner.copy(strokingWithWidth: lineWidth, lineCap: .butt, lineJoin: .miter, miterLimit: 10))
+            }
+            for clip in clips {
+                context.saveGState()
+                context.addPath(clip)
+                context.clip()
+                context.drawLinearGradient(
+                    gradient,
+                    start: CGPoint(x: a.x - unit.x * from, y: a.y - unit.y * from),
+                    end: CGPoint(x: a.x + unit.x * (1 - from), y: a.y + unit.y * (1 - from)),
+                    options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                context.restoreGState()
+            }
         }
         context.endTransparencyLayer()
         context.restoreGState()
+    }
+
+    private static func unitVector(from a: CGPoint, to b: CGPoint) -> CGPoint {
+        let d = hypot(b.x - a.x, b.y - a.y)
+        return CGPoint(x: (b.x - a.x) / d, y: (b.y - a.y) / d)
     }
 
     private var caShapeLayerLineCap: CAShapeLayerLineCap {

@@ -75,12 +75,6 @@ final class MKPointAnnotation({
   /// Called with the starting coordinate when a drag begins.
   final ValueChanged<CLLocationCoordinate2D>? onDragStart,
 
-  /// Called once per drag, when MapKit reports the drag under way
-  /// (`MKAnnotationView.DragState.dragging`), with the annotation's
-  /// coordinate at that moment. MapKit reports drag-state changes, not
-  /// every movement.
-  final ValueChanged<CLLocationCoordinate2D>? onDrag,
-
   /// Called with the final coordinate when a drag ends.
   final ValueChanged<CLLocationCoordinate2D>? onDragEnd,
 
@@ -122,7 +116,6 @@ final class MKPointAnnotation({
     bool? calloutConsumesTapEvents,
     VoidCallback? onCalloutTap = keepCallback,
     ValueChanged<CLLocationCoordinate2D>? onDragStart = keepCoordinateCallback,
-    ValueChanged<CLLocationCoordinate2D>? onDrag = keepCoordinateCallback,
     ValueChanged<CLLocationCoordinate2D>? onDragEnd = keepCoordinateCallback,
     VoidCallback? onSelect = keepCallback,
     VoidCallback? onDeselect = keepCallback,
@@ -148,7 +141,6 @@ final class MKPointAnnotation({
     onDragStart: identical(onDragStart, keepCoordinateCallback)
         ? this.onDragStart
         : onDragStart,
-    onDrag: identical(onDrag, keepCoordinateCallback) ? this.onDrag : onDrag,
     onDragEnd: identical(onDragEnd, keepCoordinateCallback)
         ? this.onDragEnd
         : onDragEnd,

@@ -70,8 +70,6 @@ extension MapKitViewHost {
         switch newState {
         case .starting:
             self.flutterApi.send { try await $0.onAnnotationDragStart(annotationId: id, coordinate: coordinate) }
-        case .dragging:
-            self.flutterApi.send { try await $0.onAnnotationDrag(annotationId: id, coordinate: coordinate) }
         case .ending, .canceling:
             self.flutterApi.send { try await $0.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) }
         default:

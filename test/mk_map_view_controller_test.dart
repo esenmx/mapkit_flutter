@@ -266,11 +266,9 @@ void main() {
       final harness = buildHarness();
       harness.controller.eventHandler
         ..onAnnotationDragStart('a', platformCoord(1, 2))
-        ..onAnnotationDrag('a', platformCoord(1.5, 2.5))
         ..onAnnotationDragEnd('a', platformCoord(2, 3));
       harness.sink.events.expectEventNames([
         'annotationDragStart',
-        'annotationDrag',
         'annotationDragEnd',
       ]);
     });

@@ -2099,7 +2099,6 @@ protocol MapKitFlutterApiProtocol {
   /// A selected `MKMapFeatureAnnotation` (iOS).
   @MainActor func onMapFeatureSelected(feature featureArg: PlatformMapFeature) async throws
   @MainActor func onAnnotationDragStart(annotationId annotationIdArg: String, coordinate coordinateArg: PlatformCoordinate) async throws
-  @MainActor func onAnnotationDrag(annotationId annotationIdArg: String, coordinate coordinateArg: PlatformCoordinate) async throws
   @MainActor func onAnnotationDragEnd(annotationId annotationIdArg: String, coordinate coordinateArg: PlatformCoordinate) async throws
   @MainActor func onCalloutTap(annotationId annotationIdArg: String) async throws
   @MainActor func onPolylineTap(polylineId polylineIdArg: String) async throws
@@ -2270,26 +2269,6 @@ class MapKitFlutterApi: MapKitFlutterApiProtocol {
   @MainActor func onAnnotationDragStart(annotationId annotationIdArg: String, coordinate coordinateArg: PlatformCoordinate) async throws {
     return try await withCheckedThrowingContinuation { continuation in
       let channelName: String = "dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDragStart\(messageChannelSuffix)"
-      let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-      channel.sendMessage([annotationIdArg, coordinateArg] as [Any?]) { response in
-        guard let listResponse = response as? [Any?] else {
-          continuation.resume(throwing: createConnectionError(withChannelName: channelName))
-          return
-        }
-        if listResponse.count > 1 {
-          let code: String = listResponse[0] as! String
-          let message: String? = nilOrValue(listResponse[1])
-          let details: String? = nilOrValue(listResponse[2])
-          continuation.resume(throwing: MapKitHostError(code: code, message: message, details: details))
-        } else {
-          continuation.resume()
-        }
-      }
-    }
-  }
-  @MainActor func onAnnotationDrag(annotationId annotationIdArg: String, coordinate coordinateArg: PlatformCoordinate) async throws {
-    return try await withCheckedThrowingContinuation { continuation in
-      let channelName: String = "dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationDrag\(messageChannelSuffix)"
       let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
       channel.sendMessage([annotationIdArg, coordinateArg] as [Any?]) { response in
         guard let listResponse = response as? [Any?] else {

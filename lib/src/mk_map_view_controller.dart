@@ -32,7 +32,6 @@ abstract interface class MKMapViewEventSink {
     MKAnnotationId id,
     CLLocationCoordinate2D coordinate,
   );
-  void onAnnotationDrag(MKAnnotationId id, CLLocationCoordinate2D coordinate);
   void onAnnotationDragEnd(
     MKAnnotationId id,
     CLLocationCoordinate2D coordinate,
@@ -408,13 +407,6 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
     MKAnnotationId(annotationId),
     .fromPlatform(coordinate),
   );
-
-  @override
-  void onAnnotationDrag(String annotationId, PlatformCoordinate coordinate) =>
-      _sink.onAnnotationDrag(
-        MKAnnotationId(annotationId),
-        .fromPlatform(coordinate),
-      );
 
   @override
   void onAnnotationDragEnd(

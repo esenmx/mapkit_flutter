@@ -38,10 +38,6 @@ final class RecordingSink implements MKMapViewEventSink {
   ) => events.add(('annotationDragStart', (id, coordinate)));
 
   @override
-  void onAnnotationDrag(MKAnnotationId id, CLLocationCoordinate2D coordinate) =>
-      events.add(('annotationDrag', (id, coordinate)));
-
-  @override
   void onAnnotationDragEnd(
     MKAnnotationId id,
     CLLocationCoordinate2D coordinate,

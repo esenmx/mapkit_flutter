@@ -2,7 +2,7 @@ name: Integration
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     # tags: ['v*']  # paused with tag-triggered publishing; uncomment to re-enable
   workflow_dispatch:
 

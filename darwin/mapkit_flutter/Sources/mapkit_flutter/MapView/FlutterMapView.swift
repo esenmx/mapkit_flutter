@@ -12,9 +12,10 @@ import FlutterMacOS
 class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
     weak var flutterApi: MapKitFlutterApi?
 
-    /// Camera handed over before the first layout pass; re-applied once the
-    /// view has real bounds so MapKit doesn't resolve it against a zero rect.
-    private var pendingCamera: MKMapCamera?
+    /// Camera moves made before the first layout pass, oldest first; replayed
+    /// once the view has real bounds so MapKit doesn't resolve them against a
+    /// zero rect, and so a move made in `onMapCreated` outlives the initial camera.
+    private var pendingMoves: [CameraMove] = []
 
     /// The last configuration Dart pushed.
     private(set) var appliedConfiguration: PlatformMapConfiguration?
@@ -53,20 +54,36 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
     #endif
 
     private func reapplyPendingCamera() {
-        if bounds.size != .zero, let camera = pendingCamera {
-            pendingCamera = nil
-            setCamera(camera, animated: false)
+        guard hasLayout, !pendingMoves.isEmpty else { return }
+        let moves = pendingMoves
+        pendingMoves = []
+        for move in moves {
+            apply(move, animated: false)
         }
     }
 
     // MARK: - Camera
 
-    func setInitialCamera(_ camera: PlatformMapCamera) {
-        let mkCamera = camera.mkCamera
-        if bounds.size == .zero {
-            pendingCamera = mkCamera
+    enum CameraMove {
+        case camera(MKMapCamera)
+        case region(MKCoordinateRegion)
+        case center(CLLocationCoordinate2D)
+    }
+
+    /// Applies `move` now and, before the first layout, queues it for replay.
+    func move(_ move: CameraMove, animated: Bool) {
+        if !hasLayout {
+            pendingMoves.append(move)
         }
-        setCamera(mkCamera, animated: false)
+        apply(move, animated: animated && hasLayout)
+    }
+
+    private func apply(_ move: CameraMove, animated: Bool) {
+        switch move {
+        case .camera(let camera): setCamera(camera, animated: animated)
+        case .region(let region): setRegion(region, animated: animated)
+        case .center(let center): setCenter(center, animated: animated)
+        }
     }
 
     /// The live camera; callers check `hasLayout` first — a zero-sized view
@@ -262,8 +279,13 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
         #elseif os(macOS)
         // macOS MKMapView pans/zooms/rotates natively; only tap and long-press
         // need bridging to Flutter. Camera moves arrive via the delegate.
+        // Like iOS taps, a click waits out a double-click, which zooms instead.
+        let doubleClickGesture = NSClickGestureRecognizer(target: nil, action: nil)
+        doubleClickGesture.numberOfClicksRequired = 2
+        doubleClickGesture.delegate = self
         let clickGesture = NSClickGestureRecognizer(target: self, action: #selector(onTap))
         clickGesture.delegate = self
+        self.addGestureRecognizer(doubleClickGesture)
         self.addGestureRecognizer(clickGesture)
         let pressGesture = NSPressGestureRecognizer(target: self, action: #selector(longTap))
         pressGesture.delegate = self
@@ -290,6 +312,14 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
                            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: PlatformGestureRecognizer) -> Bool {
         return true
     }
+
+    #if os(macOS)
+    func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer,
+                           shouldRequireFailureOf otherGestureRecognizer: NSGestureRecognizer) -> Bool {
+        (gestureRecognizer as? NSClickGestureRecognizer)?.numberOfClicksRequired == 1
+            && (otherGestureRecognizer as? NSClickGestureRecognizer)?.numberOfClicksRequired == 2
+    }
+    #endif
 }
 
 extension PlatformUserTrackingMode {

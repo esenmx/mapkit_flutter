@@ -66,7 +66,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         // map, so a throw leaves it untouched.
         let annotations = try params.annotations.map(FlutterAnnotation.init(fromPlatform:))
         try self.mapView.apply(configuration: params.configuration)
-        self.mapView.setInitialCamera(params.initialCamera)
+        self.mapView.move(.camera(params.initialCamera.mkCamera), animated: false)
         self.annotationsToAdd(annotations)
         self.applyOverlayUpdate(
             into: &self.polylinesById,
@@ -86,15 +86,15 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     func setCamera(camera: PlatformMapCamera, animated: Bool) throws {
-        self.mapView.setCamera(camera.mkCamera, animated: animated)
+        self.mapView.move(.camera(camera.mkCamera), animated: animated)
     }
 
     func setRegion(region: PlatformCoordinateRegion, animated: Bool) throws {
-        self.mapView.setRegion(region.mkRegion, animated: animated)
+        self.mapView.move(.region(region.mkRegion), animated: animated)
     }
 
     func setCenter(coordinate: PlatformCoordinate, animated: Bool) throws {
-        self.mapView.setCenter(coordinate.clCoordinate, animated: animated)
+        self.mapView.move(.center(coordinate.clCoordinate), animated: animated)
     }
 
     func getCamera() throws -> PlatformMapCamera? {
@@ -211,13 +211,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
                 completion(.failure(mapKitError(.lookAroundFailed, "No view controller to present Look Around from.")))
                 return
             }
-            var presenter = host
-            while let next = presenter.presentedViewController, !next.isBeingDismissed {
-                presenter = next
-            }
-            presenter.present(vc, animated: true) {
-                completion(.success(true))
-            }
+            Self.present(vc, over: host, completion: completion)
         }
         #elseif os(macOS)
         // MKLookAroundViewController exists on macOS 13+, but presenting it from the AppKit host isn't wired yet.
@@ -226,6 +220,24 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     #if os(iOS)
+    /// UIKit drops a presentation it rejects (presenter off-window or mid-transition)
+    /// without calling back; an accepted one links `vc` to its presenter synchronously.
+    static func present(
+        _ vc: UIViewController, over host: UIViewController, completion: @escaping (Result<Bool, Error>) -> Void
+    ) {
+        var presenter = host
+        while let next = presenter.presentedViewController, !next.isBeingDismissed {
+            presenter = next
+        }
+        presenter.present(vc, animated: true) {
+            completion(.success(true))
+        }
+        if vc.presentingViewController == nil {
+            completion(.failure(mapKitError(
+                .lookAroundFailed, "UIKit rejected presenting Look Around from \(type(of: presenter)).")))
+        }
+    }
+
     /// Runs the scene request off the main actor and hands the result back
     /// with `sending`: older SDKs don't mark `MKLookAroundScene` Sendable, so
     /// awaiting `request.scene` directly from `@MainActor` fails to compile
@@ -545,7 +557,7 @@ extension MapKitViewHost {
     private func drawOverlays(snapshot: MKMapSnapshotter.Snapshot, mapRect: MKMapRect, in context: CGContext) {
         for overlay in self.mapView.overlays where overlay.intersects?(mapRect) ?? overlay.boundingMapRect.intersects(mapRect) {
             if let flutterOverlay = overlay as? any FlutterOverlay {
-                flutterOverlay.getCAShapeLayer(snapshot: snapshot).render(in: context)
+                flutterOverlay.drawSnapshot(snapshot, in: context)
             }
         }
     }

@@ -11,6 +11,13 @@ protocol FlutterOverlay: MKOverlay {
     var overlayLevel: MKOverlayLevel { get }
     func makeRenderer() -> MKOverlayRenderer
     func getCAShapeLayer(snapshot: MKMapSnapshotter.Snapshot) -> CAShapeLayer
+    func drawSnapshot(_ snapshot: MKMapSnapshotter.Snapshot, in context: CGContext)
+}
+
+extension FlutterOverlay {
+    func drawSnapshot(_ snapshot: MKMapSnapshotter.Snapshot, in context: CGContext) {
+        getCAShapeLayer(snapshot: snapshot).render(in: context)
+    }
 }
 
 extension MKMapView {
@@ -33,8 +40,6 @@ extension MKMapView {
             addOverlay(overlay, level: level)
         }
     }
-
-
 }
 
 extension PlatformOverlayLevel {

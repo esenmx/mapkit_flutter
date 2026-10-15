@@ -35,6 +35,8 @@ Misuse now fails loudly in every build mode instead of being clamped, ignored or
 - `MKMapView` imports `package:flutter/widgets.dart` instead of `package:flutter/material.dart`.
 - `MKStandardMapConfiguration.toString()` and `MKHybridMapConfiguration.toString()` include `pointOfInterestFilter`; `MKPointOfInterestFilter` subclasses override `toString()`.
 - Polyline tap targets cover the visible stroke: half the `lineWidth`, at least 8 points (it was a fixed 8 points).
+- A tap or click on an annotation view selects the annotation without also firing the map's `onTap`.
+- macOS: a click fires `onTap` once the double-click interval passes, and a double-click (which zooms) fires none, matching iOS taps (every click of a double-click used to fire `onTap`).
 
 ### Fixed
 
@@ -43,7 +45,9 @@ Misuse now fails loudly in every build mode instead of being clamped, ignored or
 - `CLLocationCoordinate2D` wraps `-180.00000000000003` to `-180.0` instead of `180.0`.
 - Native `AnnotationController`: gate `onCalloutTapped` on `calloutConsumesTapEvents`, suppress spurious selection callbacks during icon-type swap of a selected annotation, update `MKMarkerAnnotationView` callouts in place, and register cluster reuse identifier once on `FlutterMapView` init.
 - Native `takeSnapshot`: guard against zero-size map view, project using the snapshot's camera/region options, honor custom annotation image `alpha` on iOS, and render interior polygon holes with `evenOdd` fill rule.
-- `openLookAround` walks the full `presentedViewController` chain before presenting.
+- `openLookAround` walks the full `presentedViewController` chain before presenting, and throws `MapKitPlatformException` (`look-around-failed`) when UIKit rejects the presentation; its future used to never complete.
+- A camera move made before the first layout (`setCamera` / `setRegion` / `setCenter`, e.g. from `onMapCreated`) is no longer overridden by `initialCamera` when the view gets its size.
+- Snapshots draw a polyline's `gradientColors` along its length; they used to draw the plain `strokeColor`.
 
 ## 0.4.0 - 2026-10-04
 

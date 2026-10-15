@@ -10,10 +10,27 @@ import FlutterMacOS
 @MainActor
 class TouchHandler {
 
+    /// A tap on an annotation view selects the annotation; it is not a map tap.
     static func handleMapTaps(tap: PlatformGestureRecognizer, flutterApi: MapKitFlutterApi?, in view: MKMapView) {
         let locationInView = tap.location(in: view)
+        guard !hitsAnnotationView(at: locationInView, in: view) else { return }
         let coord: CLLocationCoordinate2D = view.convert(locationInView, toCoordinateFrom: view)
         handleMapTap(at: coord, flutterApi: flutterApi, in: view)
+    }
+
+    /// Walks the subviews rather than hit-testing: macOS `MKMapView.hitTest`
+    /// answers with the map itself.
+    private static func hitsAnnotationView(at point: CGPoint, in view: MKMapView) -> Bool {
+        func search(_ parent: PlatformView) -> Bool {
+            parent.subviews.contains { child in
+                guard !child.isHidden, child.platformAlpha > 0 else { return false }
+                if child is MKAnnotationView {
+                    return child.convert(child.bounds, to: view).contains(point)
+                }
+                return search(child)
+            }
+        }
+        return search(view)
     }
 
     /// Fires only the top-most visible consuming overlay under the tap

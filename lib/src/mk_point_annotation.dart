@@ -75,7 +75,10 @@ final class MKPointAnnotation({
   /// Called with the starting coordinate when a drag begins.
   final ValueChanged<CLLocationCoordinate2D>? onDragStart,
 
-  /// Called with the live coordinate while dragging.
+  /// Called once per drag, when MapKit reports the drag under way
+  /// (`MKAnnotationView.DragState.dragging`), with the annotation's
+  /// coordinate at that moment. MapKit reports drag-state changes, not
+  /// every movement.
   final ValueChanged<CLLocationCoordinate2D>? onDrag,
 
   /// Called with the final coordinate when a drag ends.

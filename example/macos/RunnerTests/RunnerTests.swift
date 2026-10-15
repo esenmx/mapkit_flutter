@@ -656,6 +656,82 @@ final class NaturalApiTests: XCTestCase {
         await fulfillment(of: [polylineTap], timeout: 2)
     }
 
+    func testClickOnAnAnnotationViewIsNotAMapTap() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        let pin = MKAnnotationView(annotation: try FlutterAnnotation(fromPlatform: annotation("a")), reuseIdentifier: nil)
+        pin.frame = CGRect(x: 100, y: 100, width: 40, height: 40)
+        host.mapView.addSubview(pin)
+        let noMapTap = messenger.expectation(for: "onMapTap", in: self)
+        noMapTap.isInverted = true
+
+        TouchHandler.handleMapTaps(tap: FixedPointClick(at: CGPoint(x: 120, y: 120)), flutterApi: host.flutterApi, in: host.mapView)
+
+        await fulfillment(of: [noMapTap], timeout: 0.5)
+        let mapTap = messenger.expectation(for: "onMapTap", in: self)
+        TouchHandler.handleMapTaps(tap: FixedPointClick(at: CGPoint(x: 300, y: 300)), flutterApi: host.flutterApi, in: host.mapView)
+        await fulfillment(of: [mapTap], timeout: 2)
+    }
+
+    private func clickWindow(_ host: MapKitViewHost) -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 400), styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = host.mapView
+        window.orderFront(nil)
+        addTeardownBlock { @MainActor in window.close() }
+        return window
+    }
+
+    private func click(_ window: NSWindow, count: Int) throws {
+        for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+            window.sendEvent(try XCTUnwrap(NSEvent.mouseEvent(
+                with: type, location: NSPoint(x: 200, y: 200), modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber, context: nil,
+                eventNumber: 0, clickCount: count, pressure: 1)))
+        }
+    }
+
+    func testSingleClickIsAMapTap() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let window = clickWindow(host)
+        let mapTap = messenger.expectation(for: "onMapTap", in: self)
+
+        try click(window, count: 1)
+
+        await fulfillment(of: [mapTap], timeout: NSEvent.doubleClickInterval + 2)
+    }
+
+    func testDoubleClickIsNotAMapTap() async throws {
+        let messenger = RecordingMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let window = clickWindow(host)
+        let noMapTap = messenger.expectation(for: "onMapTap", in: self)
+        noMapTap.isInverted = true
+
+        try click(window, count: 1)
+        try click(window, count: 2)
+
+        await fulfillment(of: [noMapTap], timeout: NSEvent.doubleClickInterval + 1)
+    }
+
+    func testDoubleClickStillZoomsTheMap() async throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let window = clickWindow(host)
+        host.mapView.setRegion(MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+            span: MKCoordinateSpan(latitudeDelta: 10, longitudeDelta: 10)), animated: false)
+        let before = host.mapView.camera.centerCoordinateDistance
+
+        try click(window, count: 1)
+        try click(window, count: 2)
+        try await Task.sleep(for: .seconds(1.5))
+
+        XCTAssertLessThan(host.mapView.camera.centerCoordinateDistance, before * 0.9)
+    }
+
     func testUndecodableImageBytesFailTheWholeUpdate() throws {
         let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
         let broken = PlatformAnnotation(
@@ -735,6 +811,67 @@ final class NaturalApiTests: XCTestCase {
         host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
         XCTAssertGreaterThan(try XCTUnwrap(try host.getCamera()).distance, 0)
         XCTAssertGreaterThan(try XCTUnwrap(try host.getRegion()).span.latitudeDelta, 0)
+    }
+
+    private func creationParams(center: PlatformCoordinate) -> PlatformMapViewCreationParams {
+        PlatformMapViewCreationParams(
+            initialCamera: PlatformMapCamera(centerCoordinate: center, distance: 500_000, heading: 0, pitch: 0),
+            configuration: configuration(), annotations: [], polylines: [], polygons: [], circles: [])
+    }
+
+    private func layOut(_ host: MapKitViewHost) {
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        host.mapView.needsLayout = true
+        host.mapView.layoutSubtreeIfNeeded()
+    }
+
+    func testInitialCameraAppliesAtFirstLayout() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
+
+        layOut(host)
+
+        let center = try XCTUnwrap(try host.getCamera()).centerCoordinate
+        XCTAssertEqual(center.latitude, 10, accuracy: 0.01)
+        XCTAssertEqual(center.longitude, 10, accuracy: 0.01)
+    }
+
+    func testCameraMovesBeforeFirstLayoutSurviveIt() throws {
+        let target = PlatformCoordinate(latitude: 40, longitude: 20)
+        let moves: [(String, (MapKitViewHost) throws -> Void)] = [
+            ("setCamera", {
+                try $0.setCamera(
+                    camera: PlatformMapCamera(centerCoordinate: target, distance: 50_000, heading: 0, pitch: 0), animated: true)
+            }),
+            ("setRegion", {
+                try $0.setRegion(
+                    region: PlatformCoordinateRegion(
+                        center: target, span: PlatformCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)),
+                    animated: true)
+            }),
+            ("setCenter", { try $0.setCenter(coordinate: target, animated: true) }),
+        ]
+        for (name, move) in moves {
+            let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+            try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
+            try move(host)
+
+            layOut(host)
+
+            let center = try XCTUnwrap(try host.getCamera()).centerCoordinate
+            XCTAssertEqual(center.latitude, 40, accuracy: 0.01, name)
+            XCTAssertEqual(center.longitude, 20, accuracy: 0.01, name)
+        }
+    }
+
+    func testSetCenterBeforeFirstLayoutKeepsTheInitialDistance() throws {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
+        try host.setCenter(coordinate: PlatformCoordinate(latitude: 40, longitude: 20), animated: false)
+
+        layOut(host)
+
+        XCTAssertEqual(try XCTUnwrap(try host.getCamera()).distance, 500_000, accuracy: 5_000)
     }
 
     func testImageAnchorPointIsHonoredOnMacOS() throws {
@@ -887,6 +1024,66 @@ final class SnapshotCompositingTests: XCTestCase {
         XCTAssertTrue(isRed(c), "pin inside the polygon is drawn under it: \(c)")
     }
 
+    private func oceanHost() -> MapKitViewHost {
+        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        host.mapView.setRegion(MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+            span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)), animated: false)
+        return host
+    }
+
+    private func topLeft(_ host: MapKitViewHost, _ latitude: Double, _ longitude: Double) -> CGPoint {
+        let p = host.mapView.convert(CLLocationCoordinate2D(latitude: latitude, longitude: longitude), toPointTo: host.mapView)
+        return CGPoint(x: p.x, y: host.mapView.isFlipped ? p.y : 400 - p.y)
+    }
+
+    private func isBlue(_ c: NSColor) -> Bool { c.blueComponent > 0.8 && c.redComponent < 0.3 && c.greenComponent < 0.3 }
+
+    func testSnapshotDrawsGradientPolylinesWithTheirGradient() throws {
+        let host = oceanHost()
+        try host.updatePolylines(toAdd: [PlatformPolyline(
+            id: "route",
+            coordinates: [PlatformCoordinate(latitude: 0, longitude: -0.4), PlatformCoordinate(latitude: 0, longitude: 0.4)],
+            strokeColorArgb: 0xFF00_FF00, lineWidth: 12, lineCap: .butt, lineJoin: .round, isHidden: false,
+            consumeTapEvents: false, isGeodesic: false, level: .aboveRoads, zIndex: 0,
+            gradientColorsArgb: [0xFFFF_0000, 0xFF00_00FF])], toChange: [], idsToRemove: [])
+
+        let rep = try snapshot(host, annotations: false, overlays: true)
+
+        let start = try color(rep, at: topLeft(host, 0, -0.38))
+        let end = try color(rep, at: topLeft(host, 0, 0.38))
+        let middle = try color(rep, at: topLeft(host, 0, 0))
+        XCTAssertTrue(isRed(start), "gradient start is \(start)")
+        XCTAssertTrue(isBlue(end), "gradient end is \(end)")
+        XCTAssertFalse(isGreen(middle), "gradient line drawn in its plain stroke color: \(middle)")
+        XCTAssertGreaterThan(middle.redComponent, 0.3, "middle \(middle)")
+        XCTAssertGreaterThan(middle.blueComponent, 0.3, "middle \(middle)")
+    }
+
+    func testSnapshotLeavesPolygonHolesOpen() throws {
+        let host = oceanHost()
+        try host.updatePolygons(toAdd: [PlatformPolygon(
+            id: "donut",
+            coordinates: [
+                PlatformCoordinate(latitude: 0.3, longitude: -0.3), PlatformCoordinate(latitude: 0.3, longitude: 0.3),
+                PlatformCoordinate(latitude: -0.3, longitude: 0.3), PlatformCoordinate(latitude: -0.3, longitude: -0.3),
+            ],
+            interiorPolygons: [[
+                PlatformCoordinate(latitude: 0.1, longitude: -0.1), PlatformCoordinate(latitude: 0.1, longitude: 0.1),
+                PlatformCoordinate(latitude: -0.1, longitude: 0.1), PlatformCoordinate(latitude: -0.1, longitude: -0.1),
+            ]],
+            fillColorArgb: 0xFF00_FF00, strokeColorArgb: 0xFF00_FF00, lineWidth: 1,
+            zIndex: 0, isHidden: false, consumeTapEvents: false, level: .aboveRoads)], toChange: [], idsToRemove: [])
+
+        let rep = try snapshot(host, annotations: false, overlays: true)
+
+        let ring = try color(rep, at: topLeft(host, 0.2, 0.2))
+        let hole = try color(rep, at: topLeft(host, 0, 0))
+        XCTAssertTrue(isGreen(ring), "polygon ring is \(ring)")
+        XCTAssertFalse(isGreen(hole), "polygon hole is filled: \(hole)")
+    }
+
     func testMacOSSnapshotLeavesThemOutWhenTurnedOff() throws {
         let host = try compositingHost()
         let pin = host.mapView.convert(CLLocationCoordinate2D(latitude: 0.25, longitude: -0.25), toPointTo: host.mapView)
@@ -899,6 +1096,20 @@ final class SnapshotCompositingTests: XCTestCase {
         XCTAssertFalse(isRed(try color(rep, at: pinTop)))
         XCTAssertFalse(isGreen(try color(rep, at: squareTop)))
     }
+}
+
+/// A click recognizer pinned to one location, so tap routing runs without events.
+final class FixedPointClick: NSClickGestureRecognizer {
+    private let point: CGPoint
+
+    init(at point: CGPoint) {
+        self.point = point
+        super.init(target: nil, action: nil)
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func location(in view: NSView?) -> NSPoint { point }
 }
 
 final class CountingMapView: FlutterMapView {

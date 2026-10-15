@@ -4,11 +4,22 @@ import UIKit
 import XCTest
 @testable import mapkit_flutter
 
-/// Swallows every message; the iOS tests only inspect native state.
+/// Swallows every message, recording which host -> Dart methods were sent.
 final class NoopMessenger: NSObject, FlutterBinaryMessenger {
-    func send(onChannel channel: String, message: Data?) {}
+    private(set) var channels: [String] = []
 
-    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {}
+    func send(onChannel channel: String, message: Data?) {
+        channels.append(channel)
+    }
+
+    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {
+        channels.append(channel)
+        callback?(MessagesPigeonCodec.shared.encode([] as [Any?]))
+    }
+
+    func sent(_ method: String) -> Int {
+        channels.filter { $0.contains(".\(method).") }.count
+    }
 
     func setMessageHandlerOnChannel(
         _ channel: String,
@@ -102,5 +113,196 @@ final class RunnerTests: XCTestCase {
             host.syncCalloutTapGestureRecognizer(for: flutterAnnotation, on: view)
         }
         XCTAssertEqual((view.gestureRecognizers ?? []).filter { $0 is InfoWindowTapGestureRecognizer }.count, 0)
+    }
+}
+
+/// A tap recognizer pinned to one location, so tap routing runs without touches.
+final class FixedPointTap: UITapGestureRecognizer {
+    private let point: CGPoint
+
+    init(at point: CGPoint) {
+        self.point = point
+        super.init(target: nil, action: nil)
+    }
+
+    override func location(in view: UIView?) -> CGPoint { point }
+}
+
+@MainActor
+final class CameraAndTapTests: XCTestCase {
+    func testCameraMoveBeforeFirstLayoutSurvivesIt() throws {
+        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        try host.initialize(params: PlatformMapViewCreationParams(
+            initialCamera: PlatformMapCamera(
+                centerCoordinate: PlatformCoordinate(latitude: 10, longitude: 10), distance: 500_000, heading: 0, pitch: 0),
+            configuration: PlatformMapConfiguration(
+                kind: .standard, emphasisStyle: .standard, elevationStyle: .flat, showsTraffic: false,
+                showsCompass: true, showsScale: false, showsUserLocation: false, showsUserTrackingButton: false,
+                userTrackingMode: .none, insetsLayoutMarginsFromSafeArea: true, isRotateEnabled: true,
+                isScrollEnabled: true, isZoomEnabled: true, isPitchEnabled: true, selectableMapFeatures: []),
+            annotations: [], polylines: [], polygons: [], circles: []))
+        try host.setCamera(
+            camera: PlatformMapCamera(
+                centerCoordinate: PlatformCoordinate(latitude: 40, longitude: 20), distance: 50_000, heading: 0, pitch: 0),
+            animated: true)
+
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        host.mapView.layoutIfNeeded()
+
+        let center = try XCTUnwrap(try host.getCamera()).centerCoordinate
+        XCTAssertEqual(center.latitude, 40, accuracy: 0.01)
+        XCTAssertEqual(center.longitude, 20, accuracy: 0.01)
+    }
+
+    func testTapOnAnAnnotationViewIsNotAMapTap() async throws {
+        let messenger = NoopMessenger()
+        let host = MapKitViewHost(messenger: messenger, id: 0)
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        let pin = MKAnnotationView(annotation: try FlutterAnnotation(fromPlatform: annotation("a")), reuseIdentifier: nil)
+        pin.frame = CGRect(x: 100, y: 100, width: 40, height: 40)
+        host.mapView.addSubview(pin)
+
+        TouchHandler.handleMapTaps(tap: FixedPointTap(at: CGPoint(x: 120, y: 120)), flutterApi: host.flutterApi, in: host.mapView)
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertEqual(messenger.sent("onMapTap"), 0)
+
+        TouchHandler.handleMapTaps(tap: FixedPointTap(at: CGPoint(x: 300, y: 300)), flutterApi: host.flutterApi, in: host.mapView)
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertEqual(messenger.sent("onMapTap"), 1)
+    }
+}
+
+@MainActor
+final class LookAroundPresentationTests: XCTestCase {
+    func testRejectedPresentationFailsInsteadOfHanging() async throws {
+        let offscreen = UIViewController()
+        let failed = expectation(description: "fails")
+
+        MapKitViewHost.present(UIViewController(), over: offscreen) { result in
+            if case .failure(let error as MapKitHostError) = result, error.code == "look-around-failed" {
+                failed.fulfill()
+            } else {
+                XCTFail("expected look-around-failed, got \(result)")
+            }
+        }
+
+        await fulfillment(of: [failed], timeout: 3)
+    }
+
+    func testAcceptedPresentationSucceedsOnce() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene)
+        let root = UIViewController()
+        window.rootViewController = root
+        window.makeKeyAndVisible()
+        addTeardownBlock { @MainActor in window.isHidden = true }
+        let presented = expectation(description: "presents")
+        presented.assertForOverFulfill = true
+        let vc = UIViewController()
+
+        MapKitViewHost.present(vc, over: root) { result in
+            if case .success(true) = result { presented.fulfill() } else { XCTFail("expected success, got \(result)") }
+        }
+
+        await fulfillment(of: [presented], timeout: 3)
+        XCTAssertIdentical(root.presentedViewController, vc)
+        root.dismiss(animated: false)
+    }
+}
+
+/// A 400×400 pt ocean map at 0°,0° spanning 1°: 400 points per degree.
+@MainActor
+final class SnapshotDrawOrderTests: XCTestCase {
+    private func oceanHost() -> MapKitViewHost {
+        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
+        host.mapView.setRegion(MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+            span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)), animated: false)
+        return host
+    }
+
+    private func redIcon() throws -> PlatformAnnotationIcon {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 30, height: 30), format: format).image { context in
+            UIColor.red.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 30, height: 30))
+        }
+        return PlatformAnnotationIcon(
+            type: .image, imageBytes: FlutterStandardTypedData(bytes: try XCTUnwrap(image.pngData())), imagePixelRatio: 1)
+    }
+
+    /// RGBA bytes of the snapshot, top row first.
+    private func snapshot(_ host: MapKitViewHost) throws -> (bytes: [UInt8], width: Int) {
+        let exp = expectation(description: "snapshot")
+        var png: Data?
+        host.takeSnapshot(options: PlatformSnapshotOptions(
+            showsPointsOfInterest: false, showsAnnotations: true, showsOverlays: true)) { result in
+            if case .success(let data) = result { png = data.data }
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 20)
+        let image = try XCTUnwrap(UIImage(data: try XCTUnwrap(png))?.cgImage)
+        var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let drawn = bytes.withUnsafeMutableBytes { raw -> Bool in
+            guard let context = CGContext(
+                data: raw.baseAddress, width: image.width, height: image.height, bitsPerComponent: 8,
+                bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            return true
+        }
+        XCTAssertTrue(drawn)
+        return (bytes, image.width)
+    }
+
+    private func rgb(_ shot: (bytes: [UInt8], width: Int), at coordinate: CLLocationCoordinate2D, in host: MapKitViewHost)
+        -> (r: Double, g: Double, b: Double) {
+        let point = host.mapView.convert(coordinate, toPointTo: host.mapView)
+        let scale = CGFloat(shot.width) / 400
+        let i = (Int(point.y * scale) * shot.width + Int(point.x * scale)) * 4
+        return (Double(shot.bytes[i]) / 255, Double(shot.bytes[i + 1]) / 255, Double(shot.bytes[i + 2]) / 255)
+    }
+
+    func testSnapshotDrawsAnnotationsAboveOverlays() throws {
+        let host = oceanHost()
+        try host.updatePolygons(toAdd: [PlatformPolygon(
+            id: "square",
+            coordinates: [
+                PlatformCoordinate(latitude: -0.1, longitude: 0.1), PlatformCoordinate(latitude: -0.1, longitude: 0.3),
+                PlatformCoordinate(latitude: -0.3, longitude: 0.3), PlatformCoordinate(latitude: -0.3, longitude: 0.1),
+            ],
+            interiorPolygons: [], fillColorArgb: 0xFF00_FF00, strokeColorArgb: 0xFF00_FF00, lineWidth: 1,
+            zIndex: 0, isHidden: false, consumeTapEvents: false, level: .aboveRoads)], toChange: [], idsToRemove: [])
+        try host.updateAnnotations(toAdd: [PlatformAnnotation(
+            id: "inside", coordinate: PlatformCoordinate(latitude: -0.2, longitude: 0.2), icon: try redIcon(),
+            calloutConsumesTapEvents: false, alpha: 1, anchorPointX: 0.5, anchorPointY: 0.5, isDraggable: false,
+            isHidden: false, zPriority: 500)], toChange: [], idsToRemove: [])
+
+        let shot = try snapshot(host)
+
+        let pin = rgb(shot, at: CLLocationCoordinate2D(latitude: -0.2, longitude: 0.2), in: host)
+        let polygon = rgb(shot, at: CLLocationCoordinate2D(latitude: -0.12, longitude: 0.12), in: host)
+        XCTAssertTrue(pin.r > 0.8 && pin.g < 0.3 && pin.b < 0.3, "pin inside the polygon is drawn under it: \(pin)")
+        XCTAssertTrue(polygon.g > 0.8 && polygon.r < 0.3, "polygon pixel is \(polygon)")
+    }
+
+    func testSnapshotDrawsGradientPolylinesWithTheirGradient() throws {
+        let host = oceanHost()
+        try host.updatePolylines(toAdd: [PlatformPolyline(
+            id: "route",
+            coordinates: [PlatformCoordinate(latitude: 0, longitude: -0.4), PlatformCoordinate(latitude: 0, longitude: 0.4)],
+            strokeColorArgb: 0xFF00_FF00, lineWidth: 12, lineCap: .butt, lineJoin: .round, isHidden: false,
+            consumeTapEvents: false, isGeodesic: false, level: .aboveRoads, zIndex: 0,
+            gradientColorsArgb: [0xFFFF_0000, 0xFF00_00FF])], toChange: [], idsToRemove: [])
+
+        let shot = try snapshot(host)
+
+        let start = rgb(shot, at: CLLocationCoordinate2D(latitude: 0, longitude: -0.38), in: host)
+        let end = rgb(shot, at: CLLocationCoordinate2D(latitude: 0, longitude: 0.38), in: host)
+        XCTAssertTrue(start.r > 0.8 && start.g < 0.3 && start.b < 0.3, "gradient start is \(start)")
+        XCTAssertTrue(end.b > 0.8 && end.r < 0.3 && end.g < 0.3, "gradient end is \(end)")
     }
 }

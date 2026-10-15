@@ -87,6 +87,59 @@ extension StyledPolyline {
         return shapeLayer
     }
 
+    /// Lays the whole gradient along each segment so the segment shows its
+    /// share of the line's length, like `MKGradientPolylineRenderer`.
+    func drawSnapshot(_ snapshot: MKMapSnapshotter.Snapshot, in context: CGContext) {
+        guard let gradientColors, gradientColors.count >= 2, !isHidden, coordinates.count > 1,
+              let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let gradient = CGGradient(
+                  colorsSpace: space,
+                  colors: gradientColors.map(\.cgColor) as CFArray,
+                  locations: (0..<gradientColors.count).map { CGFloat($0) / CGFloat(gradientColors.count - 1) })
+        else {
+            getCAShapeLayer(snapshot: snapshot).render(in: context)
+            return
+        }
+        let points = coordinates.map(snapshot.point(for:))
+        var offsets: [CGFloat] = [0]
+        for (a, b) in zip(points, points.dropFirst()) {
+            offsets.append((offsets.last ?? 0) + hypot(b.x - a.x, b.y - a.y))
+        }
+        guard let length = offsets.last, length > 0 else { return }
+
+        let line = CGMutablePath()
+        line.addLines(between: points)
+        var dashed: CGPath = line
+        if let dashPattern, !dashPattern.isEmpty {
+            dashed = line.copy(dashingWithPhase: 0, lengths: dashPattern.map { CGFloat($0.doubleValue) })
+        }
+        context.saveGState()
+        context.addPath(dashed.copy(
+            strokingWithWidth: lineWidth, lineCap: lineCapType, lineJoin: lineJoinType, miterLimit: 10))
+        context.clip()
+        // Segments overlap at joins: each replaces, never blends over, the one before.
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+        context.setBlendMode(.copy)
+        for i in 0..<(points.count - 1) where offsets[i + 1] > offsets[i] {
+            let (a, b) = (points[i], points[i + 1])
+            let (from, to) = (offsets[i] / length, offsets[i + 1] / length)
+            let unit = CGPoint(x: (b.x - a.x) / (to - from), y: (b.y - a.y) / (to - from))
+            let segment = CGMutablePath()
+            segment.addLines(between: [a, b])
+            context.saveGState()
+            context.addPath(segment.copy(strokingWithWidth: lineWidth * 2 + 2, lineCap: .round, lineJoin: .round, miterLimit: 10))
+            context.clip()
+            context.drawLinearGradient(
+                gradient,
+                start: CGPoint(x: a.x - unit.x * from, y: a.y - unit.y * from),
+                end: CGPoint(x: a.x + unit.x * (1 - from), y: a.y + unit.y * (1 - from)),
+                options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            context.restoreGState()
+        }
+        context.endTransparencyLayer()
+        context.restoreGState()
+    }
+
     private var caShapeLayerLineCap: CAShapeLayerLineCap {
         switch lineCapType {
         case .butt: return .butt

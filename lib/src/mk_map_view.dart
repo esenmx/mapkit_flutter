@@ -27,7 +27,15 @@ import 'package:mapkit_flutter/src/mk_polyline.dart';
 /// and overlay sets diff on rebuild.
 ///
 /// iOS and macOS only. Building this widget on any other platform throws a
-/// [MapKitUnsupportedPlatformException] rather than degrading silently.
+/// [MapKitUnsupportedPlatformException] rather than degrading silently; so
+/// does an iOS-only setting on macOS (`followWithHeading`,
+/// [selectableMapFeatures], [onMapFeatureSelected],
+/// `insetsLayoutMarginsFromSafeArea: false`, an annotation's
+/// `calloutConsumesTapEvents`).
+///
+/// Ids must be unique per kind: two annotations (or two polylines, …)
+/// sharing an id throw an [ArgumentError] when the widget is built or
+/// updated.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapview
 final class const MKMapView({
   /// Where the camera starts (`MKMapCamera`).
@@ -51,7 +59,12 @@ final class const MKMapView({
   /// Whether two-finger tilt gestures are enabled (`MKMapView.isPitchEnabled`).
   final bool isPitchEnabled = true,
 
-  /// Requires `NSLocationWhenInUseUsageDescription` in `Info.plist`.
+  /// Shows the user's location (`MKMapView.showsUserLocation`).
+  ///
+  /// Like MapKit, the map never asks for location permission: request
+  /// when-in-use authorization in your app first (and add
+  /// `NSLocationWhenInUseUsageDescription` to `Info.plist`). Without it the
+  /// map reports the failure through [onDidFailToLocateUser].
   final bool showsUserLocation = false,
 
   /// `MKMapView.showsUserTrackingButton` (iOS 17 / macOS 14).
@@ -66,21 +79,32 @@ final class const MKMapView({
   final bool showsScale = false,
 
   /// How the camera tracks the user's location (`MKMapView.userTrackingMode`).
+  ///
+  /// Applied when this value changes. MapKit itself changes the mode — it
+  /// drops to `none` when the user pans — and reports it through
+  /// [onUserTrackingModeChanged]; keep your state in sync there so a later
+  /// rebuild with `follow` re-applies it. `followWithHeading` is iOS only.
   final MKUserTrackingMode userTrackingMode = .none,
 
+  /// Called when MapKit changes [userTrackingMode] itself
+  /// (`MKMapViewDelegate.mapView(_:didChange:animated:)`).
+  final ValueChanged<MKUserTrackingMode>? onUserTrackingModeChanged,
+
   /// Camera distance limits in meters (`MKMapView.cameraZoomRange`).
-  final MKCameraZoomRange cameraZoomRange = const MKCameraZoomRange(),
+  final MKCameraZoomRange cameraZoomRange = MKCameraZoomRange.unbounded,
 
   /// Region the camera center is constrained to
   /// (`MKMapView.cameraBoundary`).
   final MKCoordinateRegion? cameraBoundary,
 
   /// Map features the user can tap to select
-  /// (`MKMapView.selectableMapFeatures`). iOS only.
+  /// (`MKMapView.selectableMapFeatures`). iOS only — must stay empty on
+  /// macOS.
   final Set<MKMapFeatureOptions> selectableMapFeatures = const {},
 
   /// Whether layout margins include the safe area insets
-  /// (`UIView.insetsLayoutMarginsFromSafeArea`). iOS only.
+  /// (`UIView.insetsLayoutMarginsFromSafeArea`). iOS only — must stay `true`
+  /// on macOS.
   final bool insetsLayoutMarginsFromSafeArea = true,
 
   /// Point annotations displayed on the map, diffed by [MKAnnotationId].
@@ -133,8 +157,8 @@ final class const MKMapView({
   /// (`MKMapViewDelegate.mapView(_:didFailToLocateUserWithError:)`).
   final ValueChanged<String>? onDidFailToLocateUser,
 
-  /// The user selected a map feature (`MKMapFeatureAnnotation`). iOS only;
-  /// needs [selectableMapFeatures].
+  /// The user selected a map feature (`MKMapFeatureAnnotation`). iOS only
+  /// (must be `null` on macOS); needs [selectableMapFeatures].
   final ValueChanged<MKMapFeature>? onMapFeatureSelected,
 
   /// Replaces the platform view with an injected controller so widget tests
@@ -164,7 +188,7 @@ final class _MKMapViewState extends State<MKMapView>
   @override
   void initState() {
     super.initState();
-    assert(_debugUniqueIds(), 'MKMapView: two objects of one kind share an id');
+    _checkWidget();
     _annotations = {for (final a in widget.annotations) a.id: a};
     _polylines = {for (final p in widget.polylines) p.id: p};
     _polygons = {for (final p in widget.polygons) p.id: p};
@@ -176,14 +200,57 @@ final class _MKMapViewState extends State<MKMapView>
     }
   }
 
-  bool _debugUniqueIds() =>
-      {for (final a in widget.annotations) a.id}.length ==
-          widget.annotations.length &&
-      {for (final p in widget.polylines) p.id}.length ==
-          widget.polylines.length &&
-      {for (final p in widget.polygons) p.id}.length ==
-          widget.polygons.length &&
-      {for (final c in widget.circles) c.id}.length == widget.circles.length;
+  /// Rejects what MapKit can't represent before anything reaches native:
+  /// duplicate ids (one would silently replace the other) and iOS-only
+  /// settings on macOS (they would silently do nothing).
+  void _checkWidget() {
+    final w = widget;
+    _checkUniqueIds('annotations', w.annotations, (a) => a.id.value);
+    _checkUniqueIds('polylines', w.polylines, (p) => p.id.value);
+    _checkUniqueIds('polygons', w.polygons, (p) => p.id.value);
+    _checkUniqueIds('circles', w.circles, (c) => c.id.value);
+    if (defaultTargetPlatform == .macOS) _checkMacOSSupport(w);
+  }
+
+  static void _checkUniqueIds<T>(
+    String name,
+    Set<T> objects,
+    String Function(T) idOf,
+  ) {
+    final seen = <String>{};
+    for (final object in objects) {
+      final id = idOf(object);
+      if (!seen.add(id)) {
+        throw ArgumentError(
+          'MKMapView.$name contains two objects with id "$id"',
+        );
+      }
+    }
+  }
+
+  static void _checkMacOSSupport(MKMapView w) {
+    Never unsupported(String feature) =>
+        throw MapKitUnsupportedPlatformException(.macOS, feature: feature);
+    if (w.userTrackingMode == .followWithHeading) {
+      unsupported('MKMapView.userTrackingMode: followWithHeading');
+    }
+    if (w.selectableMapFeatures.isNotEmpty) {
+      unsupported('MKMapView.selectableMapFeatures');
+    }
+    if (w.onMapFeatureSelected != null) {
+      unsupported('MKMapView.onMapFeatureSelected');
+    }
+    if (!w.insetsLayoutMarginsFromSafeArea) {
+      unsupported('MKMapView.insetsLayoutMarginsFromSafeArea: false');
+    }
+    for (final a in w.annotations) {
+      if (a.calloutConsumesTapEvents) {
+        unsupported(
+          'MKPointAnnotation.calloutConsumesTapEvents (id "${a.id.value}")',
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -284,7 +351,7 @@ final class _MKMapViewState extends State<MKMapView>
   @override
   void didUpdateWidget(covariant MKMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    assert(_debugUniqueIds(), 'MKMapView: two objects of one kind share an id');
+    _checkWidget();
     _updateDispatchTables();
     final c = _controller;
     if (c == null) return;
@@ -369,7 +436,8 @@ final class _MKMapViewState extends State<MKMapView>
   void onCameraIdle() => widget.onCameraIdle?.call();
 
   @override
-  void onAnnotationTap(MKAnnotationId id) => _annotations[id]?.onTap?.call();
+  void onUserTrackingModeChanged(MKUserTrackingMode mode) =>
+      widget.onUserTrackingModeChanged?.call(mode);
 
   @override
   void onAnnotationSelect(MKAnnotationId id) =>

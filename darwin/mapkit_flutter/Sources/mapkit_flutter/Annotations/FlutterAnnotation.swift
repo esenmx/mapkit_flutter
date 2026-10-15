@@ -19,10 +19,9 @@ class FlutterAnnotation: NSObject, MKAnnotation, @unchecked Sendable {
     var isHidden: Bool
     var zPriority: Double
     var icon: AnnotationIcon
-    var selectedProgrammatically: Bool = false
     var clusteringIdentifier: String?
 
-    init(fromPlatform annotation: PlatformAnnotation) {
+    init(fromPlatform annotation: PlatformAnnotation) throws {
         self.coordinate = annotation.coordinate.clCoordinate
         self.id = annotation.id
         self.title = annotation.title
@@ -33,7 +32,7 @@ class FlutterAnnotation: NSObject, MKAnnotation, @unchecked Sendable {
         self.zPriority = annotation.zPriority
         self.alpha = annotation.alpha
         self.anchorPoint = CGPoint(x: annotation.anchorPointX, y: annotation.anchorPointY)
-        self.icon = AnnotationIcon(fromPlatform: annotation.icon)
+        self.icon = try AnnotationIcon(fromPlatform: annotation.icon)
         self.clusteringIdentifier = annotation.clusteringIdentifier
         super.init()
     }

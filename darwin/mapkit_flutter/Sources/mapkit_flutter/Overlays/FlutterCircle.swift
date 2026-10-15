@@ -43,24 +43,17 @@ final class FlutterCircle: MKCircle, FlutterOverlay, @unchecked Sendable {
         if isHidden {
             return shapeLayer
         }
-        #if os(iOS)
         let centerPoint = snapshot.point(for: coordinate)
         let offsetPoint = snapshot.point(for: coordinate.offsetLatitude(byMeters: radius))
-        let radiusInPoints = centerPoint.y - offsetPoint.y
+        let radiusInPoints = abs(centerPoint.y - offsetPoint.y)
 
-        let circlePath = UIBezierPath(
-            arcCenter: centerPoint,
-            radius: radiusInPoints,
-            startAngle: CGFloat(0),
-            endAngle: CGFloat(Double.pi * 2),
-            clockwise: true
-        )
+        let circlePath = CGMutablePath()
+        circlePath.addArc(center: centerPoint, radius: radiusInPoints, startAngle: 0, endAngle: .pi * 2, clockwise: true)
 
-        shapeLayer.path = circlePath.cgPath
+        shapeLayer.path = circlePath
         shapeLayer.lineWidth = lineWidth
         shapeLayer.strokeColor = strokeColor?.cgColor ?? PlatformColor.clear.cgColor
         shapeLayer.fillColor = fillColor?.cgColor ?? PlatformColor.clear.cgColor
-        #endif
         return shapeLayer
     }
 }

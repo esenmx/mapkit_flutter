@@ -59,16 +59,15 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         MapKitHostApiSetup.setUp(binaryMessenger: hostMessenger, api: self, messageChannelSuffix: suffix)
     }
 
-    private func mapKitError(_ code: String, _ message: String) -> MapKitHostError {
-        return MapKitHostError(code: code, message: message, details: nil)
-    }
-
     // MARK: - MapKitHostApi
 
     func initialize(params: PlatformMapViewCreationParams) throws {
-        self.mapView.apply(configuration: params.configuration)
+        // Decode the annotations (icons can be invalid) before touching the
+        // map, so a throw leaves it untouched.
+        let annotations = try params.annotations.map(FlutterAnnotation.init(fromPlatform:))
+        try self.mapView.apply(configuration: params.configuration)
         self.mapView.setInitialCamera(params.initialCamera)
-        self.annotationsToAdd(params.annotations)
+        self.annotationsToAdd(annotations)
         self.applyOverlayUpdate(
             into: &self.polylinesById,
             adding: params.polylines.map { makeStyledPolyline(fromPlatform: $0) },
@@ -98,22 +97,23 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         self.mapView.setCenter(coordinate.clCoordinate, animated: animated)
     }
 
-    func getCamera() throws -> PlatformMapCamera {
+    func getCamera() throws -> PlatformMapCamera? {
+        guard self.mapView.hasLayout else { return nil }
         return self.mapView.currentPlatformCamera()
     }
 
-    func getRegion() throws -> PlatformCoordinateRegion {
+    func getRegion() throws -> PlatformCoordinateRegion? {
         return self.mapView.currentPlatformRegion()
     }
 
     func convertToPoint(coordinate: PlatformCoordinate) throws -> PlatformPoint? {
-        guard self.mapView.bounds.size != .zero else { return nil }
+        guard self.mapView.hasLayout else { return nil }
         let point = self.mapView.convert(coordinate.clCoordinate, toPointTo: self.mapView)
         return PlatformPoint(x: Double(point.x), y: Double(point.y))
     }
 
     func convertToCoordinate(point: PlatformPoint) throws -> PlatformCoordinate? {
-        guard self.mapView.bounds.size != .zero else { return nil }
+        guard self.mapView.hasLayout else { return nil }
         let coordinate = self.mapView.convert(
             CGPoint(x: point.x, y: point.y),
             toCoordinateFrom: self.mapView
@@ -122,8 +122,11 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     func updateAnnotations(toAdd: [PlatformAnnotation], toChange: [PlatformAnnotation], idsToRemove: [String]) throws {
-        if !toAdd.isEmpty { self.annotationsToAdd(toAdd) }
-        if !toChange.isEmpty { self.annotationsToChange(toChange) }
+        // Decode first: an invalid icon fails the whole update, never half of it.
+        let added = try toAdd.map(FlutterAnnotation.init(fromPlatform:))
+        let changed = try toChange.map(FlutterAnnotation.init(fromPlatform:))
+        if !added.isEmpty { self.annotationsToAdd(added) }
+        if !changed.isEmpty { self.annotationsToChange(changed) }
         if !idsToRemove.isEmpty { self.annotationsToRemove(idsToRemove) }
     }
 
@@ -152,18 +155,18 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     }
 
     func updateMapConfiguration(configuration: PlatformMapConfiguration) throws {
-        self.mapView.apply(configuration: configuration)
+        try self.mapView.apply(configuration: configuration)
     }
 
-    func showCallout(annotationId: String) throws {
-        self.selectAnnotation(with: annotationId)
+    func selectAnnotation(annotationId: String) throws -> Bool {
+        return self.selectAnnotation(with: annotationId)
     }
 
-    func hideCallout(annotationId: String) throws {
-        self.hideAnnotation(with: annotationId)
+    func deselectAnnotation(annotationId: String) throws -> Bool {
+        return self.deselectAnnotation(with: annotationId)
     }
 
-    func isCalloutShown(annotationId: String) throws -> Bool {
+    func isAnnotationSelected(annotationId: String) throws -> Bool {
         return self.isAnnotationSelected(with: annotationId)
     }
 
@@ -171,49 +174,54 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         Task { @MainActor in
             do {
                 guard let data = try await self.takeSnapshot(options: options) else {
-                    completion(.failure(self.mapKitError("snapshot-failed", "Snapshot produced no image data.")))
+                    completion(.failure(mapKitError(.snapshotFailed, "Snapshot produced no image data.")))
                     return
                 }
                 completion(.success(data))
             } catch let error as MapKitHostError {
                 completion(.failure(error))
             } catch {
-                completion(.failure(self.mapKitError("snapshot-failed", error.localizedDescription)))
+                completion(.failure(mapKitError(.snapshotFailed, error.localizedDescription)))
             }
         }
     }
 
+    /// `false` only when no scene exists for the coordinate; a failed scene
+    /// request or a missing presenter is an error, not "no scene".
     func openLookAround(coordinate: PlatformCoordinate, completion: @escaping (Result<Bool, Error>) -> Void) {
         #if os(iOS)
         let coord = coordinate.clCoordinate
         Task { @MainActor in
+            let scene: MKLookAroundScene?
             do {
-                guard let scene = try await Self.requestLookAroundScene(at: coord) else {
-                    completion(.success(false))
-                    return
-                }
-                let vc = MKLookAroundViewController(scene: scene)
-                guard let host = self.contentView.window?.rootViewController
-                    ?? UIApplication.shared.connectedScenes
-                        .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
-                        .first else {
-                    completion(.success(false))
-                    return
-                }
-                var presenter = host
-                while let next = presenter.presentedViewController, !next.isBeingDismissed {
-                    presenter = next
-                }
-                presenter.present(vc, animated: true) {
-                    completion(.success(true))
-                }
+                scene = try await Self.requestLookAroundScene(at: coord)
             } catch {
+                completion(.failure(mapKitError(.lookAroundFailed, error.localizedDescription)))
+                return
+            }
+            guard let scene else {
                 completion(.success(false))
+                return
+            }
+            let vc = MKLookAroundViewController(scene: scene)
+            guard let host = self.contentView.window?.rootViewController
+                ?? UIApplication.shared.connectedScenes
+                    .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController })
+                    .first else {
+                completion(.failure(mapKitError(.lookAroundFailed, "No view controller to present Look Around from.")))
+                return
+            }
+            var presenter = host
+            while let next = presenter.presentedViewController, !next.isBeingDismissed {
+                presenter = next
+            }
+            presenter.present(vc, animated: true) {
+                completion(.success(true))
             }
         }
         #elseif os(macOS)
         // MKLookAroundViewController exists on macOS 13+, but presenting it from the AppKit host isn't wired yet.
-        completion(.success(false))
+        completion(.failure(mapKitError(.unsupportedPlatform, "openLookAround is iOS only.")))
         #endif
     }
 
@@ -230,17 +238,18 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     #endif
 
     func addTileOverlay(overlay overlayData: PlatformTileOverlay) throws {
-        let overlay = FlutterTileOverlay(fromPlatform: overlayData)
-        if let existing = tileOverlays.removeValue(forKey: overlay.id) {
-            mapView.removeOverlay(existing)
+        guard tileOverlays[overlayData.id] == nil else {
+            throw mapKitError(.duplicateId, "A tile overlay with id \"\(overlayData.id)\" is already on the map.")
         }
+        let overlay = FlutterTileOverlay(fromPlatform: overlayData)
         tileOverlays[overlay.id] = overlay
         self.mapView.addOverlay(overlay, level: overlay.overlayLevel)
     }
 
-    func removeTileOverlay(tileOverlayId: String) throws {
-        guard let overlay = tileOverlays.removeValue(forKey: tileOverlayId) else { return }
+    func removeTileOverlay(tileOverlayId: String) throws -> Bool {
+        guard let overlay = tileOverlays.removeValue(forKey: tileOverlayId) else { return false }
         self.mapView.removeOverlay(overlay)
+        return true
     }
 
     func dispose() throws {
@@ -314,6 +323,11 @@ extension MapKitViewHost: MKMapViewDelegate {
         self.flutterApi.send { try await $0.onCameraMoveStarted() }
     }
 
+    public func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
+        let platformMode = PlatformUserTrackingMode(mkMode: mode)
+        self.flutterApi.send { try await $0.onUserTrackingModeChanged(mode: platformMode) }
+    }
+
     public func mapViewDidFailLoadingMap(_ mapView: MKMapView, withError error: Error) {
         let message = error.localizedDescription
         self.flutterApi.send { try await $0.onDidFailLoadingMap(error: message) }
@@ -366,13 +380,13 @@ extension MapKitViewHost {
             options: options)
     }
 
-    nonisolated static func makeSnapshotOptions(_ input: SnapshotInput) -> MKMapSnapshotter.Options {
+    nonisolated static func makeSnapshotOptions(_ input: SnapshotInput) throws -> MKMapSnapshotter.Options {
         let options = MKMapSnapshotter.Options()
         options.region = input.region
         options.size = input.size
         options.camera = input.camera.mkCamera
         if let configuration = input.configuration {
-            options.preferredConfiguration = FlutterMapView.makeMapConfiguration(
+            options.preferredConfiguration = try FlutterMapView.makeMapConfiguration(
                 configuration, hidingPointsOfInterest: !input.options.showsPointsOfInterest)
         }
         #if os(iOS)
@@ -390,11 +404,11 @@ extension MapKitViewHost {
     private func takeSnapshot(options: PlatformSnapshotOptions) async throws -> FlutterStandardTypedData? {
         let input = snapshotInput(options)
         guard input.size.width > 0, input.size.height > 0 else {
-            throw mapKitError("snapshot-failed", "Map view has zero size.")
+            throw mapKitError(.snapshotFailed, "Map view has zero size.")
         }
         // Caller-side options exist only for `size`/`mapRect` in the
         // compositing pass below; the snapshotter gets its own copy off-actor.
-        let snapshotOptions = Self.makeSnapshotOptions(input)
+        let snapshotOptions = try Self.makeSnapshotOptions(input)
 
         let snapshot = try await Self.startSnapshot(input)
 
@@ -405,16 +419,12 @@ extension MapKitViewHost {
             // Image-space bounds: `snapshot.point(for:)` projects into this
             // space, so drawn frames are tested here rather than in map space.
             let bounds = CGRect(origin: .zero, size: snapshotOptions.size)
+            if options.showsOverlays {
+                self.drawOverlays(snapshot: snapshot, mapRect: rect, in: context.cgContext)
+            }
             if options.showsAnnotations {
                 for annotation in self.mapView.getMapViewAnnotations() where !annotation.isHidden {
                     self.drawAnnotations(annotation: annotation, point: snapshot.point(for: annotation.coordinate), bounds: bounds)
-                }
-            }
-            if options.showsOverlays {
-                for overlay in self.mapView.overlays {
-                    if overlay.intersects?(rect) ?? overlay.boundingMapRect.intersects(rect) {
-                        self.drawOverlays(overlay: overlay, snapshot: snapshot, context: context)
-                    }
                 }
             }
         }
@@ -422,14 +432,63 @@ extension MapKitViewHost {
             return nil
         }
         #elseif os(macOS)
-        // macOS renders the base map image; annotation/overlay compositing
-        // (the iOS UIGraphics path) is not yet ported.
-        guard let imageData = snapshot.image.pngRepresentation else {
+        guard let imageData = self.composite(snapshot, options: options, snapshotOptions: snapshotOptions) else {
             return nil
         }
         #endif
         return FlutterStandardTypedData(bytes: imageData)
     }
+
+    #if os(macOS)
+    /// Draws annotations and overlays over the snapshot at its pixel size.
+    /// Annotations draw in a top-left-origin point space like the iOS
+    /// renderer; macOS `snapshot.point(for:)` is bottom-left-origin, so their
+    /// points are flipped and the overlay layers render under a local re-flip.
+    private func composite(
+        _ snapshot: MKMapSnapshotter.Snapshot,
+        options: PlatformSnapshotOptions,
+        snapshotOptions: MKMapSnapshotter.Options
+    ) -> Data? {
+        let size = snapshotOptions.size
+        guard let base = snapshot.image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                  data: nil, width: base.width, height: base.height, bitsPerComponent: 8, bytesPerRow: 0,
+                  space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else {
+            return nil
+        }
+        context.draw(base, in: CGRect(x: 0, y: 0, width: base.width, height: base.height))
+        let scale = CGFloat(base.width) / size.width
+        context.translateBy(x: 0, y: CGFloat(base.height))
+        context.scaleBy(x: scale, y: -scale)
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
+        let bounds = CGRect(origin: .zero, size: size)
+        if options.showsOverlays {
+            context.saveGState()
+            context.translateBy(x: 0, y: size.height)
+            context.scaleBy(x: 1, y: -1)
+            self.drawOverlays(snapshot: snapshot, mapRect: snapshotOptions.mapRect, in: context)
+            context.restoreGState()
+        }
+        if options.showsAnnotations {
+            for annotation in self.mapView.getMapViewAnnotations() where !annotation.isHidden {
+                let point = snapshot.point(for: annotation.coordinate)
+                self.drawAnnotations(annotation: annotation, point: CGPoint(x: point.x, y: size.height - point.y), bounds: bounds)
+            }
+        }
+        NSGraphicsContext.restoreGraphicsState()
+
+        guard let composed = context.makeImage() else {
+            return nil
+        }
+        let rep = NSBitmapImageRep(cgImage: composed)
+        rep.size = size
+        return rep.representation(using: .png, properties: [:])
+    }
+    #endif
 
     /// Runs the snapshotter off the main actor and hands the result back with
     /// `sending`: older SDKs don't mark `MKMapSnapshotter.Snapshot` Sendable,
@@ -438,12 +497,11 @@ extension MapKitViewHost {
     /// live entirely in this disconnected region, so the fresh snapshot is
     /// provably safe to move out.
     private nonisolated static func startSnapshot(_ input: SnapshotInput) async throws -> sending MKMapSnapshotter.Snapshot {
-        try await MKMapSnapshotter(options: makeSnapshotOptions(input)).start()
+        try await MKMapSnapshotter(options: try makeSnapshotOptions(input)).start()
     }
 
-    #if os(iOS)
     /// Skips fully off-image annotations (their drawn frame does not
-    /// intersect `bounds`) before the expensive `drawHierarchy` / `draw(at:)`;
+    /// intersect `bounds`) before the expensive hierarchy / image draw;
     /// partially visible edge annotations still draw, matching MKMapView.
     private func drawAnnotations(annotation: FlutterAnnotation, point: CGPoint, bounds: CGRect) {
         let annotationView = self.getAnnotationView(annotation: annotation)
@@ -456,7 +514,16 @@ extension MapKitViewHost {
                 height: annotationView.bounds.height
             )
             guard frame.intersects(bounds) else { return }
+            #if os(iOS)
             annotationView.drawHierarchy(in: frame, afterScreenUpdates: true)
+            #elseif os(macOS)
+            // Off-window marker views build their balloon only when prepared.
+            annotationView.prepareForDisplay()
+            annotationView.layoutSubtreeIfNeeded()
+            guard let rep = annotationView.bitmapImageRepForCachingDisplay(in: annotationView.bounds) else { return }
+            annotationView.cacheDisplay(in: annotationView.bounds, to: rep)
+            rep.draw(in: frame, from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
+            #endif
         } else if let image = annotationView.image {
             // Place the image so its normalized anchor point lands on the
             // annotation's coordinate, matching MKAnnotationView.anchorPoint.
@@ -465,16 +532,23 @@ extension MapKitViewHost {
                 y: point.y - annotation.anchorPoint.y * image.size.height
             )
             guard CGRect(origin: origin, size: image.size).intersects(bounds) else { return }
+            #if os(iOS)
             image.draw(at: origin, blendMode: .normal, alpha: CGFloat(annotation.alpha))
+            #elseif os(macOS)
+            image.draw(
+                in: CGRect(origin: origin, size: image.size), from: .zero, operation: .sourceOver,
+                fraction: CGFloat(annotation.alpha), respectFlipped: true, hints: nil)
+            #endif
         }
     }
 
-    private func drawOverlays(overlay: MKOverlay, snapshot: MKMapSnapshotter.Snapshot, context: UIGraphicsRendererContext) {
-        if let flutterOverlay = overlay as? any FlutterOverlay {
-            flutterOverlay.getCAShapeLayer(snapshot: snapshot).render(in: context.cgContext)
+    private func drawOverlays(snapshot: MKMapSnapshotter.Snapshot, mapRect: MKMapRect, in context: CGContext) {
+        for overlay in self.mapView.overlays where overlay.intersects?(mapRect) ?? overlay.boundingMapRect.intersects(mapRect) {
+            if let flutterOverlay = overlay as? any FlutterOverlay {
+                flutterOverlay.getCAShapeLayer(snapshot: snapshot).render(in: context)
+            }
         }
     }
-    #endif
 }
 
 #if os(iOS)

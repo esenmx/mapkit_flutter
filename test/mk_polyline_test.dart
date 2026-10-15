@@ -9,14 +9,14 @@ import '_helpers/fixtures.dart';
 void main() {
   group('MKPolyline wire mapping', () {
     test('serializes renderer vocabulary', () {
-      final platform = const MKPolyline(
-        id: MKPolylineId('route'),
+      final platform = MKPolyline(
+        id: const MKPolylineId('route'),
         coordinates: [applePark, infiniteLoop],
-        strokeColor: Color(0xFF0000FF),
+        strokeColor: const Color(0xFF0000FF),
         lineWidth: 4,
         lineCap: .butt,
         lineJoin: .miter,
-        lineDashPattern: [6, 3],
+        lineDashPattern: const [6, 3],
         zIndex: 2,
         level: .aboveLabels,
         consumeTapEvents: true,
@@ -45,14 +45,31 @@ void main() {
     });
 
     test('gradient colors serialize as ARGB32 when present', () {
-      final platform = const MKPolyline(
-        id: MKPolylineId('g'),
+      final platform = MKPolyline(
+        id: const MKPolylineId('g'),
         coordinates: [applePark, infiniteLoop],
-        gradientColors: [Color(0xFFFF0000), Color(0xFF00FF00)],
+        gradientColors: const [Color(0xFFFF0000), Color(0xFF00FF00)],
       ).toPlatform();
       check(platform.gradientColorsArgb)
           .isNotNull()
           .deepEquals([0xFFFF0000, 0xFF00FF00]);
+    });
+
+    test('rejects a single gradient color', () {
+      check(
+        () => MKPolyline(
+          id: const MKPolylineId('one'),
+          coordinates: [applePark, infiniteLoop],
+          gradientColors: const [Color(0xFFFF0000)],
+        ),
+      ).throws<ArgumentError>();
+      check(
+        () => MKPolyline.geodesic(
+          id: const MKPolylineId('one'),
+          coordinates: [applePark, infiniteLoop],
+          gradientColors: const [Color(0xFFFF0000)],
+        ),
+      ).throws<ArgumentError>();
     });
 
     test('rejects negative or non-finite lineWidth', () {
@@ -60,25 +77,25 @@ void main() {
         check(
           () => MKPolyline(
             id: const MKPolylineId('bad'),
-            coordinates: const [applePark, infiniteLoop],
+            coordinates: [applePark, infiniteLoop],
             lineWidth: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
         check(
           () => MKPolyline.geodesic(
             id: const MKPolylineId('bad'),
-            coordinates: const [applePark, infiniteLoop],
+            coordinates: [applePark, infiniteLoop],
             lineWidth: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
       }
     });
   });
 
   group('MKPolyline.geodesic', () {
     test('flags the wire payload without mutating coordinates', () {
-      final platform = const MKPolyline.geodesic(
-        id: MKPolylineId('arc'),
+      final platform = MKPolyline.geodesic(
+        id: const MKPolylineId('arc'),
         coordinates: [applePark, infiniteLoop],
       ).toPlatform();
       check(platform.isGeodesic).isTrue();
@@ -86,8 +103,8 @@ void main() {
     });
 
     test('copyWith preserves geodesic-ness', () {
-      const arc = MKPolyline.geodesic(
-        id: MKPolylineId('arc'),
+      final arc = MKPolyline.geodesic(
+        id: const MKPolylineId('arc'),
         coordinates: [applePark, infiniteLoop],
       );
       check(arc.copyWith(lineWidth: 2).isGeodesic).isTrue();
@@ -96,8 +113,8 @@ void main() {
 
     test('straight and geodesic lines compare unequal', () {
       final straight = polyline('p');
-      const arc = MKPolyline.geodesic(
-        id: MKPolylineId('p'),
+      final arc = MKPolyline.geodesic(
+        id: const MKPolylineId('p'),
         coordinates: [applePark, infiniteLoop],
       );
       check(straight == arc).isFalse();
@@ -107,16 +124,16 @@ void main() {
   group('equality', () {
     test('compares coordinates and dash pattern by content', () {
       check(
-        const MKPolyline(
-          id: MKPolylineId('p'),
+        MKPolyline(
+          id: const MKPolylineId('p'),
           coordinates: [applePark],
-          lineDashPattern: [1, 2],
+          lineDashPattern: const [1, 2],
         ),
       ).equals(
-        const MKPolyline(
-          id: MKPolylineId('p'),
+        MKPolyline(
+          id: const MKPolylineId('p'),
           coordinates: [applePark],
-          lineDashPattern: [1, 2],
+          lineDashPattern: const [1, 2],
         ),
       );
       final dashed = polyline('p').copyWith(lineDashPattern: const [1]);
@@ -125,19 +142,26 @@ void main() {
   });
 
   group('tap consumption', () {
-    test('onTap implies consumeTapEvents on the wire', () {
-      final tappable = MKPolyline(
-        id: const MKPolylineId('p'),
-        coordinates: const [applePark, infiniteLoop],
-        onTap: () {},
-      );
-      check(tappable.consumeTapEvents).isFalse();
-      check(tappable.toPlatform().consumeTapEvents).isTrue();
+    test('consumeTapEvents is explicit on the wire', () {
+      check(polyline('x').toPlatform().consumeTapEvents).isFalse();
+      final capturing = polyline('x').copyWith(consumeTapEvents: true);
+      check(capturing.toPlatform().consumeTapEvents).isTrue();
+      check(capturing.copyWith(onTap: () {}).toPlatform().consumeTapEvents)
+          .isTrue();
     });
 
-    test('clearing onTap makes the overlay unequal', () {
-      final tappable = polyline('p').copyWith(onTap: () {});
-      check(tappable.copyWith(onTap: null) == tappable).isFalse();
+    test('onTap without consumeTapEvents throws instead of never firing', () {
+      check(() => polyline('x').copyWith(onTap: () {})).throws<ArgumentError>();
+      final tappable = polyline('x')
+          .copyWith(consumeTapEvents: true, onTap: () {});
+      check(() => tappable.copyWith(consumeTapEvents: false))
+          .throws<ArgumentError>();
+    });
+
+    test('clearing onTap keeps the overlay equal (closures are not state)', () {
+      final tappable = polyline('x')
+          .copyWith(consumeTapEvents: true, onTap: () {});
+      check(tappable.copyWith(onTap: null)).equals(tappable);
     });
   });
 }

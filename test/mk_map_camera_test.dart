@@ -7,13 +7,13 @@ import '_helpers/fixtures.dart';
 void main() {
   group('MKMapCamera', () {
     test('equality is value-based', () {
-      const a = MKMapCamera(
+      final a = MKMapCamera(
         centerCoordinate: applePark,
         distance: 1200,
         heading: 90,
         pitch: 45,
       );
-      const b = MKMapCamera(
+      final b = MKMapCamera(
         centerCoordinate: applePark,
         distance: 1200,
         heading: 90,
@@ -33,33 +33,33 @@ void main() {
 
     test('rejects non-positive or non-finite parameters', () {
       check(() => MKMapCamera(centerCoordinate: applePark, distance: 0))
-          .throws<AssertionError>();
+          .throws<ArgumentError>();
       for (final bad in [
         double.nan,
         double.infinity,
         double.negativeInfinity,
       ]) {
         check(() => MKMapCamera(centerCoordinate: applePark, distance: bad))
-            .throws<AssertionError>();
+            .throws<ArgumentError>();
         check(
           () => MKMapCamera(
             centerCoordinate: applePark,
             distance: 1000,
             heading: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
         check(
           () => MKMapCamera(
             centerCoordinate: applePark,
             distance: 1000,
             pitch: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
       }
     });
 
     test('round-trips through the platform type', () {
-      const camera = MKMapCamera(
+      final camera = MKMapCamera(
         centerCoordinate: applePark,
         distance: 1200,
         heading: 90,

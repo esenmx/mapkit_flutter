@@ -5,25 +5,31 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   group('CLLocationCoordinate2D', () {
     test('equality is value-based', () {
-      const a = CLLocationCoordinate2D(latitude: 10, longitude: 20);
-      const b = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      final a = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      final b = CLLocationCoordinate2D(latitude: 10, longitude: 20);
       check(a).equals(b);
       check(a.hashCode).equals(b.hashCode);
     });
 
-    test('clamps latitude to [-90, 90]', () {
-      const over = CLLocationCoordinate2D(latitude: 91, longitude: 0);
-      const under = CLLocationCoordinate2D(latitude: -120, longitude: 0);
-      check(over.latitude).equals(90);
-      check(under.latitude).equals(-90);
+    test('rejects latitude outside [-90, 90] instead of clamping', () {
+      // Swapped arguments (Tokyo as lat 139.69 / lng 35.68) must fail loudly,
+      // not land on the North Pole.
+      check(() => CLLocationCoordinate2D(latitude: 139.69, longitude: 35.68))
+          .throws<ArgumentError>();
+      check(() => CLLocationCoordinate2D(latitude: -90.0001, longitude: 0))
+          .throws<ArgumentError>();
+      check(CLLocationCoordinate2D(latitude: 90, longitude: 0).latitude)
+          .equals(90);
+      check(CLLocationCoordinate2D(latitude: -90, longitude: 0).latitude)
+          .equals(-90);
     });
 
     test('wraps longitude to [-180, 180)', () {
-      const at190 = CLLocationCoordinate2D(latitude: 0, longitude: 190);
-      const atNeg190 = CLLocationCoordinate2D(latitude: 0, longitude: -190);
-      const at180 = CLLocationCoordinate2D(latitude: 0, longitude: 180);
-      const at540 = CLLocationCoordinate2D(latitude: 0, longitude: 540);
-      const atSubNeg180 = CLLocationCoordinate2D(
+      final at190 = CLLocationCoordinate2D(latitude: 0, longitude: 190);
+      final atNeg190 = CLLocationCoordinate2D(latitude: 0, longitude: -190);
+      final at180 = CLLocationCoordinate2D(latitude: 0, longitude: 180);
+      final at540 = CLLocationCoordinate2D(latitude: 0, longitude: 540);
+      final atSubNeg180 = CLLocationCoordinate2D(
         latitude: 0,
         longitude: -180.00000000000003,
       );
@@ -42,14 +48,14 @@ void main() {
         double.negativeInfinity,
       ]) {
         check(() => CLLocationCoordinate2D(latitude: bad, longitude: 0))
-            .throws<AssertionError>();
+            .throws<ArgumentError>();
         check(() => CLLocationCoordinate2D(latitude: 0, longitude: bad))
-            .throws<AssertionError>();
+            .throws<ArgumentError>();
       }
     });
 
     test('round-trips through the platform type', () {
-      const original = CLLocationCoordinate2D(latitude: 37.5, longitude: -122);
+      final original = CLLocationCoordinate2D(latitude: 37.5, longitude: -122);
       final platform = original.toPlatform();
       check(platform.latitude).equals(37.5);
       check(platform.longitude).equals(-122);
@@ -57,8 +63,8 @@ void main() {
     });
 
     test('Coordinate is an alias for the full Apple symbol', () {
-      const alias = CLLocationCoordinate2D(latitude: 1, longitude: 2);
-      const expected = CLLocationCoordinate2D(latitude: 1, longitude: 2);
+      final alias = CLLocationCoordinate2D(latitude: 1, longitude: 2);
+      final expected = CLLocationCoordinate2D(latitude: 1, longitude: 2);
       check(alias).equals(expected);
     });
   });

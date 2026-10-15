@@ -50,7 +50,6 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
 
     func getCAShapeLayer(snapshot: MKMapSnapshotter.Snapshot) -> CAShapeLayer {
         let shapeLayer = CAShapeLayer()
-        #if os(iOS)
         guard !isHidden, !coordinates.isEmpty else {
             return shapeLayer
         }
@@ -62,7 +61,6 @@ final class FlutterPolygon: MKPolygon, FlutterOverlay, @unchecked Sendable {
         shapeLayer.fillColor = fillColor?.cgColor ?? PlatformColor.clear.cgColor
         shapeLayer.lineCap = .round
         shapeLayer.lineJoin = .round
-        #endif
         return shapeLayer
     }
 

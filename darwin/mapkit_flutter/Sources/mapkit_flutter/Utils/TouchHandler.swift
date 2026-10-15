@@ -23,8 +23,11 @@ class TouchHandler {
         // (A typed `a.reversed() + b.reversed()` is an ambiguous overload for Swift 6.2 / Xcode 26.)
         for overlay in (view.overlays(in: .aboveRoads) + view.overlays(in: .aboveLabels)).reversed() {
             if let polyline = overlay as? any StyledPolyline {
+                // At least the visible stroke: half the line width either side,
+                // never less than an 8-point finger slop.
+                let tolerance = max(8, polyline.lineWidth / 2)
                 guard !polyline.isHidden, polyline.isConsumingTapEvents,
-                      polyline.contains(coordinate: coord, mapView: view) else { continue }
+                      polyline.contains(coordinate: coord, mapView: view, tolerance: tolerance) else { continue }
                 let id = polyline.id
                 flutterApi?.send { try await $0.onPolylineTap(polylineId: id) }
                 return

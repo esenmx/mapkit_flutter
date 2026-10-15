@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_enums.dart';
@@ -14,7 +15,7 @@ typedef MKTileOverlayId = MapItemId<MKTileOverlay>;
 /// standard slippy-map scheme.
 /// See: https://developer.apple.com/documentation/mapkit/mktileoverlay
 @immutable
-final class const MKTileOverlay({
+final class MKTileOverlay({
   /// Unique identifier used to add or remove this tile overlay.
   required final MKTileOverlayId id,
 
@@ -45,11 +46,23 @@ final class const MKTileOverlay({
   final MKOverlayLevel level = .aboveRoads,
 }) {
   /// Creates a raster tile overlay for [urlTemplate].
-  this
-    : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]'),
-      assert(minimumZ >= 0, 'minimumZ must be >= 0'),
-      assert(minimumZ <= maximumZ, 'minimumZ must be <= maximumZ'),
-      assert(tileSize > 0, 'tileSize must be > 0');
+  ///
+  /// Throws [ArgumentError] when [alpha] is outside `[0, 1]`, [minimumZ] is
+  /// negative or above [maximumZ], or [tileSize] is not positive.
+  this {
+    checkInRange(alpha, 0, 1, 'alpha');
+    if (minimumZ < 0) {
+      throw ArgumentError.value(minimumZ, 'minimumZ', 'must be >= 0');
+    }
+    if (minimumZ > maximumZ) {
+      throw ArgumentError(
+        'minimumZ ($minimumZ) must be <= maximumZ ($maximumZ)',
+      );
+    }
+    if (tileSize <= 0) {
+      throw ArgumentError.value(tileSize, 'tileSize', 'must be > 0');
+    }
+  }
 
   /// Converts this tile overlay to its Pigeon wire representation.
   @internal

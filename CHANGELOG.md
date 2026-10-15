@@ -1,19 +1,47 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
+
+Misuse now fails loudly in every build mode instead of being clamped, ignored or degraded, and the controller reports outcomes instead of swallowing them.
+
+### Breaking
+
+- **Value types validate in all build modes and lost their `const` constructors.** `CLLocationCoordinate2D`, `MKCoordinateSpan`, `MKCameraZoomRange`, `MKMapCamera`, `MKPointAnnotation`, `MKPolyline`, `MKPolygon`, `MKCircle` and `MKTileOverlay` throw an `ArgumentError` for non-finite numbers, out-of-range spans/alpha/zoom levels, negative widths or radii, and a zoom range whose minimum exceeds its maximum — release builds no longer pass them through to MapKit. Migration: drop `const` from these constructor calls; `MKMapView(cameraZoomRange:)` defaults to the new `MKCameraZoomRange.unbounded` constant.
+- `CLLocationCoordinate2D` rejects a latitude outside `[-90, 90]` instead of clamping it (swapped arguments used to land on a pole). Longitude still wraps into `[-180, 180)`.
+- `MKPolyline` rejects a single `gradientColors` entry (it used to draw `strokeColor` silently); pass none or at least two.
+- Duplicate ids within one of `MKMapView`'s sets throw an `ArgumentError` in all build modes (release builds used to keep only the last object).
+- Tap capture is explicit: overlays send `consumeTapEvents` as given (`onTap` no longer implies it) and `onTap` without `consumeTapEvents: true` throws. `MKPointAnnotation` gains `calloutConsumesTapEvents` (default `false`), and `onCalloutTap` requires it. Equality no longer tracks callback presence. Migration: add `consumeTapEvents: true` next to an overlay's `onTap`, and `calloutConsumesTapEvents: true` next to `onCalloutTap`.
+- `MKPointAnnotation.onTap` is removed — it was `mapView(_:didSelect:)` minus programmatic selections. Use `onSelect`, which fires for a user tap and for `selectAnnotation`.
+- `MKMapViewController.showCallout` / `hideCallout` / `isCalloutShown` are renamed to MapKit's `selectAnnotation` / `deselectAnnotation` / `isAnnotationSelected`. `selectAnnotation` and `deselectAnnotation` return `Future<bool>`: `false` when the id isn't on the map (and, for `selectAnnotation`, when the annotation is hidden) instead of silently doing nothing.
+- `MKMapViewController.camera` and `region` return `null` before the view's first layout (they returned a zero region and a camera with distance 0). `CameraConveniences` helpers throw a `StateError` then, `scrollBy` included (it was a silent no-op), and `fitCoordinates([])` throws an `ArgumentError` (it was a no-op), as do a negative `padding` / `minimumSpan`.
+- `openLookAround` returns `false` only when no scene exists. A failed scene request or a missing presenter throws `MapKitPlatformException` (`look-around-failed`), and macOS throws `unsupported-platform` (it returned `false` for all of these).
+- `addTileOverlay` with an id already on the map throws `MapKitPlatformException` (`duplicate-id`) instead of replacing it; `removeTileOverlay` returns `Future<bool>` (`false` for an id that isn't on the map).
+- iOS-only settings on macOS throw a `MapKitUnsupportedPlatformException` naming the setting (new `feature` field): `userTrackingMode: followWithHeading` (it fell back to `follow`), `selectableMapFeatures`, `onMapFeatureSelected`, `insetsLayoutMarginsFromSafeArea: false` and an annotation's `calloutConsumesTapEvents` (all silently ignored).
+- `showsUserLocation: true` no longer prompts for location permission (neither `MKMapView` nor google_maps_flutter does). Request when-in-use authorization in your app; without it `onDidFailToLocateUser` reports the failure.
+- Annotation image bytes that don't decode and unknown SF Symbol names fail the update with `MapKitPlatformException` (`invalid-icon`) instead of an invisible annotation or a plain marker. An invalid icon fails the whole update; nothing is half-applied.
+- A point-of-interest filter naming a category newer than the running OS (the iOS 18 / macOS 15 values) fails with `MapKitPlatformException` (`unavailable-poi-category`) instead of being dropped — `including([.castle])` on iOS 17 used to hide every POI.
+- MapKit rejecting a zoom range or camera boundary throws `MapKitPlatformException` (`invalid-argument`) instead of silently leaving the map unbounded.
+- `MKMapSnapshotOptions.showsBuildings` is removed; it had no effect.
+
+### Added
+
+- `MKMapView.onUserTrackingModeChanged` reports MapKit's own tracking-mode changes (`mapView(_:didChange:animated:)`, e.g. dropping to `none` when the user pans), so the declared `userTrackingMode` can stay in sync.
+- Image-icon `anchorPoint` works on macOS (via `centerOffset`); it used to be ignored there.
+- macOS snapshots draw annotations and overlays when `showsAnnotations` / `showsOverlays` are on, as iOS does; they used to contain only the base map although both options default to `true`.
+- Snapshots draw annotations above overlays, matching the live map (overlays used to cover annotations on both platforms).
 
 ### Changed
 
 - `MKMapView` imports `package:flutter/widgets.dart` instead of `package:flutter/material.dart`.
 - `MKStandardMapConfiguration.toString()` and `MKHybridMapConfiguration.toString()` include `pointOfInterestFilter`; `MKPointOfInterestFilter` subclasses override `toString()`.
+- Polyline tap targets cover the visible stroke: half the `lineWidth`, at least 8 points (it was a fixed 8 points).
 
 ### Fixed
 
 - Cross-type overlay ID collisions in `MapKitViewHost` so polylines, polygons, and circles have independent ID namespaces.
 - `MKAnnotationIcon.asset` slices `ByteData` views via `Uint8List.sublistView` and loads from the resolved `AssetBundleKey.bundle`.
-- `CLLocationCoordinate2D` asserts (debug) that latitude and longitude are finite, and wraps `-180.00000000000003` to `-180.0` instead of `180.0`.
-- Added debug finiteness and range assertions on `MKMapCamera`, `MKCoordinateSpan`, `MKCameraZoomRange`, `MKPolyline`, `MKPolygon`, `MKCircle`, and `MKTileOverlay`.
-- Native `AnnotationController`: gate `onCalloutTapped` on `calloutConsumesTapEvents`, ignore `selectAnnotation` on hidden annotations and reset `selectedProgrammatically` if selection is ignored, suppress spurious selection callbacks during icon-type swap of a selected annotation, update `MKMarkerAnnotationView` callouts in place, and register cluster reuse identifier once on `FlutterMapView` init.
+- `CLLocationCoordinate2D` wraps `-180.00000000000003` to `-180.0` instead of `180.0`.
+- Native `AnnotationController`: gate `onCalloutTapped` on `calloutConsumesTapEvents`, suppress spurious selection callbacks during icon-type swap of a selected annotation, update `MKMarkerAnnotationView` callouts in place, and register cluster reuse identifier once on `FlutterMapView` init.
 - Native `takeSnapshot`: guard against zero-size map view, project using the snapshot's camera/region options, honor custom annotation image `alpha` on iOS, and render interior polygon holes with `evenOdd` fill rule.
 - `openLookAround` walks the full `presentedViewController` chain before presenting.
 

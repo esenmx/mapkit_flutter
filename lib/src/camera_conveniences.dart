@@ -1,9 +1,11 @@
 import 'dart:math' show max, min, pow;
 import 'dart:ui' show Offset;
 
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/mk_coordinate_region.dart';
 import 'package:mapkit_flutter/src/mk_coordinate_span.dart';
+import 'package:mapkit_flutter/src/mk_map_camera.dart';
 import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 
 /// google_maps_flutter-dialect camera helpers layered over the canonical
@@ -16,15 +18,18 @@ import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 extension CameraConveniences on MKMapViewController {
   /// Approximate Web-Mercator zoom level of the current camera.
   ///
-  /// google_maps_flutter dialect; canonical: `(await camera).zoomLevel`.
-  Future<double> getZoomLevel() async => (await camera).zoomLevel;
+  /// google_maps_flutter dialect; canonical: `(await camera)?.zoomLevel`.
+  /// Like every camera-relative helper here, throws [StateError] while the
+  /// view has no layout.
+  Future<double> getZoomLevel() async =>
+      (await _laidOutCamera('getZoomLevel')).zoomLevel;
 
   /// Move to an absolute zoom level, preserving center, heading, and pitch.
   ///
   /// google_maps_flutter dialect; canonical: `setCamera` with
   /// `MKMapCamera.withZoomLevel`.
   Future<void> zoomTo(double zoomLevel, {bool animated = true}) async {
-    final current = await camera;
+    final current = await _laidOutCamera('zoomTo');
     await setCamera(
       .withZoomLevel(
         centerCoordinate: current.centerCoordinate,
@@ -42,7 +47,7 @@ extension CameraConveniences on MKMapViewController {
   /// google_maps_flutter dialect; canonical: `setCamera` with a scaled
   /// `MKMapCamera.distance`.
   Future<void> zoomBy(double amount, {bool animated = true}) async {
-    final current = await camera;
+    final current = await _laidOutCamera('zoomBy');
     await setCamera(
       current.copyWith(distance: current.distance / pow(2.0, amount)),
       animated: animated,
@@ -59,14 +64,14 @@ extension CameraConveniences on MKMapViewController {
   /// Pan the camera by a screen-pixel offset.
   ///
   /// google_maps_flutter dialect; canonical: the `convertToPoint` /
-  /// `convertToCoordinate` pair plus `setCenter`. No-op while the view has
-  /// no layout.
+  /// `convertToCoordinate` pair plus `setCenter`. Throws [StateError] while
+  /// the view has no layout — there is no screen to scroll yet.
   Future<void> scrollBy(double dx, double dy, {bool animated = true}) async {
-    final current = await camera;
+    final current = await _laidOutCamera('scrollBy');
     final centerPoint = await convertToPoint(current.centerCoordinate);
-    if (centerPoint == null) return;
+    if (centerPoint == null) throw _noLayout('scrollBy');
     final target = await convertToCoordinate(centerPoint + Offset(dx, dy));
-    if (target == null) return;
+    if (target == null) throw _noLayout('scrollBy');
     await setCenter(target, animated: animated);
   }
 
@@ -78,18 +83,25 @@ extension CameraConveniences on MKMapViewController {
   /// center.
   ///
   /// google_maps_flutter dialect (`CameraUpdate.newLatLngBounds`); canonical:
-  /// `setRegion(MKCoordinateRegion.containing(coordinates))`. No-op when
-  /// [coordinates] is empty.
+  /// `setRegion(MKCoordinateRegion.containing(coordinates))`. Throws
+  /// [ArgumentError] when [coordinates] is empty (nothing to fit) or
+  /// [padding] / [minimumSpan] is negative or non-finite.
   Future<void> fitCoordinates(
     Iterable<CLLocationCoordinate2D> coordinates, {
     bool animated = true,
     double padding = 0,
     double minimumSpan = 0.005,
   }) async {
-    assert(padding >= 0, 'padding must be >= 0');
-    assert(minimumSpan >= 0, 'minimumSpan must be >= 0');
+    checkNonNegative(padding, 'padding');
+    checkNonNegative(minimumSpan, 'minimumSpan');
     final region = MKCoordinateRegion.containing(coordinates);
-    if (region == null) return;
+    if (region == null) {
+      throw ArgumentError.value(
+        coordinates,
+        'coordinates',
+        'must not be empty',
+      );
+    }
     double fit(double delta, double limit) =>
         min(max(delta * (1 + 2 * padding), minimumSpan), limit);
     await setRegion(
@@ -103,4 +115,10 @@ extension CameraConveniences on MKMapViewController {
       animated: animated,
     );
   }
+
+  Future<MKMapCamera> _laidOutCamera(String method) async =>
+      await camera ?? (throw _noLayout(method));
+
+  StateError _noLayout(String method) =>
+      StateError('$method needs a laid-out map view (no layout yet).');
 }

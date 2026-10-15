@@ -1,6 +1,7 @@
 import 'dart:math' show log, pow;
 
 import 'package:flutter/foundation.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:meta/meta.dart';
@@ -10,7 +11,7 @@ import 'package:meta/meta.dart';
 /// rotated to the compass [heading] and tilted by [pitch] degrees.
 /// See: https://developer.apple.com/documentation/mapkit/mkmapcamera
 @immutable
-final class const MKMapCamera({
+final class MKMapCamera({
   /// Ground coordinate at the center of the viewport.
   required final CLLocationCoordinate2D centerCoordinate,
 
@@ -25,19 +26,20 @@ final class const MKMapCamera({
   final double pitch = 0.0,
 }) {
   /// Creates a camera looking at [centerCoordinate] from [distance] meters.
-  this
-    : assert(
-        distance > 0 && distance < double.infinity,
-        'distance must be a finite value > 0 meters',
-      ),
-      assert(
-        heading > double.negativeInfinity && heading < double.infinity,
-        'heading must be finite',
-      ),
-      assert(
-        pitch > double.negativeInfinity && pitch < double.infinity,
-        'pitch must be finite',
+  ///
+  /// Throws [ArgumentError] unless [distance] is a finite value `> 0` and
+  /// [heading] and [pitch] are finite.
+  this {
+    if (!(distance > 0 && distance.isFinite)) {
+      throw ArgumentError.value(
+        distance,
+        'distance',
+        'must be a finite value > 0 meters',
       );
+    }
+    checkFinite(heading, 'heading');
+    checkFinite(pitch, 'pitch');
+  }
 
   /// Constructs a camera from its Pigeon wire representation.
   @internal

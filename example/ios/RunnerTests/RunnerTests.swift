@@ -75,6 +75,20 @@ final class RunnerTests: XCTestCase {
         }
     }
 
+    /// Run on an iOS 17 simulator to exercise the throw: a filter naming an
+    /// iOS 18 category fails instead of silently becoming `including([])`,
+    /// which would hide every point of interest.
+    func testIOS18CategoryInAFilterFailsBeforeIOS18() throws {
+        let filter = PlatformPointOfInterestFilter(mode: .including, categories: [.golf, .cafe])
+        if #available(iOS 18.0, *) {
+            XCTAssertNotNil(try FlutterMapView.poiFilter(from: filter))
+        } else {
+            XCTAssertThrowsError(try FlutterMapView.poiFilter(from: filter)) { error in
+                XCTAssertEqual((error as? MapKitHostError)?.code, "unavailable-poi-category")
+            }
+        }
+    }
+
     func testCalloutRecognizerRemovedWhenCalloutDisabled() throws {
         let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
         try host.updateAnnotations(toAdd: [annotation("a", callout: true)], toChange: [], idsToRemove: [])

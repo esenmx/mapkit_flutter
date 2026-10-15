@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:meta/meta.dart';
 
@@ -9,35 +10,36 @@ typedef Coordinate = CLLocationCoordinate2D;
 /// A geographic latitude/longitude pair in degrees, mirroring Core Location's
 /// `CLLocationCoordinate2D(latitude:longitude:)`.
 ///
-/// Latitude is clamped to `[-90, 90]`; longitude is wrapped to `[-180, 180)`
+/// Latitude must lie in `[-90, 90]`; longitude is wrapped to `[-180, 180)`
 /// (180° east normalizes to `-180`); in-range values are stored verbatim.
 /// See: https://developer.apple.com/documentation/corelocation/cllocationcoordinate2d
 @immutable
 final class CLLocationCoordinate2D {
-  /// Creates a coordinate clamping [latitude] to `[-90, 90]` and wrapping
-  /// [longitude] into `[-180, 180)`.
-  const new({required double latitude, required double longitude})
-    : assert(
-        latitude > double.negativeInfinity && latitude < double.infinity,
-        'latitude must be finite',
-      ),
-      assert(
-        longitude > double.negativeInfinity && longitude < double.infinity,
-        'longitude must be finite',
-      ),
-      latitude = (latitude < -90.0
-          ? -90.0
-          : (90.0 < latitude ? 90.0 : latitude)),
-      longitude = (longitude < -180.0 || longitude >= 180.0)
-          ? (((longitude + 180.0) % 360.0 - 180.0) >= 180.0
-                ? -180.0
-                : ((longitude + 180.0) % 360.0 - 180.0))
-          : longitude;
+  /// Creates a coordinate, wrapping [longitude] into `[-180, 180)`.
+  ///
+  /// Throws [ArgumentError] when [latitude] is outside `[-90, 90]` or either
+  /// value is not finite — swapped arguments fail here instead of landing on
+  /// a pole.
+  new({required double latitude, required double longitude})
+    : latitude = _checkLatitude(latitude),
+      longitude = _wrapLongitude(longitude);
 
   /// Constructs a coordinate from its Pigeon wire representation.
   @internal
   factory fromPlatform(PlatformCoordinate p) =>
       CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude);
+
+  static double _checkLatitude(double latitude) {
+    checkInRange(latitude, -90, 90, 'latitude');
+    return latitude;
+  }
+
+  static double _wrapLongitude(double longitude) {
+    checkFinite(longitude, 'longitude');
+    if (longitude >= -180.0 && longitude < 180.0) return longitude;
+    final wrapped = (longitude + 180.0) % 360.0 - 180.0;
+    return wrapped >= 180.0 ? -180.0 : wrapped;
+  }
 
   /// Latitude in degrees in `[-90, 90]`.
   final double latitude;

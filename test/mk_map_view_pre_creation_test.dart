@@ -60,7 +60,7 @@ void main() {
 
     Future<void> nativeTap(String id) async {
       await messenger.handlePlatformMessage(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap.'
+        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationSelect.'
         '$viewId',
         _codec.encodeMessage(<Object?>[id]),
         (_) {},
@@ -71,10 +71,10 @@ void main() {
     return (createGate: createGate, hostCalls: hostCalls, nativeTap: nativeTap);
   }
 
-  MKPointAnnotation ann(String id, VoidCallback onTap) => MKPointAnnotation(
+  MKPointAnnotation ann(String id, VoidCallback onSelect) => MKPointAnnotation(
     id: MKAnnotationId(id),
     coordinate: applePark,
-    onTap: onTap,
+    onSelect: onSelect,
   );
 
   Widget map(Set<MKPointAnnotation> annotations) => Directionality(

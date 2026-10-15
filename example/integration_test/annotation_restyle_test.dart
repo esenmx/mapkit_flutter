@@ -12,7 +12,7 @@ import 'package:mapkit_flutter_example/custom_marker_image.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  const applePark = CLLocationCoordinate2D(
+  final applePark = CLLocationCoordinate2D(
     latitude: 37.334922,
     longitude: -122.009033,
   );
@@ -26,10 +26,7 @@ void main() {
 
     Widget mapWith(Set<MKPointAnnotation> annotations) => MaterialApp(
       home: MKMapView(
-        initialCamera: const MKMapCamera(
-          centerCoordinate: applePark,
-          distance: 1500,
-        ),
+        initialCamera: MKMapCamera(centerCoordinate: applePark, distance: 1500),
         annotations: annotations,
         onMapCreated: (c) => controller ??= c,
       ),
@@ -85,20 +82,23 @@ void main() {
     });
 
     // Selection still round-trips on the reused, restyled annotation.
-    await ctrl.showCallout(id);
+    check(await ctrl.selectAnnotation(id)).isTrue();
     var shown = false;
     while (!shown && DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 150));
-      shown = await ctrl.isCalloutShown(id);
+      shown = await ctrl.isAnnotationSelected(id);
     }
-    check(shown, because: 'callout never opened on the reused pin').isTrue();
+    check(shown, because: 'selection never took on the reused pin').isTrue();
 
-    await ctrl.hideCallout(id);
+    check(await ctrl.deselectAnnotation(id)).isTrue();
     await tester.pump(const Duration(milliseconds: 300));
-    check(await ctrl.isCalloutShown(id)).isFalse();
+    check(await ctrl.isAnnotationSelected(id)).isFalse();
 
     // The channel is still responsive after every restyle.
-    check((await ctrl.camera).distance).isGreaterThan(0);
+    check(await ctrl.camera)
+        .isNotNull()
+        .has((c) => c.distance, 'distance')
+        .isGreaterThan(0);
     check(tester.takeException()).isNull();
   });
 }

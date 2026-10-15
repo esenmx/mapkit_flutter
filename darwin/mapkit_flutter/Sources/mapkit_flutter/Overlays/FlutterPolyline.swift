@@ -66,27 +66,24 @@ extension StyledPolyline {
 
     func getCAShapeLayer(snapshot: MKMapSnapshotter.Snapshot) -> CAShapeLayer {
         let shapeLayer = CAShapeLayer()
-        #if os(iOS)
-        let path = UIBezierPath()
-
         guard !isHidden, let first = coordinates.first else {
             return shapeLayer
         }
 
         // Single subpath: lineJoin and dash phase only apply within a subpath, matching MKPolylineRenderer.
+        let path = CGMutablePath()
         path.move(to: snapshot.point(for: first))
         for coordinate in coordinates.dropFirst() {
             path.addLine(to: snapshot.point(for: coordinate))
         }
 
-        shapeLayer.path = path.cgPath
+        shapeLayer.path = path
         shapeLayer.lineWidth = lineWidth
         shapeLayer.lineCap = caShapeLayerLineCap
         shapeLayer.lineJoin = caShapeLayerLineJoin
         shapeLayer.lineDashPattern = dashPattern
         shapeLayer.strokeColor = strokeColor?.cgColor ?? PlatformColor.clear.cgColor
         shapeLayer.fillColor = PlatformColor.clear.cgColor
-        #endif
         return shapeLayer
     }
 
@@ -137,11 +134,12 @@ final class FlutterPolyline: MKPolyline, StyledPolyline, @unchecked Sendable {
 }
 
 public extension MKPolyline {
-    // maxMeters is the preferred distance offset from the self to be acknowledged as a touch
+    /// Whether a tap at `coordinate` lands within `tolerance` screen points of
+    /// the line.
     @MainActor
-    func contains(coordinate: CLLocationCoordinate2D, mapView: MKMapView, maxMeters: Int = 8) -> Bool {
+    func contains(coordinate: CLLocationCoordinate2D, mapView: MKMapView, tolerance: CGFloat) -> Bool {
         let distance: Double = distanceOf(pt: MKMapPoint.init(coordinate), toMultipPoint: self)
-        return distance <= meters(fromPixel: maxMeters, at: coordinate, view: mapView)
+        return distance <= meters(fromPoints: tolerance, at: coordinate, view: mapView)
     }
 
     private func closestPointOnSegment(pt: MKMapPoint, ptA: MKMapPoint, ptB: MKMapPoint) -> MKMapPoint {
@@ -179,9 +177,9 @@ public extension MKPolyline {
     }
 
     @MainActor
-    private func meters(fromPixel pixel: Int, at touchCoordinate: CLLocationCoordinate2D, view: MKMapView) -> Double {
+    private func meters(fromPoints points: CGFloat, at touchCoordinate: CLLocationCoordinate2D, view: MKMapView) -> Double {
         let touchPoint: CGPoint = view.convert(touchCoordinate, toPointTo: view)
-        let maxOffsetPoint = CGPoint(x: touchPoint.x + CGFloat(pixel), y: touchPoint.y)
+        let maxOffsetPoint = CGPoint(x: touchPoint.x + points, y: touchPoint.y)
         let maxOffsetCoordinate: CLLocationCoordinate2D = view.convert(maxOffsetPoint, toCoordinateFrom: view)
         return MKMapPoint.init(touchCoordinate).distance(to: MKMapPoint.init(maxOffsetCoordinate))
     }

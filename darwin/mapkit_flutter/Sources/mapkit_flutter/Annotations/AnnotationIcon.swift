@@ -27,13 +27,18 @@ class AnnotationIcon: Equatable {
     /// Custom-image variant: rendered via a plain `MKAnnotationView`.
     var isCustomImage: Bool { iconType == .image }
 
-    init(fromPlatform icon: PlatformAnnotationIcon) {
+    /// Throws `invalid-icon` for an SF Symbol name the OS doesn't know or image
+    /// bytes it can't decode — never an invisible or silently plain marker.
+    init(fromPlatform icon: PlatformAnnotationIcon) throws {
         switch icon.type {
         case .marker:
             self.iconType = .marker
             self.glyphText = icon.glyphText
             if let systemImage = icon.glyphSystemImage {
-                self.glyphImage = PlatformImage.systemSymbol(systemImage)
+                guard let glyph = PlatformImage.systemSymbol(systemImage) else {
+                    throw mapKitError(.invalidIcon, "Unknown SF Symbol \"\(systemImage)\".")
+                }
+                self.glyphImage = glyph
             }
             if let argb = icon.glyphTintArgb {
                 self.glyphTint = PlatformColor(argb: argb)
@@ -43,10 +48,12 @@ class AnnotationIcon: Equatable {
             }
         case .image:
             self.iconType = .image
-            if let data = icon.imageBytes?.data {
-                self.image = PlatformImage.fromImageData(
-                    data, pixelRatio: CGFloat(icon.imagePixelRatio ?? 1))
+            guard let data = icon.imageBytes?.data,
+                  let image = PlatformImage.fromImageData(
+                    data, pixelRatio: CGFloat(icon.imagePixelRatio ?? 1)) else {
+                throw mapKitError(.invalidIcon, "Annotation image bytes could not be decoded.")
             }
+            self.image = image
         }
     }
 

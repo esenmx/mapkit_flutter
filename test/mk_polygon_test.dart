@@ -9,8 +9,8 @@ import '_helpers/fixtures.dart';
 void main() {
   group('MKPolygon wire mapping', () {
     test('serializes interior polygons ring by ring', () {
-      final platform = const MKPolygon(
-        id: MKPolygonId('zone'),
+      final platform = MKPolygon(
+        id: const MKPolygonId('zone'),
         coordinates: [
           CLLocationCoordinate2D(latitude: 0, longitude: 0),
           CLLocationCoordinate2D(latitude: 0, longitude: 10),
@@ -23,8 +23,8 @@ void main() {
             CLLocationCoordinate2D(latitude: 4, longitude: 4),
           ],
         ],
-        fillColor: Color(0x6600FF00),
-        strokeColor: Color(0xFF112233),
+        fillColor: const Color(0x6600FF00),
+        strokeColor: const Color(0xFF112233),
         lineWidth: 3,
       ).toPlatform();
 
@@ -43,10 +43,10 @@ void main() {
         check(
           () => MKPolygon(
             id: const MKPolygonId('bad'),
-            coordinates: const [applePark, infiniteLoop],
+            coordinates: [applePark, infiniteLoop],
             lineWidth: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
       }
     });
   });
@@ -58,7 +58,7 @@ void main() {
       check(
         polygon('z') ==
             polygon('z').copyWith(
-              interiorPolygons: const [
+              interiorPolygons: [
                 [
                   CLLocationCoordinate2D(latitude: 1, longitude: 1),
                   CLLocationCoordinate2D(latitude: 1, longitude: 2),
@@ -71,15 +71,26 @@ void main() {
   });
 
   group('tap consumption', () {
-    test('onTap implies consumeTapEvents on the wire', () {
-      final tappable = polygon('z').copyWith(onTap: () {});
-      check(tappable.consumeTapEvents).isFalse();
-      check(tappable.toPlatform().consumeTapEvents).isTrue();
+    test('consumeTapEvents is explicit on the wire', () {
+      check(polygon('x').toPlatform().consumeTapEvents).isFalse();
+      final capturing = polygon('x').copyWith(consumeTapEvents: true);
+      check(capturing.toPlatform().consumeTapEvents).isTrue();
+      check(capturing.copyWith(onTap: () {}).toPlatform().consumeTapEvents)
+          .isTrue();
     });
 
-    test('clearing onTap makes the overlay unequal', () {
-      final tappable = polygon('z').copyWith(onTap: () {});
-      check(tappable.copyWith(onTap: null) == tappable).isFalse();
+    test('onTap without consumeTapEvents throws instead of never firing', () {
+      check(() => polygon('x').copyWith(onTap: () {})).throws<ArgumentError>();
+      final tappable = polygon('x')
+          .copyWith(consumeTapEvents: true, onTap: () {});
+      check(() => tappable.copyWith(consumeTapEvents: false))
+          .throws<ArgumentError>();
+    });
+
+    test('clearing onTap keeps the overlay equal (closures are not state)', () {
+      final tappable = polygon('x')
+          .copyWith(consumeTapEvents: true, onTap: () {});
+      check(tappable.copyWith(onTap: null)).equals(tappable);
     });
   });
 }

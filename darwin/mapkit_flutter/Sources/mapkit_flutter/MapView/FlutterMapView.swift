@@ -1,4 +1,3 @@
-import CoreLocation
 import Foundation
 import MapKit
 
@@ -10,18 +9,12 @@ import AppKit
 import FlutterMacOS
 #endif
 
-// `@preconcurrency`: CLLocationManagerDelegate is nonisolated, but callbacks
-// arrive on the thread that created the manager — main, since the manager is
-// an instance property of this MainActor-isolated view.
-class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurrency CLLocationManagerDelegate {
+class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
     weak var flutterApi: MapKitFlutterApi?
 
     /// Camera handed over before the first layout pass; re-applied once the
     /// view has real bounds so MapKit doesn't resolve it against a zero rect.
     private var pendingCamera: MKMapCamera?
-
-    let locationManager = CLLocationManager()
-    private var pendingUserLocationRequest = false
 
     /// The last configuration Dart pushed.
     private(set) var appliedConfiguration: PlatformMapConfiguration?
@@ -38,7 +31,6 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
 
     convenience init() {
         self.init(frame: CGRect.zero)
-        self.locationManager.delegate = self
         initialiseTapGestureRecognizers()
     }
 
@@ -77,26 +69,39 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         setCamera(mkCamera, animated: false)
     }
 
+    /// The live camera; callers check `hasLayout` first — a zero-sized view
+    /// reports a degenerate camera (distance 0).
     func currentPlatformCamera() -> PlatformMapCamera {
         return .from(self.camera)
     }
 
-    func currentPlatformRegion() -> PlatformCoordinateRegion {
-        guard bounds.size != .zero else {
-            return PlatformCoordinateRegion(
-                center: PlatformCoordinate(latitude: 0, longitude: 0),
-                span: PlatformCoordinateSpan(latitudeDelta: 0, longitudeDelta: 0)
-            )
-        }
+    /// Whether the view has real bounds; camera and region reads, conversions
+    /// and snapshots are meaningless before the first layout.
+    var hasLayout: Bool { bounds.size != .zero }
+
+    func currentPlatformRegion() -> PlatformCoordinateRegion? {
+        guard hasLayout else { return nil }
         return .from(self.region)
     }
 
     // MARK: - Configuration
 
-    func apply(configuration config: PlatformMapConfiguration) {
+    /// Applies a Dart configuration. Everything MapKit could reject is
+    /// resolved first, so a throw leaves the map unchanged.
+    func apply(configuration config: PlatformMapConfiguration) throws {
+        let mapConfiguration = try Self.makeMapConfiguration(config)
+        let trackingMode = try config.userTrackingMode.mkMode()
+        let zoomRange = try Self.zoomRange(config.cameraZoomRange)
+        let boundary = try config.cameraBoundary.map { region in
+            guard let boundary = MKMapView.CameraBoundary(coordinateRegion: region.mkRegion) else {
+                throw mapKitError(.invalidArgument, "MapKit rejects cameraBoundary \(region.mkRegion).")
+            }
+            return boundary
+        }
+
         let previousTrackingMode = appliedConfiguration?.userTrackingMode
         appliedConfiguration = config
-        self.preferredConfiguration = Self.makeMapConfiguration(config)
+        self.preferredConfiguration = mapConfiguration
 
         self.showsCompass = config.showsCompass
         self.showsScale = config.showsScale
@@ -106,31 +111,22 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         self.isPitchEnabled = config.isPitchEnabled
         self.isZoomEnabled = config.isZoomEnabled
 
-        if config.showsUserLocation {
-            self.requestUserLocation()
-        } else {
-            self.removeUserLocation()
-        }
+        // Like MKMapView, never prompts for location permission: the app owns
+        // authorization, and a denied or undetermined status surfaces through
+        // `mapView(_:didFailToLocateUserWithError:)`.
+        self.showsUserLocation = config.showsUserLocation
         self.showsUserTrackingButton = config.showsUserTrackingButton
 
-        // MapKit drops to `.none` when the user pans; unrelated config changes must not snap back.
+        // MapKit drops to `.none` when the user pans and reports it through
+        // `mapView(_:didChange:animated:)`; unrelated config changes must not
+        // snap back.
         if config.userTrackingMode != previousTrackingMode {
-            self.setUserTrackingMode(config.userTrackingMode.mkMode, animated: false)
+            self.setUserTrackingMode(trackingMode, animated: false)
         }
 
         // Always assign — nil clears a previously-set range/boundary.
-        if let range = config.cameraZoomRange,
-           range.minCenterCoordinateDistance != nil || range.maxCenterCoordinateDistance != nil {
-            self.cameraZoomRange = MKMapView.CameraZoomRange(
-                minCenterCoordinateDistance: range.minCenterCoordinateDistance ?? MKMapCameraZoomDefault,
-                maxCenterCoordinateDistance: range.maxCenterCoordinateDistance ?? MKMapCameraZoomDefault
-            )
-        } else {
-            self.cameraZoomRange = nil
-        }
-        self.cameraBoundary = config.cameraBoundary.flatMap {
-            MKMapView.CameraBoundary(coordinateRegion: $0.mkRegion)
-        }
+        self.cameraZoomRange = zoomRange
+        self.cameraBoundary = boundary
 
         #if os(iOS)
         self.insetsLayoutMarginsFromSafeArea = config.insetsLayoutMarginsFromSafeArea
@@ -139,14 +135,30 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         #endif
     }
 
+    private static func zoomRange(_ range: PlatformCameraZoomRange?) throws -> MKMapView.CameraZoomRange? {
+        guard let range, range.minCenterCoordinateDistance != nil || range.maxCenterCoordinateDistance != nil else {
+            return nil
+        }
+        guard let zoomRange = MKMapView.CameraZoomRange(
+            minCenterCoordinateDistance: range.minCenterCoordinateDistance ?? MKMapCameraZoomDefault,
+            maxCenterCoordinateDistance: range.maxCenterCoordinateDistance ?? MKMapCameraZoomDefault
+        ) else {
+            throw mapKitError(
+                .invalidArgument,
+                "MapKit rejects cameraZoomRange min \(String(describing: range.minCenterCoordinateDistance)) "
+                    + "max \(String(describing: range.maxCenterCoordinateDistance)).")
+        }
+        return zoomRange
+    }
+
     /// The `MKMapConfiguration` for a Dart configuration; shared by the live map and snapshots.
     nonisolated static func makeMapConfiguration(
         _ config: PlatformMapConfiguration,
         hidingPointsOfInterest: Bool = false
-    ) -> MKMapConfiguration {
+    ) throws -> MKMapConfiguration {
         let elevationStyle: MKMapConfiguration.ElevationStyle =
             config.elevationStyle == .realistic ? .realistic : .flat
-        let filter = hidingPointsOfInterest ? .excludingAll : poiFilter(from: config.pointOfInterestFilter)
+        let filter = hidingPointsOfInterest ? .excludingAll : try poiFilter(from: config.pointOfInterestFilter)
 
         switch config.kind {
         case .imagery:
@@ -175,17 +187,32 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
         }
     }
 
-    private nonisolated static func poiFilter(from filter: PlatformPointOfInterestFilter?) -> MKPointOfInterestFilter? {
+    /// `category` maps a wire category to MapKit's (nil when the running OS
+    /// predates it); injectable so the unavailable path is testable on any OS.
+    nonisolated static func poiFilter(
+        from filter: PlatformPointOfInterestFilter?,
+        category: (PlatformPointOfInterestCategory) -> MKPointOfInterestCategory? = \.mkCategory
+    ) throws -> MKPointOfInterestFilter? {
         guard let filter = filter else { return nil }
+        func categories() throws -> [MKPointOfInterestCategory] {
+            try filter.categories.map { wire in
+                guard let mk = category(wire) else {
+                    throw mapKitError(
+                        .unavailablePoiCategory,
+                        "MKPointOfInterestCategory.\(wire) needs iOS 18 / macOS 15.")
+                }
+                return mk
+            }
+        }
         switch filter.mode {
         case .none:
             return MKPointOfInterestFilter.excludingAll
         case .all:
             return MKPointOfInterestFilter.includingAll
         case .including:
-            return MKPointOfInterestFilter(including: filter.categories.compactMap(\.mkCategory))
+            return MKPointOfInterestFilter(including: try categories())
         case .excluding:
-            return MKPointOfInterestFilter(excluding: filter.categories.compactMap(\.mkCategory))
+            return MKPointOfInterestFilter(excluding: try categories())
         }
     }
 
@@ -203,42 +230,13 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
     }
     #endif
 
-    // MARK: - Location
-
-    /// `showsUserLocation` runs MapKit's own Core Location session for the
-    /// blue dot; the manager here exists only to fire the when-in-use prompt,
-    /// which the view never requests itself. Outside `.notDetermined` the
-    /// flag is set even when authorization is denied, so the view attempts,
-    /// fails, and reports through
-    /// `mapView(_:didFailToLocateUserWithError:)`.
-    func requestUserLocation() {
-        if locationManager.authorizationStatus == .notDetermined {
-            pendingUserLocationRequest = true
-            locationManager.requestWhenInUseAuthorization()
-        } else {
-            self.showsUserLocation = true
-        }
-    }
-
-    func removeUserLocation() {
-        pendingUserLocationRequest = false
-        self.showsUserLocation = false
-    }
-
     /// Detaches every delegate and drops map content so the view holds nothing after `dispose`.
     func tearDown() {
         delegate = nil
         flutterApi = nil
-        locationManager.delegate = nil
-        removeUserLocation()
+        showsUserLocation = false
         removeAnnotations(annotations)
         removeOverlays(overlays)
-    }
-
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        guard pendingUserLocationRequest, manager.authorizationStatus != .notDetermined else { return }
-        pendingUserLocationRequest = false
-        self.showsUserLocation = true
     }
 
     /// Flutter annotations sorted bottom-to-top, matching their on-map
@@ -295,7 +293,7 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate, @preconcurre
 }
 
 extension PlatformUserTrackingMode {
-    var mkMode: MKUserTrackingMode {
+    func mkMode() throws -> MKUserTrackingMode {
         switch self {
         case .none: return .none
         case .follow: return .follow
@@ -303,9 +301,19 @@ extension PlatformUserTrackingMode {
             #if os(iOS)
             return .followWithHeading
             #elseif os(macOS)
-            // Heading-tracking is unavailable on macOS; fall back to follow.
-            return .follow
+            throw mapKitError(.unsupportedPlatform, "userTrackingMode followWithHeading is iOS only.")
             #endif
+        }
+    }
+
+    init(mkMode: MKUserTrackingMode) {
+        switch mkMode {
+        case .none: self = .none
+        case .follow: self = .follow
+        #if os(iOS)
+        case .followWithHeading: self = .followWithHeading
+        #endif
+        @unknown default: self = .none
         }
     }
 }

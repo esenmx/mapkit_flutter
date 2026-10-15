@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0
+## 0.5.0 - 2026-10-15
 
 Misuse now fails loudly in every build mode instead of being clamped, ignored or degraded, and the controller reports outcomes instead of swallowing them.
 

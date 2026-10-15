@@ -32,7 +32,7 @@ body:
     id: package-version
     attributes:
       label: mapkit_flutter version
-      placeholder: 0.4.0
+      placeholder: 0.5.0
     validations:
       required: true
   - type: textarea

@@ -30,7 +30,7 @@ void main() {
     final live = <int>[];
     for (var round = 0; round < 3; round++) {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: SizedBox(
             width: 300,
             height: 300,

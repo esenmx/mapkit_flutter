@@ -8,6 +8,7 @@ import 'package:mapkit_flutter/src/exceptions.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:mapkit_flutter/src/mk_circle.dart';
 import 'package:mapkit_flutter/src/mk_coordinate_region.dart';
+import 'package:mapkit_flutter/src/mk_enums.dart';
 import 'package:mapkit_flutter/src/mk_map_camera.dart';
 import 'package:mapkit_flutter/src/mk_map_feature.dart';
 import 'package:mapkit_flutter/src/mk_map_snapshot_options.dart';
@@ -23,7 +24,7 @@ abstract interface class MKMapViewEventSink {
   void onCameraMoveStarted();
   void onCameraMove(MKMapCamera camera);
   void onCameraIdle();
-  void onAnnotationTap(MKAnnotationId id);
+  void onUserTrackingModeChanged(MKUserTrackingMode mode);
   void onAnnotationSelect(MKAnnotationId id);
   void onAnnotationDeselect(MKAnnotationId id);
   void onMapFeatureSelected(MKMapFeature feature);
@@ -71,14 +72,14 @@ abstract interface class MKMapViewEventSink {
 /// serialized onto an internal queue, so concurrent calls execute in source
 /// order. Failures surface as [MapKitException]s.
 abstract interface class MKMapViewController {
-  /// The current camera (`MKMapView.camera`).
-  Future<MKMapCamera> get camera;
+  /// The current camera (`MKMapView.camera`), or `null` while the view has no
+  /// layout (before the first frame) — MapKit has no meaningful camera for a
+  /// zero-sized view.
+  Future<MKMapCamera?> get camera;
 
-  /// The currently visible region (`MKMapView.region`).
-  ///
-  /// Returns a zero region while the view has no layout (before the first
-  /// frame).
-  Future<MKCoordinateRegion> get region;
+  /// The currently visible region (`MKMapView.region`), or `null` while the
+  /// view has no layout (before the first frame).
+  Future<MKCoordinateRegion?> get region;
 
   /// `MKMapView.setCamera(_:animated:)`.
   Future<void> setCamera(MKMapCamera camera, {bool animated = true});
@@ -102,22 +103,24 @@ abstract interface class MKMapViewController {
   /// has no layout.
   Future<CLLocationCoordinate2D?> convertToCoordinate(Offset point);
 
-  /// Select the annotation, showing its callout bubble.
+  /// `MKMapView.selectAnnotation(_:animated:)` — selects the annotation,
+  /// showing its callout when it has a `title`.
   ///
-  /// An id that is not on the map is ignored, matching
-  /// `MKMapView.selectAnnotation(_:animated:)` semantics for foreign
-  /// annotations — so a call racing a rebuild that removed the annotation is
-  /// harmless.
-  Future<void> showCallout(MKAnnotationId id);
+  /// Returns whether the annotation is now selected: `false` when the id is
+  /// not on the map (e.g. a call racing a rebuild that removed it) or the
+  /// annotation is hidden. Nothing happens in that case; check the result
+  /// instead of assuming the selection took.
+  Future<bool> selectAnnotation(MKAnnotationId id);
 
-  /// Deselect the annotation, hiding its callout bubble.
+  /// `MKMapView.deselectAnnotation(_:animated:)`.
   ///
-  /// An id that is not on the map is ignored (see [showCallout]).
-  Future<void> hideCallout(MKAnnotationId id);
+  /// Returns `false` when the id is not on the map (nothing happens);
+  /// otherwise the annotation is deselected and the result is `true`.
+  Future<bool> deselectAnnotation(MKAnnotationId id);
 
-  /// Whether the annotation is selected (its callout is showing). Returns
-  /// `false` for an id that is not on the map.
-  Future<bool> isCalloutShown(MKAnnotationId id);
+  /// Whether the annotation is selected (`MKMapView.selectedAnnotations`).
+  /// An id that is not on the map is not selected, so the result is `false`.
+  Future<bool> isAnnotationSelected(MKAnnotationId id);
 
   /// Render the current map to a PNG via `MKMapSnapshotter`.
   ///
@@ -127,22 +130,26 @@ abstract interface class MKMapViewController {
     MKMapSnapshotOptions options = const MKMapSnapshotOptions(),
   ]);
 
-  /// Open the iOS Look Around (street-view) experience for a coordinate.
+  /// Open the Look Around (street-view) experience for a coordinate (iOS).
   ///
-  /// Returns `true` if a Look Around scene was available and presented,
-  /// `false` when no scene exists for the coordinate, the scene request
-  /// failed (e.g. offline), or the viewer could not be presented.
+  /// Returns `true` once the scene is presented and `false` when no Look
+  /// Around scene exists for the coordinate. Throws a
+  /// [MapKitPlatformException] with code `look-around-failed` when the scene
+  /// request fails (e.g. offline) or there is no view controller to present
+  /// from, and code `unsupported-platform` on macOS.
   Future<bool> openLookAround(CLLocationCoordinate2D coordinate);
 
   /// Add a custom raster tile overlay backed by a URL template.
   ///
   /// The template uses `{x}`, `{y}`, `{z}` placeholders, e.g.
-  /// `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
+  /// `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. Throws a
+  /// [MapKitPlatformException] with code `duplicate-id` when a tile overlay
+  /// with the same id is already on the map — remove it first to replace it.
   Future<void> addTileOverlay(MKTileOverlay overlay);
 
-  /// Remove a previously-added tile overlay. Idempotent — an id that is not
-  /// on the map is ignored.
-  Future<void> removeTileOverlay(MKTileOverlayId id);
+  /// Remove a previously-added tile overlay. Returns `false` when no tile
+  /// overlay with this id is on the map.
+  Future<bool> removeTileOverlay(MKTileOverlayId id);
 
   /// Release platform resources. Called automatically when the owning
   /// `MKMapView` widget unmounts.
@@ -212,12 +219,20 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   // ------------------------- Public API -------------------------
 
   @override
-  Future<MKMapCamera> get camera =>
-      _enqueue(() async => .fromPlatform(await _host.getCamera()));
+  Future<MKMapCamera?> get camera => _enqueue(
+    () async => switch (await _host.getCamera()) {
+      null => null,
+      final camera => .fromPlatform(camera),
+    },
+  );
 
   @override
-  Future<MKCoordinateRegion> get region =>
-      _enqueue(() async => .fromPlatform(await _host.getRegion()));
+  Future<MKCoordinateRegion?> get region => _enqueue(
+    () async => switch (await _host.getRegion()) {
+      null => null,
+      final region => .fromPlatform(region),
+    },
+  );
 
   @override
   Future<void> setCamera(MKMapCamera camera, {bool animated = true}) =>
@@ -252,16 +267,16 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   );
 
   @override
-  Future<void> showCallout(MKAnnotationId id) =>
-      _enqueue(() => _host.showCallout(id.value));
+  Future<bool> selectAnnotation(MKAnnotationId id) =>
+      _enqueue(() => _host.selectAnnotation(id.value));
 
   @override
-  Future<void> hideCallout(MKAnnotationId id) =>
-      _enqueue(() => _host.hideCallout(id.value));
+  Future<bool> deselectAnnotation(MKAnnotationId id) =>
+      _enqueue(() => _host.deselectAnnotation(id.value));
 
   @override
-  Future<bool> isCalloutShown(MKAnnotationId id) =>
-      _enqueue(() => _host.isCalloutShown(id.value));
+  Future<bool> isAnnotationSelected(MKAnnotationId id) =>
+      _enqueue(() => _host.isAnnotationSelected(id.value));
 
   @override
   Future<Uint8List> takeSnapshot([
@@ -277,12 +292,13 @@ final class MKMapViewControllerImpl implements MKMapViewController {
       _enqueue(() => _host.addTileOverlay(overlay.toPlatform()));
 
   @override
-  Future<void> removeTileOverlay(MKTileOverlayId id) =>
+  Future<bool> removeTileOverlay(MKTileOverlayId id) =>
       _enqueue(() => _host.removeTileOverlay(id.value));
 
   // ------------------------- Widget-driven mutations -------------------------
 
-  /// Pushes the initial map state now that the platform view exists.
+  /// Pushes the initial map state now that the platform view exists. Ids are
+  /// unique per kind — `MKMapView` rejects duplicates before calling this.
   Future<void> initialize({
     required MKMapCamera initialCamera,
     required PlatformMapConfiguration configuration,
@@ -295,20 +311,10 @@ final class MKMapViewControllerImpl implements MKMapViewController {
       PlatformMapViewCreationParams(
         initialCamera: initialCamera.toPlatform(),
         configuration: configuration,
-        annotations: [
-          for (final a in lastById(annotations, (a) => a.id.value))
-            a.toPlatform(),
-        ],
-        polylines: [
-          for (final p in lastById(polylines, (p) => p.id.value))
-            p.toPlatform(),
-        ],
-        polygons: [
-          for (final p in lastById(polygons, (p) => p.id.value)) p.toPlatform(),
-        ],
-        circles: [
-          for (final c in lastById(circles, (c) => c.id.value)) c.toPlatform(),
-        ],
+        annotations: [for (final a in annotations) a.toPlatform()],
+        polylines: [for (final p in polylines) p.toPlatform()],
+        polygons: [for (final p in polygons) p.toPlatform()],
+        circles: [for (final c in circles) c.toPlatform()],
       ),
     ),
   );
@@ -379,8 +385,8 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
   void onCameraIdle() => _sink.onCameraIdle();
 
   @override
-  void onAnnotationTap(String annotationId) =>
-      _sink.onAnnotationTap(MKAnnotationId(annotationId));
+  void onUserTrackingModeChanged(PlatformUserTrackingMode mode) =>
+      _sink.onUserTrackingModeChanged(mode);
 
   @override
   void onAnnotationSelect(String annotationId) =>

@@ -16,12 +16,18 @@ typedef MKMapEmphasisStyle = PlatformMapEmphasisStyle;
 typedef MKMapElevationStyle = PlatformMapElevationStyle;
 
 /// `MKUserTrackingMode` — how the camera follows the user's location.
+/// `followWithHeading` is iOS only; `MKMapView` throws a
+/// `MapKitUnsupportedPlatformException` for it on macOS.
 typedef MKUserTrackingMode = PlatformUserTrackingMode;
 
 /// `MKPointOfInterestCategory` — categories for `MKPointOfInterestFilter`.
+///
+/// Values documented as iOS 18 / macOS 15 need that OS: a filter naming one
+/// on an older OS fails with a `MapKitPlatformException`
+/// (`unavailable-poi-category`) instead of silently dropping it.
 typedef MKPointOfInterestCategory = PlatformPointOfInterestCategory;
 
-/// `MKMapFeatureOptions` — map features the user can select.
+/// `MKMapFeatureOptions` — map features the user can select. iOS only.
 typedef MKMapFeatureOptions = PlatformMapFeatureOptions;
 
 /// MKMapFeatureAnnotation.FeatureType.

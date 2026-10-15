@@ -15,10 +15,6 @@ import 'mk_map_view_controller_mock_test.mocks.dart';
 /// surface stays implementable from outside the package.
 @GenerateNiceMocks([MockSpec<MKMapViewController>()])
 void main() {
-  // Nice mocks need a dummy for every non-nullable return type they hand back
-  // before a stub is installed — including while `when(...)` runs.
-  setUpAll(() => provideDummy<MKMapCamera>(sampleCamera));
-
   test('mocked controller records imperative calls', () async {
     final controller = MockMKMapViewController();
     await controller.setCamera(sampleCamera, animated: false);

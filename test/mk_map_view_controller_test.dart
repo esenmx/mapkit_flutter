@@ -54,12 +54,18 @@ void main() {
         heading: 90,
         pitch: 15,
       );
-      final camera = await harness.controller.camera;
-      const target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      final camera = (await harness.controller.camera)!;
+      final target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
       check(camera.centerCoordinate).equals(target);
       check(camera.distance).equals(4321);
       check(camera.heading).equals(90);
       check(camera.pitch).equals(15);
+    });
+
+    test('camera is null before the first layout', () async {
+      final harness = buildHarness();
+      harness.host.camera = null;
+      check(await harness.controller.camera).isNull();
     });
 
     test('region getter parses center + span', () async {
@@ -70,11 +76,17 @@ void main() {
         latitudeDelta: 1,
         longitudeDelta: 2,
       );
-      final region = await harness.controller.region;
-      const center = CLLocationCoordinate2D(latitude: 10, longitude: 20);
-      const span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
+      final region = (await harness.controller.region)!;
+      final center = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      final span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
       check(region.center).equals(center);
       check(region.span).equals(span);
+    });
+
+    test('region is null before the first layout', () async {
+      final harness = buildHarness();
+      harness.host.region = null;
+      check(await harness.controller.region).isNull();
     });
   });
 
@@ -100,7 +112,7 @@ void main() {
       final c = await harness.controller.convertToCoordinate(
         const Offset(5, 5),
       );
-      check(c).equals(const CLLocationCoordinate2D(latitude: 1, longitude: 2));
+      check(c).equals(CLLocationCoordinate2D(latitude: 1, longitude: 2));
       check(harness.host.calls.lastRecorded().name)
           .equals('convertToCoordinate');
     });
@@ -112,24 +124,34 @@ void main() {
     });
   });
 
-  group('outbound — callout', () {
-    test('showCallout forwards the id', () async {
+  group('outbound — selection', () {
+    test('selectAnnotation forwards the id and reports the outcome', () async {
       final harness = buildHarness();
-      await harness.controller.showCallout(const MKAnnotationId('a'));
-      check(harness.expectLast<String>('showCallout')).equals('a');
+      check(
+        await harness.controller.selectAnnotation(const MKAnnotationId('a')),
+      ).isTrue();
+      check(harness.expectLast<String>('selectAnnotation')).equals('a');
+      harness.host.selectResult = false;
+      check(
+        await harness.controller.selectAnnotation(const MKAnnotationId('x')),
+      ).isFalse();
     });
 
-    test('hideCallout forwards the id', () async {
+    test('deselectAnnotation reports an id that is not on the map', () async {
       final harness = buildHarness();
-      await harness.controller.hideCallout(const MKAnnotationId('a'));
-      harness.expectLastCall('hideCallout');
+      harness.host.deselectResult = false;
+      check(
+        await harness.controller.deselectAnnotation(const MKAnnotationId('a')),
+      ).isFalse();
+      harness.expectLastCall('deselectAnnotation');
     });
 
-    test('isCalloutShown returns host bool', () async {
+    test('isAnnotationSelected returns host bool', () async {
       final harness = buildHarness();
-      harness.host.calloutShown = true;
+      harness.host.annotationSelected = true;
       const annotationId = MKAnnotationId('a');
-      check(await harness.controller.isCalloutShown(annotationId)).isTrue();
+      check(await harness.controller.isAnnotationSelected(annotationId))
+          .isTrue();
     });
   });
 
@@ -137,12 +159,11 @@ void main() {
     test('takeSnapshot forwards the options', () async {
       final harness = buildHarness();
       await harness.controller.takeSnapshot(
-        const MKMapSnapshotOptions(showsBuildings: false, showsOverlays: false),
+        const MKMapSnapshotOptions(showsOverlays: false),
       );
       final options = harness.expectLast<PlatformSnapshotOptions>(
         'takeSnapshot',
       );
-      check(options.showsBuildings).isFalse();
       check(options.showsPointsOfInterest).isTrue();
       check(options.showsAnnotations).isTrue();
       check(options.showsOverlays).isFalse();
@@ -154,7 +175,7 @@ void main() {
         final harness = buildHarness();
         harness.host.lookAroundResult = true;
         final ok = await harness.controller.openLookAround(
-          const CLLocationCoordinate2D(latitude: 37, longitude: -122),
+          CLLocationCoordinate2D(latitude: 37, longitude: -122),
         );
         check(ok).isTrue();
         final sent = harness.expectLast<PlatformCoordinate>('openLookAround');
@@ -165,8 +186,8 @@ void main() {
     test('addTileOverlay forwards a typed overlay', () async {
       final harness = buildHarness();
       await harness.controller.addTileOverlay(
-        const MKTileOverlay(
-          id: MKTileOverlayId('osm'),
+        MKTileOverlay(
+          id: const MKTileOverlayId('osm'),
           urlTemplate: 'https://t/{z}/{x}/{y}.png',
           minimumZ: 3,
           maximumZ: 17,
@@ -179,11 +200,24 @@ void main() {
       check(o.canReplaceMapContent).isTrue();
     });
 
-    test('removeTileOverlay forwards id only', () async {
-      final harness = buildHarness();
-      await harness.controller.removeTileOverlay(const MKTileOverlayId('osm'));
-      check(harness.expectLast<String>('removeTileOverlay')).equals('osm');
-    });
+    test(
+      'removeTileOverlay forwards id only and reports the outcome',
+      () async {
+        final harness = buildHarness();
+        check(
+          await harness.controller.removeTileOverlay(
+            const MKTileOverlayId('osm'),
+          ),
+        ).isTrue();
+        check(harness.expectLast<String>('removeTileOverlay')).equals('osm');
+        harness.host.removeTileOverlayResult = false;
+        check(
+          await harness.controller.removeTileOverlay(
+            const MKTileOverlayId('gone'),
+          ),
+        ).isFalse();
+      },
+    );
   });
 
   group('outbound — diff updates', () {
@@ -214,11 +248,18 @@ void main() {
       check(harness.expectSink<MKMapCamera>('cameraMove').distance).equals(900);
     });
 
-    test('onAnnotationTap', () {
+    test('onAnnotationSelect', () {
       final harness = buildHarness();
-      harness.controller.eventHandler.onAnnotationTap('a');
-      final sunk = harness.expectSink<MKAnnotationId>('annotationTap');
+      harness.controller.eventHandler.onAnnotationSelect('a');
+      final sunk = harness.expectSink<MKAnnotationId>('annotationSelect');
       check(sunk).equals(const MKAnnotationId('a'));
+    });
+
+    test('onUserTrackingModeChanged delivers the new mode', () {
+      final harness = buildHarness();
+      harness.controller.eventHandler.onUserTrackingModeChanged(.none);
+      check(harness.expectSink<MKUserTrackingMode>('userTrackingModeChanged'))
+          .equals(MKUserTrackingMode.none);
     });
 
     test('annotation drag lifecycle', () {
@@ -237,7 +278,7 @@ void main() {
     test('onMapTap delivers a coordinate', () {
       final harness = buildHarness();
       harness.controller.eventHandler.onMapTap(platformCoord(10, 20));
-      const target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
+      final target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
       final sunk = harness.expectSink<CLLocationCoordinate2D>('mapTap');
       check(sunk).equals(target);
     });
@@ -263,6 +304,30 @@ void main() {
       await harness.dispose();
       final setCamera = harness.controller.setCamera(sampleCamera);
       await check(setCamera).throws<MapKitDisposedException>();
+    });
+
+    for (final code in ['look-around-failed', 'unsupported-platform']) {
+      test('openLookAround failure surfaces $code', () async {
+        final harness = buildHarness();
+        harness.host.errorToThrow = PlatformException(code: code);
+        check(
+          await catchMapKit<MapKitPlatformException>(
+            () => harness.controller.openLookAround(applePark),
+          ),
+        ).has((e) => e.code, 'code').equals(code);
+      });
+    }
+
+    test('addTileOverlay with a duplicate id surfaces duplicate-id', () async {
+      final harness = buildHarness();
+      harness.host.errorToThrow = PlatformException(code: 'duplicate-id');
+      check(
+        await catchMapKit<MapKitPlatformException>(
+          () => harness.controller.addTileOverlay(
+            MKTileOverlay(id: const MKTileOverlayId('osm'), urlTemplate: 'u'),
+          ),
+        ),
+      ).has((e) => e.code, 'code').equals('duplicate-id');
     });
 
     test('snapshot failure surfaces its stable code', () async {

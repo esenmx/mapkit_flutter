@@ -3,6 +3,7 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart';
 
 import 'package:mapkit_flutter/src/_internal/copy_with_keep.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -17,7 +18,7 @@ typedef MKPolygonId = MapItemId<MKPolygon>;
 /// fill/stroke properties merged in.
 /// See: https://developer.apple.com/documentation/mapkit/mkpolygon
 @immutable
-final class const MKPolygon({
+final class MKPolygon({
   /// Unique identifier used to diff this polygon across rebuilds.
   required final MKPolygonId id,
 
@@ -43,23 +44,27 @@ final class const MKPolygon({
   /// Whether the polygon is hidden on the map.
   final bool isHidden = false,
 
-  /// Whether this overlay consumes taps; also blocks the map's `onTap`
-  /// without a callback.
+  /// Whether this overlay captures taps: a tap on it reports to [onTap]
+  /// and does not reach the map's `onTap`. With no [onTap] it just blocks
+  /// map taps over its area.
   final bool consumeTapEvents = false,
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level = .aboveRoads,
 
-  /// Called when the overlay is tapped; implies `consumeTapEvents`.
+  /// Called when the overlay is tapped; requires [consumeTapEvents] (only
+  /// overlays that capture taps receive them).
   final VoidCallback? onTap,
 }) {
   /// Creates a polygon overlay with an outer [coordinates] ring and optional
   /// [interiorPolygons] cutout rings.
-  this
-    : assert(
-        lineWidth >= 0 && lineWidth < double.infinity,
-        'lineWidth must be a finite value >= 0',
-      );
+  ///
+  /// Throws [ArgumentError] for a negative or non-finite [lineWidth] or an
+  /// [onTap] without [consumeTapEvents].
+  this {
+    checkNonNegative(lineWidth, 'lineWidth');
+    checkTapCallback(onTap, consumeTapEvents: consumeTapEvents);
+  }
 
   /// Returns a copy with the given fields replaced.
   MKPolygon copyWith({
@@ -100,7 +105,7 @@ final class const MKPolygon({
     lineWidth: lineWidth,
     zIndex: zIndex,
     isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents || onTap != null,
+    consumeTapEvents: consumeTapEvents,
     level: level,
   );
 
@@ -116,8 +121,7 @@ final class const MKPolygon({
       other.zIndex == zIndex &&
       other.isHidden == isHidden &&
       other.consumeTapEvents == consumeTapEvents &&
-      other.level == level &&
-      (other.onTap != null) == (onTap != null);
+      other.level == level;
 
   static bool _ringsEqual(
     List<List<CLLocationCoordinate2D>> a,
@@ -142,7 +146,6 @@ final class const MKPolygon({
     isHidden,
     consumeTapEvents,
     level,
-    onTap != null,
   );
 
   @override

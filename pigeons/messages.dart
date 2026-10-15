@@ -12,10 +12,20 @@
 // `MKUserTrackingMode` or `CGLineCap` would shadow Apple's real types across
 // the plugin module. Keep the prefix for any future addition.
 //
-// Error-code contract (host -> MapKitException at the controller):
-//   snapshot-failed — `takeSnapshot` could not produce image data.
-// Everything else degrades instead of throwing: unknown ids no-op,
-// conversions return null pre-layout, `openLookAround` returns false.
+// Error-code contract (host -> MapKitPlatformException at the controller):
+//   snapshot-failed       — `takeSnapshot` could not produce image data.
+//   look-around-failed    — the Look Around scene request or presentation
+//                           failed (a missing scene is `false`, not an error).
+//   unsupported-platform  — the feature does not exist on this platform
+//                           (e.g. `openLookAround` on macOS).
+//   duplicate-id          — `addTileOverlay` with an id already on the map.
+//   invalid-icon          — undecodable image bytes or an unknown SF Symbol.
+//   unavailable-poi-category — a point-of-interest category newer than the
+//                           running OS.
+//   invalid-argument      — a value MapKit rejects (zoom range, boundary).
+// Unknown ids are reported, not ignored: select/deselect/remove return
+// whether they found the object. Reads that need a layout return null
+// before the first layout.
 
 // Pigeon parses this file with its own bundled analyzer, which does not
 // support Dart 3.13 primary-constructor syntax. Keep the class name on
@@ -114,39 +124,106 @@ enum PlatformPointOfInterestCategory {
   university,
   winery,
   zoo,
-  // iOS 18 / macOS 15. Dropped from filters on older OS versions.
+
+  // iOS 18 / macOS 15. A filter naming one on an older OS fails with
+  // `unavailable-poi-category`.
+  /// iOS 18 / macOS 15.
   animalService,
+
+  /// iOS 18 / macOS 15.
   automotiveRepair,
+
+  /// iOS 18 / macOS 15.
   baseball,
+
+  /// iOS 18 / macOS 15.
   basketball,
+
+  /// iOS 18 / macOS 15.
   beauty,
+
+  /// iOS 18 / macOS 15.
   bowling,
+
+  /// iOS 18 / macOS 15.
   castle,
+
+  /// iOS 18 / macOS 15.
   conventionCenter,
+
+  /// iOS 18 / macOS 15.
   distillery,
+
+  /// iOS 18 / macOS 15.
   fairground,
+
+  /// iOS 18 / macOS 15.
   fishing,
+
+  /// iOS 18 / macOS 15.
   fortress,
+
+  /// iOS 18 / macOS 15.
   golf,
+
+  /// iOS 18 / macOS 15.
   goKart,
+
+  /// iOS 18 / macOS 15.
   hiking,
+
+  /// iOS 18 / macOS 15.
   kayaking,
+
+  /// iOS 18 / macOS 15.
   landmark,
+
+  /// iOS 18 / macOS 15.
   mailbox,
+
+  /// iOS 18 / macOS 15.
   miniGolf,
+
+  /// iOS 18 / macOS 15.
   musicVenue,
+
+  /// iOS 18 / macOS 15.
   nationalMonument,
+
+  /// iOS 18 / macOS 15.
   planetarium,
+
+  /// iOS 18 / macOS 15.
   rockClimbing,
+
+  /// iOS 18 / macOS 15.
   rvPark,
+
+  /// iOS 18 / macOS 15.
   skatePark,
+
+  /// iOS 18 / macOS 15.
   skating,
+
+  /// iOS 18 / macOS 15.
   skiing,
+
+  /// iOS 18 / macOS 15.
   soccer,
+
+  /// iOS 18 / macOS 15.
   spa,
+
+  /// iOS 18 / macOS 15.
   surfing,
+
+  /// iOS 18 / macOS 15.
   swimming,
+
+  /// iOS 18 / macOS 15.
   tennis,
+
+  /// iOS 18 / macOS 15.
   volleyball,
 }
 
@@ -455,13 +532,11 @@ class PlatformMapConfiguration {
 /// toggles.
 class PlatformSnapshotOptions {
   PlatformSnapshotOptions({
-    required this.showsBuildings,
     required this.showsPointsOfInterest,
     required this.showsAnnotations,
     required this.showsOverlays,
   });
 
-  final bool showsBuildings;
   final bool showsPointsOfInterest;
   final bool showsAnnotations;
   final bool showsOverlays;
@@ -523,11 +598,11 @@ abstract class MapKitHostApi {
   /// `MKMapView.setCenter(_:animated:)`.
   void setCenter(PlatformCoordinate coordinate, bool animated);
 
-  /// `MKMapView.camera`.
-  PlatformMapCamera getCamera();
+  /// `MKMapView.camera`; null before the first layout.
+  PlatformMapCamera? getCamera();
 
-  /// `MKMapView.region`.
-  PlatformCoordinateRegion getRegion();
+  /// `MKMapView.region`; null before the first layout.
+  PlatformCoordinateRegion? getRegion();
 
   /// `MKMapView.convert(_:toPointTo:)`.
   PlatformPoint? convertToPoint(PlatformCoordinate coordinate);
@@ -558,21 +633,32 @@ abstract class MapKitHostApi {
 
   void updateMapConfiguration(PlatformMapConfiguration configuration);
 
-  void showCallout(String annotationId);
-  void hideCallout(String annotationId);
-  bool isCalloutShown(String annotationId);
+  /// `MKMapView.selectAnnotation(_:animated:)`; false when the id is not on
+  /// the map or the annotation is hidden.
+  bool selectAnnotation(String annotationId);
+
+  /// `MKMapView.deselectAnnotation(_:animated:)`; false when the id is not on
+  /// the map.
+  bool deselectAnnotation(String annotationId);
+
+  bool isAnnotationSelected(String annotationId);
 
   /// Throws: `snapshot-failed`.
   // @asyncCallback, not @async: pigeon's async-throws host handlers capture the non-Sendable api/reply in a Task, which Swift 6 rejects.
   @asyncCallback
   Uint8List takeSnapshot(PlatformSnapshotOptions options);
 
+  /// False when no scene exists. Throws: `look-around-failed`,
+  /// `unsupported-platform` (macOS).
   // @asyncCallback, not @async: pigeon's async-throws host handlers capture the non-Sendable api/reply in a Task, which Swift 6 rejects.
   @asyncCallback
   bool openLookAround(PlatformCoordinate coordinate);
 
+  /// Throws: `duplicate-id`.
   void addTileOverlay(PlatformTileOverlay overlay);
-  void removeTileOverlay(String tileOverlayId);
+
+  /// False when no tile overlay with this id is on the map.
+  bool removeTileOverlay(String tileOverlayId);
 
   /// Tears down the native view: removes this host's channel handlers,
   /// detaches the map delegate, stops location updates.
@@ -585,7 +671,10 @@ abstract class MapKitFlutterApi {
   void onCameraMoveStarted();
   void onCameraMove(PlatformMapCamera camera);
   void onCameraIdle();
-  void onAnnotationTap(String annotationId);
+
+  /// `MKMapViewDelegate.mapView(_:didChange:animated:)` — e.g. MapKit drops
+  /// to `none` when the user pans.
+  void onUserTrackingModeChanged(PlatformUserTrackingMode mode);
 
   /// `MKMapViewDelegate.mapView(_:didSelect:)` for a Flutter annotation.
   void onAnnotationSelect(String annotationId);

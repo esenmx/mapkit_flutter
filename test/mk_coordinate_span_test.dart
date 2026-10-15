@@ -5,8 +5,8 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   group('MKCoordinateSpan', () {
     test('equality is value-based', () {
-      const a = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
-      const b = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
+      final a = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
+      final b = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
       check(a).equals(b);
       check(a.hashCode).equals(b.hashCode);
     });
@@ -14,16 +14,16 @@ void main() {
     test('rejects out-of-range or non-finite deltas', () {
       MKCoordinateSpan span(double lat, double lng) =>
           MKCoordinateSpan(latitudeDelta: lat, longitudeDelta: lng);
-      check(() => span(-1, 0)).throws<AssertionError>();
-      check(() => span(0, -1)).throws<AssertionError>();
-      check(() => span(180.1, 0)).throws<AssertionError>();
-      check(() => span(0, 360.1)).throws<AssertionError>();
-      check(() => span(double.nan, 0)).throws<AssertionError>();
-      check(() => span(0, double.infinity)).throws<AssertionError>();
+      check(() => span(-1, 0)).throws<ArgumentError>();
+      check(() => span(0, -1)).throws<ArgumentError>();
+      check(() => span(180.1, 0)).throws<ArgumentError>();
+      check(() => span(0, 360.1)).throws<ArgumentError>();
+      check(() => span(double.nan, 0)).throws<ArgumentError>();
+      check(() => span(0, double.infinity)).throws<ArgumentError>();
     });
 
     test('round-trips through the platform type', () {
-      const original = MKCoordinateSpan(
+      final original = MKCoordinateSpan(
         latitudeDelta: 1.5,
         longitudeDelta: 2.5,
       );
@@ -34,7 +34,7 @@ void main() {
     });
 
     test('toString representation', () {
-      const span = MKCoordinateSpan(latitudeDelta: 1.2, longitudeDelta: 3.4);
+      final span = MKCoordinateSpan(latitudeDelta: 1.2, longitudeDelta: 3.4);
       check(span.toString()).equals('MKCoordinateSpan(1.2, 3.4)');
     });
   });

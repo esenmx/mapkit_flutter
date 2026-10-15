@@ -9,14 +9,14 @@ import '_helpers/fixtures.dart';
 void main() {
   group('MKPointAnnotation wire mapping', () {
     test('serializes MKAnnotationView vocabulary', () {
-      final platform = const MKPointAnnotation(
-        id: MKAnnotationId('a'),
+      final platform = MKPointAnnotation(
+        id: const MKAnnotationId('a'),
         coordinate: applePark,
-        icon: .marker(markerTintColor: Color(0xFF2266FF)),
+        icon: const .marker(markerTintColor: Color(0xFF2266FF)),
         title: 'Apple Park',
         subtitle: 'Cupertino',
         alpha: 0.8,
-        anchorPoint: Offset(0.5, 0.5),
+        anchorPoint: const Offset(0.5, 0.5),
         isDraggable: true,
         zPriority: 750,
         clusteringIdentifier: 'offices',
@@ -35,13 +35,13 @@ void main() {
       check(platform.clusteringIdentifier).equals('offices');
     });
 
-    test('callout consumes taps only when onCalloutTap is set', () {
+    test('callout tap capture is the explicit flag', () {
       check(annotation('a').toPlatform().calloutConsumesTapEvents).isFalse();
       check(
         MKPointAnnotation(
           id: const MKAnnotationId('a'),
           coordinate: applePark,
-          onCalloutTap: () {},
+          calloutConsumesTapEvents: true,
         ).toPlatform().calloutConsumesTapEvents,
       ).isTrue();
     });
@@ -63,7 +63,7 @@ void main() {
           coordinate: applePark,
           alpha: -0.1,
         ),
-      ).throws<AssertionError>();
+      ).throws<ArgumentError>();
 
       check(
         () => MKPointAnnotation(
@@ -71,7 +71,7 @@ void main() {
           coordinate: applePark,
           alpha: 1.1,
         ),
-      ).throws<AssertionError>();
+      ).throws<ArgumentError>();
     });
 
     test('accepts alpha boundaries', () {
@@ -88,11 +88,11 @@ void main() {
   });
 
   group('equality', () {
-    test('onTap and drag closure identity does not affect equality', () {
+    test('select and drag closure identity does not affect equality', () {
       MKPointAnnotation withCallbacks() => MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
-        onTap: () {},
+        onSelect: () {},
         onDragStart: (_) {},
         onDrag: (_) {},
         onDragEnd: (_) {},
@@ -103,27 +103,39 @@ void main() {
       check(withCallbacks().hashCode).equals(withCallbacks().hashCode);
     });
 
-    test('onCalloutTap presence participates in equality', () {
-      const plain = MKPointAnnotation(
-        id: MKAnnotationId('a'),
-        coordinate: applePark,
-      );
-      final withCallout = MKPointAnnotation(
-        id: const MKAnnotationId('a'),
-        coordinate: applePark,
-        onCalloutTap: () {},
-      );
-      // A null↔non-null toggle drives the calloutConsumesTapEvents wire flag,
-      // so it must read as a real change the diff can see...
-      check(withCallout == plain).isFalse();
-      // ...but two distinct non-null handlers stay equal (presence, not
-      // identity), keeping the recycle path quiet on a handler swap.
-      final otherCallout = MKPointAnnotation(
-        id: const MKAnnotationId('a'),
-        coordinate: applePark,
-        onCalloutTap: () {},
-      );
-      check(withCallout).equals(otherCallout);
+    test(
+      'calloutConsumesTapEvents is explicit state, not callback presence',
+      () {
+        final plain = MKPointAnnotation(
+          id: const MKAnnotationId('a'),
+          coordinate: applePark,
+        );
+        final consuming = MKPointAnnotation(
+          id: const MKAnnotationId('a'),
+          coordinate: applePark,
+          calloutConsumesTapEvents: true,
+        );
+        final withCallout = MKPointAnnotation(
+          id: const MKAnnotationId('a'),
+          coordinate: applePark,
+          calloutConsumesTapEvents: true,
+          onCalloutTap: () {},
+        );
+        check(consuming == plain).isFalse();
+        check(withCallout).equals(consuming);
+        check(withCallout.toPlatform().calloutConsumesTapEvents).isTrue();
+        check(plain.toPlatform().calloutConsumesTapEvents).isFalse();
+      },
+    );
+
+    test('onCalloutTap without calloutConsumesTapEvents throws', () {
+      check(
+        () => MKPointAnnotation(
+          id: const MKAnnotationId('a'),
+          coordinate: applePark,
+          onCalloutTap: () {},
+        ),
+      ).throws<ArgumentError>();
     });
 
     test('different coordinates compare unequal', () {
@@ -148,13 +160,13 @@ void main() {
   group('clustering', () {
     test('annotations sharing a clusteringIdentifier serialize it', () {
       final ids = [
-        const MKPointAnnotation(
-          id: MKAnnotationId('a'),
+        MKPointAnnotation(
+          id: const MKAnnotationId('a'),
           coordinate: applePark,
           clusteringIdentifier: 'stores',
         ),
-        const MKPointAnnotation(
-          id: MKAnnotationId('b'),
+        MKPointAnnotation(
+          id: const MKAnnotationId('b'),
           coordinate: infiniteLoop,
           clusteringIdentifier: 'stores',
         ),

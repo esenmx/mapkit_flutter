@@ -295,38 +295,71 @@ enum PlatformPointOfInterestCategory: Int, CaseIterable {
   case university = 37
   case winery = 38
   case zoo = 39
+  /// iOS 18 / macOS 15.
   case animalService = 40
+  /// iOS 18 / macOS 15.
   case automotiveRepair = 41
+  /// iOS 18 / macOS 15.
   case baseball = 42
+  /// iOS 18 / macOS 15.
   case basketball = 43
+  /// iOS 18 / macOS 15.
   case beauty = 44
+  /// iOS 18 / macOS 15.
   case bowling = 45
+  /// iOS 18 / macOS 15.
   case castle = 46
+  /// iOS 18 / macOS 15.
   case conventionCenter = 47
+  /// iOS 18 / macOS 15.
   case distillery = 48
+  /// iOS 18 / macOS 15.
   case fairground = 49
+  /// iOS 18 / macOS 15.
   case fishing = 50
+  /// iOS 18 / macOS 15.
   case fortress = 51
+  /// iOS 18 / macOS 15.
   case golf = 52
+  /// iOS 18 / macOS 15.
   case goKart = 53
+  /// iOS 18 / macOS 15.
   case hiking = 54
+  /// iOS 18 / macOS 15.
   case kayaking = 55
+  /// iOS 18 / macOS 15.
   case landmark = 56
+  /// iOS 18 / macOS 15.
   case mailbox = 57
+  /// iOS 18 / macOS 15.
   case miniGolf = 58
+  /// iOS 18 / macOS 15.
   case musicVenue = 59
+  /// iOS 18 / macOS 15.
   case nationalMonument = 60
+  /// iOS 18 / macOS 15.
   case planetarium = 61
+  /// iOS 18 / macOS 15.
   case rockClimbing = 62
+  /// iOS 18 / macOS 15.
   case rvPark = 63
+  /// iOS 18 / macOS 15.
   case skatePark = 64
+  /// iOS 18 / macOS 15.
   case skating = 65
+  /// iOS 18 / macOS 15.
   case skiing = 66
+  /// iOS 18 / macOS 15.
   case soccer = 67
+  /// iOS 18 / macOS 15.
   case spa = 68
+  /// iOS 18 / macOS 15.
   case surfing = 69
+  /// iOS 18 / macOS 15.
   case swimming = 70
+  /// iOS 18 / macOS 15.
   case tennis = 71
+  /// iOS 18 / macOS 15.
   case volleyball = 72
 }
 
@@ -1268,7 +1301,6 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PlatformSnapshotOptions: Hashable, CustomStringConvertible {
-  var showsBuildings: Bool
   var showsPointsOfInterest: Bool
   var showsAnnotations: Bool
   var showsOverlays: Bool
@@ -1276,13 +1308,11 @@ struct PlatformSnapshotOptions: Hashable, CustomStringConvertible {
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> PlatformSnapshotOptions? {
-    let showsBuildings = pigeonVar_list[0] as! Bool
-    let showsPointsOfInterest = pigeonVar_list[1] as! Bool
-    let showsAnnotations = pigeonVar_list[2] as! Bool
-    let showsOverlays = pigeonVar_list[3] as! Bool
+    let showsPointsOfInterest = pigeonVar_list[0] as! Bool
+    let showsAnnotations = pigeonVar_list[1] as! Bool
+    let showsOverlays = pigeonVar_list[2] as! Bool
 
     return PlatformSnapshotOptions(
-      showsBuildings: showsBuildings,
       showsPointsOfInterest: showsPointsOfInterest,
       showsAnnotations: showsAnnotations,
       showsOverlays: showsOverlays
@@ -1290,7 +1320,6 @@ struct PlatformSnapshotOptions: Hashable, CustomStringConvertible {
   }
   func toList() -> [Any?] {
     return [
-      showsBuildings,
       showsPointsOfInterest,
       showsAnnotations,
       showsOverlays,
@@ -1300,19 +1329,18 @@ struct PlatformSnapshotOptions: Hashable, CustomStringConvertible {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return MessagesPigeonInternal.deepEquals(lhs.showsBuildings, rhs.showsBuildings) && MessagesPigeonInternal.deepEquals(lhs.showsPointsOfInterest, rhs.showsPointsOfInterest) && MessagesPigeonInternal.deepEquals(lhs.showsAnnotations, rhs.showsAnnotations) && MessagesPigeonInternal.deepEquals(lhs.showsOverlays, rhs.showsOverlays)
+    return MessagesPigeonInternal.deepEquals(lhs.showsPointsOfInterest, rhs.showsPointsOfInterest) && MessagesPigeonInternal.deepEquals(lhs.showsAnnotations, rhs.showsAnnotations) && MessagesPigeonInternal.deepEquals(lhs.showsOverlays, rhs.showsOverlays)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("PlatformSnapshotOptions")
-    MessagesPigeonInternal.deepHash(value: showsBuildings, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: showsPointsOfInterest, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: showsAnnotations, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: showsOverlays, hasher: &hasher)
   }
 
   public var description: String {
-    return "PlatformSnapshotOptions(showsBuildings: \(String(describing: showsBuildings)), showsPointsOfInterest: \(String(describing: showsPointsOfInterest)), showsAnnotations: \(String(describing: showsAnnotations)), showsOverlays: \(String(describing: showsOverlays)))"
+    return "PlatformSnapshotOptions(showsPointsOfInterest: \(String(describing: showsPointsOfInterest)), showsAnnotations: \(String(describing: showsAnnotations)), showsOverlays: \(String(describing: showsOverlays)))"
   }
 }
 
@@ -1667,10 +1695,10 @@ protocol MapKitHostApi {
   func setRegion(region: PlatformCoordinateRegion, animated: Bool) throws
   /// `MKMapView.setCenter(_:animated:)`.
   func setCenter(coordinate: PlatformCoordinate, animated: Bool) throws
-  /// `MKMapView.camera`.
-  func getCamera() throws -> PlatformMapCamera
-  /// `MKMapView.region`.
-  func getRegion() throws -> PlatformCoordinateRegion
+  /// `MKMapView.camera`; null before the first layout.
+  func getCamera() throws -> PlatformMapCamera?
+  /// `MKMapView.region`; null before the first layout.
+  func getRegion() throws -> PlatformCoordinateRegion?
   /// `MKMapView.convert(_:toPointTo:)`.
   func convertToPoint(coordinate: PlatformCoordinate) throws -> PlatformPoint?
   /// `MKMapView.convert(_:toCoordinateFrom:)`.
@@ -1680,14 +1708,22 @@ protocol MapKitHostApi {
   func updatePolygons(toAdd: [PlatformPolygon], toChange: [PlatformPolygon], idsToRemove: [String]) throws
   func updateCircles(toAdd: [PlatformCircle], toChange: [PlatformCircle], idsToRemove: [String]) throws
   func updateMapConfiguration(configuration: PlatformMapConfiguration) throws
-  func showCallout(annotationId: String) throws
-  func hideCallout(annotationId: String) throws
-  func isCalloutShown(annotationId: String) throws -> Bool
+  /// `MKMapView.selectAnnotation(_:animated:)`; false when the id is not on
+  /// the map or the annotation is hidden.
+  func selectAnnotation(annotationId: String) throws -> Bool
+  /// `MKMapView.deselectAnnotation(_:animated:)`; false when the id is not on
+  /// the map.
+  func deselectAnnotation(annotationId: String) throws -> Bool
+  func isAnnotationSelected(annotationId: String) throws -> Bool
   /// Throws: `snapshot-failed`.
   func takeSnapshot(options: PlatformSnapshotOptions, completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void)
+  /// False when no scene exists. Throws: `look-around-failed`,
+  /// `unsupported-platform` (macOS).
   func openLookAround(coordinate: PlatformCoordinate, completion: @escaping (Result<Bool, Error>) -> Void)
+  /// Throws: `duplicate-id`.
   func addTileOverlay(overlay: PlatformTileOverlay) throws
-  func removeTileOverlay(tileOverlayId: String) throws
+  /// False when no tile overlay with this id is on the map.
+  func removeTileOverlay(tileOverlayId: String) throws -> Bool
   /// Tears down the native view: removes this host's channel handlers,
   /// detaches the map delegate, stops location updates.
   func dispose() throws
@@ -1767,7 +1803,7 @@ class MapKitHostApiSetup {
     } else {
       setCenterChannel.setMessageHandler(nil)
     }
-    /// `MKMapView.camera`.
+    /// `MKMapView.camera`; null before the first layout.
     let getCameraChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getCamera\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getCameraChannel.setMessageHandler { _, reply in
@@ -1781,7 +1817,7 @@ class MapKitHostApiSetup {
     } else {
       getCameraChannel.setMessageHandler(nil)
     }
-    /// `MKMapView.region`.
+    /// `MKMapView.region`; null before the first layout.
     let getRegionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getRegion\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getRegionChannel.setMessageHandler { _, reply in
@@ -1910,50 +1946,54 @@ class MapKitHostApiSetup {
     } else {
       updateMapConfigurationChannel.setMessageHandler(nil)
     }
-    let showCalloutChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.showCallout\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    /// `MKMapView.selectAnnotation(_:animated:)`; false when the id is not on
+    /// the map or the annotation is hidden.
+    let selectAnnotationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.selectAnnotation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      showCalloutChannel.setMessageHandler { message, reply in
+      selectAnnotationChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let annotationIdArg = args[0] as! String
         do {
-          try api.showCallout(annotationId: annotationIdArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      showCalloutChannel.setMessageHandler(nil)
-    }
-    let hideCalloutChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.hideCallout\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      hideCalloutChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let annotationIdArg = args[0] as! String
-        do {
-          try api.hideCallout(annotationId: annotationIdArg)
-          reply(wrapResult(nil))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      hideCalloutChannel.setMessageHandler(nil)
-    }
-    let isCalloutShownChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.isCalloutShown\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      isCalloutShownChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let annotationIdArg = args[0] as! String
-        do {
-          let result = try api.isCalloutShown(annotationId: annotationIdArg)
+          let result = try api.selectAnnotation(annotationId: annotationIdArg)
           reply(wrapResult(result))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      isCalloutShownChannel.setMessageHandler(nil)
+      selectAnnotationChannel.setMessageHandler(nil)
+    }
+    /// `MKMapView.deselectAnnotation(_:animated:)`; false when the id is not on
+    /// the map.
+    let deselectAnnotationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.deselectAnnotation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deselectAnnotationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let annotationIdArg = args[0] as! String
+        do {
+          let result = try api.deselectAnnotation(annotationId: annotationIdArg)
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      deselectAnnotationChannel.setMessageHandler(nil)
+    }
+    let isAnnotationSelectedChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.isAnnotationSelected\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      isAnnotationSelectedChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let annotationIdArg = args[0] as! String
+        do {
+          let result = try api.isAnnotationSelected(annotationId: annotationIdArg)
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      isAnnotationSelectedChannel.setMessageHandler(nil)
     }
     /// Throws: `snapshot-failed`.
     let takeSnapshotChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.takeSnapshot\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
@@ -1973,6 +2013,8 @@ class MapKitHostApiSetup {
     } else {
       takeSnapshotChannel.setMessageHandler(nil)
     }
+    /// False when no scene exists. Throws: `look-around-failed`,
+    /// `unsupported-platform` (macOS).
     let openLookAroundChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.openLookAround\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       openLookAroundChannel.setMessageHandler { message, reply in
@@ -1990,6 +2032,7 @@ class MapKitHostApiSetup {
     } else {
       openLookAroundChannel.setMessageHandler(nil)
     }
+    /// Throws: `duplicate-id`.
     let addTileOverlayChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.addTileOverlay\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       addTileOverlayChannel.setMessageHandler { message, reply in
@@ -2005,14 +2048,15 @@ class MapKitHostApiSetup {
     } else {
       addTileOverlayChannel.setMessageHandler(nil)
     }
+    /// False when no tile overlay with this id is on the map.
     let removeTileOverlayChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.removeTileOverlay\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       removeTileOverlayChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let tileOverlayIdArg = args[0] as! String
         do {
-          try api.removeTileOverlay(tileOverlayId: tileOverlayIdArg)
-          reply(wrapResult(nil))
+          let result = try api.removeTileOverlay(tileOverlayId: tileOverlayIdArg)
+          reply(wrapResult(result))
         } catch {
           reply(wrapError(error))
         }
@@ -2045,7 +2089,9 @@ protocol MapKitFlutterApiProtocol {
   @MainActor func onCameraMoveStarted() async throws
   @MainActor func onCameraMove(camera cameraArg: PlatformMapCamera) async throws
   @MainActor func onCameraIdle() async throws
-  @MainActor func onAnnotationTap(annotationId annotationIdArg: String) async throws
+  /// `MKMapViewDelegate.mapView(_:didChange:animated:)` — e.g. MapKit drops
+  /// to `none` when the user pans.
+  @MainActor func onUserTrackingModeChanged(mode modeArg: PlatformUserTrackingMode) async throws
   /// `MKMapViewDelegate.mapView(_:didSelect:)` for a Flutter annotation.
   @MainActor func onAnnotationSelect(annotationId annotationIdArg: String) async throws
   /// `MKMapViewDelegate.mapView(_:didDeselect:)` for a Flutter annotation.
@@ -2136,11 +2182,13 @@ class MapKitFlutterApi: MapKitFlutterApiProtocol {
       }
     }
   }
-  @MainActor func onAnnotationTap(annotationId annotationIdArg: String) async throws {
+  /// `MKMapViewDelegate.mapView(_:didChange:animated:)` — e.g. MapKit drops
+  /// to `none` when the user pans.
+  @MainActor func onUserTrackingModeChanged(mode modeArg: PlatformUserTrackingMode) async throws {
     return try await withCheckedThrowingContinuation { continuation in
-      let channelName: String = "dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap\(messageChannelSuffix)"
+      let channelName: String = "dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onUserTrackingModeChanged\(messageChannelSuffix)"
       let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-      channel.sendMessage([annotationIdArg] as [Any?]) { response in
+      channel.sendMessage([modeArg] as [Any?]) { response in
         guard let listResponse = response as? [Any?] else {
           continuation.resume(throwing: createConnectionError(withChannelName: channelName))
           return

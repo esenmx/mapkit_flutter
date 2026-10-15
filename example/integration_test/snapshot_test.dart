@@ -27,7 +27,7 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  const applePark = CLLocationCoordinate2D(
+  final applePark = CLLocationCoordinate2D(
     latitude: 37.334922,
     longitude: -122.009033,
   );
@@ -70,10 +70,7 @@ void main() {
       Set<MKPolyline> polylines = const {},
     }) => MaterialApp(
       home: MKMapView(
-        initialCamera: const MKMapCamera(
-          centerCoordinate: applePark,
-          distance: 1500,
-        ),
+        initialCamera: MKMapCamera(centerCoordinate: applePark, distance: 1500),
         annotations: annotations,
         polylines: polylines,
         onMapCreated: (c) => controller ??= c,
@@ -103,16 +100,14 @@ void main() {
     // The visible region becomes meaningful once the view has layout; a cold
     // simulator can take a while, so this wait gets its own deadline.
     final regionDeadline = DateTime.now().add(const Duration(seconds: 45));
-    var region = await ctrl.region;
-    while (region.span.latitudeDelta == 0 &&
-        DateTime.now().isBefore(regionDeadline)) {
+    var maybeRegion = await ctrl.region;
+    while (maybeRegion == null && DateTime.now().isBefore(regionDeadline)) {
       await tester.pump(const Duration(milliseconds: 250));
-      region = await ctrl.region;
+      maybeRegion = await ctrl.region;
     }
-    check(
-      region.span.latitudeDelta,
-      because: 'map region never became meaningful',
-    ).isGreaterThan(0);
+    final region = maybeRegion;
+    if (region == null) fail('map region never became meaningful');
+    check(region.span.latitudeDelta).isGreaterThan(0);
 
     // Let tiles settle so paired snapshots share a stable base map.
     await tester.pump(const Duration(seconds: 4));
@@ -139,7 +134,6 @@ void main() {
     }) async {
       final bytes = await ctrl.takeSnapshot(
         MKMapSnapshotOptions(
-          showsBuildings: false,
           showsPointsOfInterest: false,
           showsAnnotations: annotations,
           showsOverlays: overlays,

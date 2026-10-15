@@ -3,6 +3,7 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart';
 
 import 'package:mapkit_flutter/src/_internal/copy_with_keep.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -17,13 +18,17 @@ typedef MKPolylineId = MapItemId<MKPolyline>;
 /// [lineDashPattern]).
 ///
 /// [MKPolyline.geodesic] follows the shortest path over the globe
-/// (`MKGeodesicPolyline`); a non-empty [gradientColors] renders with
+/// (`MKGeodesicPolyline`); two or more [gradientColors] render with
 /// `MKGradientPolylineRenderer`.
 /// See: https://developer.apple.com/documentation/mapkit/mkpolyline
 @immutable
 final class MKPolyline {
   /// Straight-segment polyline (`MKPolyline`).
-  const new({
+  ///
+  /// Throws [ArgumentError] for a negative or non-finite [lineWidth], a
+  /// single [gradientColors] entry, or an [onTap] without
+  /// [consumeTapEvents].
+  new({
     required this.id,
     required this.coordinates,
     this.strokeColor = const Color(0xFF000000),
@@ -37,16 +42,14 @@ final class MKPolyline {
     this.consumeTapEvents = false,
     this.level = .aboveRoads,
     this.onTap,
-  }) : assert(
-         lineWidth >= 0 && lineWidth < double.infinity,
-         'lineWidth must be a finite value >= 0',
-       ),
-       isGeodesic = false;
+  }) : isGeodesic = false {
+    _validate();
+  }
 
   /// Polyline whose segments follow the shortest path over the globe,
   /// mirroring `MKGeodesicPolyline`.
   /// See: https://developer.apple.com/documentation/mapkit/mkgeodesicpolyline
-  const new geodesic({
+  new geodesic({
     required this.id,
     required this.coordinates,
     this.strokeColor = const Color(0xFF000000),
@@ -60,11 +63,21 @@ final class MKPolyline {
     this.consumeTapEvents = false,
     this.level = .aboveRoads,
     this.onTap,
-  }) : assert(
-         lineWidth >= 0 && lineWidth < double.infinity,
-         'lineWidth must be a finite value >= 0',
-       ),
-       isGeodesic = true;
+  }) : isGeodesic = true {
+    _validate();
+  }
+
+  void _validate() {
+    checkNonNegative(lineWidth, 'lineWidth');
+    checkTapCallback(onTap, consumeTapEvents: consumeTapEvents);
+    if (gradientColors.length == 1) {
+      throw ArgumentError.value(
+        gradientColors,
+        'gradientColors',
+        'needs at least two colors (or none)',
+      );
+    }
+  }
 
   /// Unique identifier used to diff this polyline across rebuilds.
   final MKPolylineId id;
@@ -99,7 +112,7 @@ final class MKPolyline {
 
   /// When non-empty, the line renders with a smooth gradient spreading these
   /// colors evenly from start to end (`MKGradientPolylineRenderer`), ignoring
-  /// [strokeColor]. Requires at least two colors.
+  /// [strokeColor]. Empty or at least two colors.
   final List<Color> gradientColors;
 
   /// Whether the polyline is hidden on the map.
@@ -109,14 +122,16 @@ final class MKPolyline {
   /// overlay z-index; ties resolve by insertion.
   final int zIndex;
 
-  /// Whether this overlay consumes taps; also blocks the map's `onTap`
-  /// without a callback.
+  /// Whether this overlay captures taps: a tap on it reports to [onTap]
+  /// and does not reach the map's `onTap`. With no [onTap] it just blocks
+  /// map taps over its area.
   final bool consumeTapEvents;
 
   /// Vertical placement relative to the base map's labels/roads.
   final MKOverlayLevel level;
 
-  /// Called when the overlay is tapped; implies `consumeTapEvents`.
+  /// Called when the overlay is tapped; requires [consumeTapEvents] (only
+  /// overlays that capture taps receive them).
   final VoidCallback? onTap;
 
   /// Returns a copy with the given fields replaced.
@@ -161,7 +176,7 @@ final class MKPolyline {
     lineCap: lineCap,
     lineJoin: lineJoin,
     isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents || onTap != null,
+    consumeTapEvents: consumeTapEvents,
     isGeodesic: isGeodesic,
     level: level,
     zIndex: zIndex,
@@ -186,8 +201,7 @@ final class MKPolyline {
       other.isHidden == isHidden &&
       other.zIndex == zIndex &&
       other.consumeTapEvents == consumeTapEvents &&
-      other.level == level &&
-      (other.onTap != null) == (onTap != null);
+      other.level == level;
 
   @override
   int get hashCode => Object.hash(
@@ -204,7 +218,6 @@ final class MKPolyline {
     zIndex,
     consumeTapEvents,
     level,
-    onTap != null,
   );
 
   @override

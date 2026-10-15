@@ -12,19 +12,22 @@ final class FakeHostApi extends MapKitHostApi {
   /// Names of all recorded calls, in order.
   List<String> get callNames => [for (final c in calls) c.$1];
 
-  PlatformMapCamera camera = PlatformMapCamera(
+  PlatformMapCamera? camera = PlatformMapCamera(
     centerCoordinate: PlatformCoordinate(latitude: 0, longitude: 0),
     distance: 1000,
     heading: 0,
     pitch: 0,
   );
-  PlatformCoordinateRegion region = PlatformCoordinateRegion(
+  PlatformCoordinateRegion? region = PlatformCoordinateRegion(
     center: PlatformCoordinate(latitude: 0, longitude: 0),
     span: PlatformCoordinateSpan(latitudeDelta: 0, longitudeDelta: 0),
   );
   PlatformPoint? point;
   PlatformCoordinate? coordinate;
-  bool calloutShown = false;
+  bool annotationSelected = false;
+  bool selectResult = true;
+  bool deselectResult = true;
+  bool removeTileOverlayResult = true;
   bool lookAroundResult = false;
   Object? errorToThrow;
 
@@ -59,13 +62,13 @@ final class FakeHostApi extends MapKitHostApi {
       _record('setCenter', (coordinate, animated));
 
   @override
-  Future<PlatformMapCamera> getCamera() async {
+  Future<PlatformMapCamera?> getCamera() async {
     _record('getCamera', null);
     return camera;
   }
 
   @override
-  Future<PlatformCoordinateRegion> getRegion() async {
+  Future<PlatformCoordinateRegion?> getRegion() async {
     _record('getRegion', null);
     return region;
   }
@@ -116,17 +119,21 @@ final class FakeHostApi extends MapKitHostApi {
   ) async => _record('updateMapConfiguration', configuration);
 
   @override
-  Future<void> showCallout(String annotationId) async =>
-      _record('showCallout', annotationId);
+  Future<bool> selectAnnotation(String annotationId) async {
+    _record('selectAnnotation', annotationId);
+    return selectResult;
+  }
 
   @override
-  Future<void> hideCallout(String annotationId) async =>
-      _record('hideCallout', annotationId);
+  Future<bool> deselectAnnotation(String annotationId) async {
+    _record('deselectAnnotation', annotationId);
+    return deselectResult;
+  }
 
   @override
-  Future<bool> isCalloutShown(String annotationId) async {
-    _record('isCalloutShown', annotationId);
-    return calloutShown;
+  Future<bool> isAnnotationSelected(String annotationId) async {
+    _record('isAnnotationSelected', annotationId);
+    return annotationSelected;
   }
 
   @override
@@ -146,8 +153,10 @@ final class FakeHostApi extends MapKitHostApi {
       _record('addTileOverlay', overlay);
 
   @override
-  Future<void> removeTileOverlay(String tileOverlayId) async =>
-      _record('removeTileOverlay', tileOverlayId);
+  Future<bool> removeTileOverlay(String tileOverlayId) async {
+    _record('removeTileOverlay', tileOverlayId);
+    return removeTileOverlayResult;
+  }
 
   @override
   Future<void> dispose() async => _record('dispose', null);

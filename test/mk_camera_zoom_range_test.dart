@@ -5,17 +5,17 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   group('MKCameraZoomRange', () {
     test('defaults to unbounded', () {
-      const range = MKCameraZoomRange();
+      final range = MKCameraZoomRange();
       check(range.minCenterCoordinateDistance).isNull();
       check(range.maxCenterCoordinateDistance).isNull();
     });
 
     test('equality is value-based', () {
-      const a = MKCameraZoomRange(
+      final a = MKCameraZoomRange(
         minCenterCoordinateDistance: 500,
         maxCenterCoordinateDistance: 100000,
       );
-      const b = MKCameraZoomRange(
+      final b = MKCameraZoomRange(
         minCenterCoordinateDistance: 500,
         maxCenterCoordinateDistance: 100000,
       );
@@ -29,20 +29,20 @@ void main() {
           minCenterCoordinateDistance: 2,
           maxCenterCoordinateDistance: 1,
         ),
-      ).throws<AssertionError>();
+      ).throws<ArgumentError>();
       check(() => MKCameraZoomRange(minCenterCoordinateDistance: -1))
-          .throws<AssertionError>();
+          .throws<ArgumentError>();
       check(() => MKCameraZoomRange(maxCenterCoordinateDistance: -1))
-          .throws<AssertionError>();
+          .throws<ArgumentError>();
       check(() => MKCameraZoomRange(minCenterCoordinateDistance: double.nan))
-          .throws<AssertionError>();
+          .throws<ArgumentError>();
       check(
         () => MKCameraZoomRange(maxCenterCoordinateDistance: double.infinity),
-      ).throws<AssertionError>();
+      ).throws<ArgumentError>();
     });
 
     test('serializes both distances', () {
-      const range = MKCameraZoomRange(
+      final range = MKCameraZoomRange(
         minCenterCoordinateDistance: 500,
         maxCenterCoordinateDistance: 100000,
       );

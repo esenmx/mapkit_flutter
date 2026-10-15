@@ -16,7 +16,8 @@ final class RecordingSink implements MKMapViewEventSink {
   void onCameraIdle() => events.add(('cameraIdle', null));
 
   @override
-  void onAnnotationTap(MKAnnotationId id) => events.add(('annotationTap', id));
+  void onUserTrackingModeChanged(MKUserTrackingMode mode) =>
+      events.add(('userTrackingModeChanged', mode));
 
   @override
   void onAnnotationSelect(MKAnnotationId id) =>

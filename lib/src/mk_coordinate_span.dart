@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 import 'package:meta/meta.dart';
 
@@ -6,7 +7,7 @@ import 'package:meta/meta.dart';
 /// `MKCoordinateSpan(latitudeDelta:longitudeDelta:)`.
 /// See: https://developer.apple.com/documentation/mapkit/mkcoordinatespan
 @immutable
-final class const MKCoordinateSpan({
+final class MKCoordinateSpan({
   /// North-to-south span in degrees in `[0, 180]`.
   required final double latitudeDelta,
 
@@ -14,16 +15,11 @@ final class const MKCoordinateSpan({
   required final double longitudeDelta,
 }) {
   /// Creates a coordinate span with [latitudeDelta] in `[0, 180]` and
-  /// [longitudeDelta] in `[0, 360]`.
-  this
-    : assert(
-        latitudeDelta >= 0 && latitudeDelta <= 180,
-        'latitudeDelta must be in [0, 180]',
-      ),
-      assert(
-        longitudeDelta >= 0 && longitudeDelta <= 360,
-        'longitudeDelta must be in [0, 360]',
-      );
+  /// [longitudeDelta] in `[0, 360]`; throws [ArgumentError] otherwise.
+  this {
+    checkInRange(latitudeDelta, 0, 180, 'latitudeDelta');
+    checkInRange(longitudeDelta, 0, 360, 'longitudeDelta');
+  }
 
   /// Constructs a coordinate span from its Pigeon wire representation.
   @internal

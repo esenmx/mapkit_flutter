@@ -10,7 +10,7 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  const applePark = CLLocationCoordinate2D(
+  final applePark = CLLocationCoordinate2D(
     latitude: 37.334922,
     longitude: -122.009033,
   );
@@ -20,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: MKMapView(
-          initialCamera: const MKMapCamera(
+          initialCamera: MKMapCamera(
             centerCoordinate: applePark,
             distance: 1500,
           ),
@@ -38,24 +38,26 @@ void main() {
       fail('platform view never reached onMapCreated');
     }
 
-    // The visible region becomes meaningful once the view has layout.
-    var region = await ctrl.region;
-    while (region.span.latitudeDelta == 0 &&
-        DateTime.now().isBefore(deadline)) {
+    // The visible region exists once the view has layout (null before).
+    var maybeRegion = await ctrl.region;
+    while (maybeRegion == null && DateTime.now().isBefore(deadline)) {
       await tester.pump(const Duration(milliseconds: 250));
-      region = await ctrl.region;
+      maybeRegion = await ctrl.region;
     }
+    final region = maybeRegion;
+    if (region == null) fail('map never got a layout');
     check(region.span.latitudeDelta).isGreaterThan(0);
     check(region.center.latitude).isCloseTo(applePark.latitude, 0.05);
 
     // setCamera → camera round-trip through the host API. MapKit may adjust
     // the exact distance, so assertions stay tolerant.
     await ctrl.setCamera(
-      const MKMapCamera(centerCoordinate: applePark, distance: 5000),
+      MKMapCamera(centerCoordinate: applePark, distance: 5000),
       animated: false,
     );
     await tester.pump(const Duration(seconds: 1));
     final camera = await ctrl.camera;
+    if (camera == null) fail('camera lost its layout');
     final center = camera.centerCoordinate;
     check(center.latitude).isCloseTo(applePark.latitude, 0.05);
     check(center.longitude).isCloseTo(applePark.longitude, 0.05);

@@ -3,6 +3,7 @@ import 'dart:ui' show Offset;
 import 'package:flutter/foundation.dart';
 
 import 'package:mapkit_flutter/src/_internal/copy_with_keep.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/map_item_id.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -18,7 +19,7 @@ typedef MKAnnotationId = MapItemId<MKPointAnnotation>;
 /// object to configure.
 /// See: https://developer.apple.com/documentation/mapkit/mkpointannotation
 @immutable
-final class const MKPointAnnotation({
+final class MKPointAnnotation({
   /// Unique identifier used to diff this annotation across rebuilds.
   required final MKAnnotationId id,
 
@@ -38,10 +39,10 @@ final class const MKPointAnnotation({
   /// View opacity in `[0, 1]`.
   final double alpha = 1.0,
 
-  /// Normalized anchor within the icon image (`MKAnnotationView.anchorPoint`):
-  /// `(0.5, 1)` pins the bottom-center to [coordinate]. Applies to
-  /// [MKAnnotationIcon.image] icons; system markers anchor themselves. iOS
-  /// only: macOS centers the image on [coordinate].
+  /// Normalized anchor within the icon image (`MKAnnotationView.anchorPoint`
+  /// on iOS, the equivalent `centerOffset` on macOS): `(0.5, 1)` pins the
+  /// bottom-center to [coordinate]. Applies to [MKAnnotationIcon.image]
+  /// icons; system markers anchor themselves.
   final Offset anchorPoint = const Offset(0.5, 1),
 
   /// Whether the user can drag the annotation
@@ -61,11 +62,14 @@ final class const MKPointAnnotation({
   /// `null` means the annotation never clusters.
   final String? clusteringIdentifier,
 
-  /// Called when the user taps the annotation view.
-  final VoidCallback? onTap,
+  /// Whether taps on the callout bubble are captured and reported to
+  /// [onCalloutTap]. iOS only: `MKMapView` throws a
+  /// `MapKitUnsupportedPlatformException` for `true` on macOS, which shows
+  /// MapKit's default callout.
+  final bool calloutConsumesTapEvents = false,
 
-  /// Called when the callout bubble is tapped. iOS only (macOS shows
-  /// MapKit's default callout).
+  /// Called when the callout bubble is tapped; requires
+  /// [calloutConsumesTapEvents]. iOS only.
   final VoidCallback? onCalloutTap,
 
   /// Called with the starting coordinate when a drag begins.
@@ -77,14 +81,28 @@ final class const MKPointAnnotation({
   /// Called with the final coordinate when a drag ends.
   final ValueChanged<CLLocationCoordinate2D>? onDragEnd,
 
-  /// `mapView(_:didSelect:)` — user or programmatic, after `onTap`.
+  /// `mapView(_:didSelect:)` — the user tapped the annotation, or
+  /// `MKMapViewController.selectAnnotation` selected it.
   final VoidCallback? onSelect,
 
   /// `mapView(_:didDeselect:)`.
   final VoidCallback? onDeselect,
 }) {
   /// Creates a point annotation at [coordinate].
-  this : assert(0.0 <= alpha && alpha <= 1.0, 'alpha must be in [0, 1]');
+  ///
+  /// Throws [ArgumentError] when [alpha] is outside `[0, 1]`, or when
+  /// [onCalloutTap] is set without [calloutConsumesTapEvents] (it would never
+  /// fire).
+  this {
+    checkInRange(alpha, 0, 1, 'alpha');
+    if (onCalloutTap != null && !calloutConsumesTapEvents) {
+      throw ArgumentError.value(
+        onCalloutTap,
+        'onCalloutTap',
+        'requires calloutConsumesTapEvents: true',
+      );
+    }
+  }
 
   /// Returns a copy with the given fields replaced.
   MKPointAnnotation copyWith({
@@ -98,7 +116,7 @@ final class const MKPointAnnotation({
     bool? isHidden,
     double? zPriority,
     String? clusteringIdentifier = keepString,
-    VoidCallback? onTap = keepCallback,
+    bool? calloutConsumesTapEvents,
     VoidCallback? onCalloutTap = keepCallback,
     ValueChanged<CLLocationCoordinate2D>? onDragStart = keepCoordinateCallback,
     ValueChanged<CLLocationCoordinate2D>? onDrag = keepCoordinateCallback,
@@ -119,7 +137,8 @@ final class const MKPointAnnotation({
     clusteringIdentifier: identical(clusteringIdentifier, keepString)
         ? this.clusteringIdentifier
         : clusteringIdentifier,
-    onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
+    calloutConsumesTapEvents:
+        calloutConsumesTapEvents ?? this.calloutConsumesTapEvents,
     onCalloutTap: identical(onCalloutTap, keepCallback)
         ? this.onCalloutTap
         : onCalloutTap,
@@ -144,7 +163,7 @@ final class const MKPointAnnotation({
     icon: icon.toPlatform(),
     title: title,
     subtitle: subtitle,
-    calloutConsumesTapEvents: onCalloutTap != null,
+    calloutConsumesTapEvents: calloutConsumesTapEvents,
     alpha: alpha,
     anchorPointX: anchorPoint.dx,
     anchorPointY: anchorPoint.dy,
@@ -168,10 +187,7 @@ final class const MKPointAnnotation({
       other.isHidden == isHidden &&
       other.zPriority == zPriority &&
       other.clusteringIdentifier == clusteringIdentifier &&
-      // `onCalloutTap`'s presence drives the native `calloutConsumesTapEvents`
-      // flag, so a null↔non-null toggle is a real change. Closure identity
-      // still isn't compared — that routes through the live dispatch table.
-      (other.onCalloutTap != null) == (onCalloutTap != null);
+      other.calloutConsumesTapEvents == calloutConsumesTapEvents;
 
   @override
   int get hashCode => Object.hash(
@@ -186,7 +202,7 @@ final class const MKPointAnnotation({
     isHidden,
     zPriority,
     clusteringIdentifier,
-    onCalloutTap != null,
+    calloutConsumesTapEvents,
   );
 
   @override
@@ -197,7 +213,7 @@ final class const MKPointAnnotation({
       ..write('title: $title, ')
       ..write('isHidden: $isHidden, ')
       ..write('isDraggable: $isDraggable, ')
-      ..write('onTap: ${onTap != null ? 'set' : 'null'}');
+      ..write('onSelect: ${onSelect != null ? 'set' : 'null'}');
     return (b..write(')')).toString();
   }
 }

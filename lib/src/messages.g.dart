@@ -192,38 +192,104 @@ enum PlatformPointOfInterestCategory {
   university,
   winery,
   zoo,
+
+  /// iOS 18 / macOS 15.
   animalService,
+
+  /// iOS 18 / macOS 15.
   automotiveRepair,
+
+  /// iOS 18 / macOS 15.
   baseball,
+
+  /// iOS 18 / macOS 15.
   basketball,
+
+  /// iOS 18 / macOS 15.
   beauty,
+
+  /// iOS 18 / macOS 15.
   bowling,
+
+  /// iOS 18 / macOS 15.
   castle,
+
+  /// iOS 18 / macOS 15.
   conventionCenter,
+
+  /// iOS 18 / macOS 15.
   distillery,
+
+  /// iOS 18 / macOS 15.
   fairground,
+
+  /// iOS 18 / macOS 15.
   fishing,
+
+  /// iOS 18 / macOS 15.
   fortress,
+
+  /// iOS 18 / macOS 15.
   golf,
+
+  /// iOS 18 / macOS 15.
   goKart,
+
+  /// iOS 18 / macOS 15.
   hiking,
+
+  /// iOS 18 / macOS 15.
   kayaking,
+
+  /// iOS 18 / macOS 15.
   landmark,
+
+  /// iOS 18 / macOS 15.
   mailbox,
+
+  /// iOS 18 / macOS 15.
   miniGolf,
+
+  /// iOS 18 / macOS 15.
   musicVenue,
+
+  /// iOS 18 / macOS 15.
   nationalMonument,
+
+  /// iOS 18 / macOS 15.
   planetarium,
+
+  /// iOS 18 / macOS 15.
   rockClimbing,
+
+  /// iOS 18 / macOS 15.
   rvPark,
+
+  /// iOS 18 / macOS 15.
   skatePark,
+
+  /// iOS 18 / macOS 15.
   skating,
+
+  /// iOS 18 / macOS 15.
   skiing,
+
+  /// iOS 18 / macOS 15.
   soccer,
+
+  /// iOS 18 / macOS 15.
   spa,
+
+  /// iOS 18 / macOS 15.
   surfing,
+
+  /// iOS 18 / macOS 15.
   swimming,
+
+  /// iOS 18 / macOS 15.
   tennis,
+
+  /// iOS 18 / macOS 15.
   volleyball,
 }
 
@@ -1364,13 +1430,10 @@ class PlatformMapConfiguration {
 /// toggles.
 class PlatformSnapshotOptions {
   PlatformSnapshotOptions({
-    required this.showsBuildings,
     required this.showsPointsOfInterest,
     required this.showsAnnotations,
     required this.showsOverlays,
   });
-
-  bool showsBuildings;
 
   bool showsPointsOfInterest;
 
@@ -1379,12 +1442,7 @@ class PlatformSnapshotOptions {
   bool showsOverlays;
 
   List<Object?> _toList() {
-    return <Object?>[
-      showsBuildings,
-      showsPointsOfInterest,
-      showsAnnotations,
-      showsOverlays,
-    ];
+    return <Object?>[showsPointsOfInterest, showsAnnotations, showsOverlays];
   }
 
   Object encode() {
@@ -1394,10 +1452,9 @@ class PlatformSnapshotOptions {
   static PlatformSnapshotOptions decode(Object result) {
     result as List<Object?>;
     return PlatformSnapshotOptions(
-      showsBuildings: result[0]! as bool,
-      showsPointsOfInterest: result[1]! as bool,
-      showsAnnotations: result[2]! as bool,
-      showsOverlays: result[3]! as bool,
+      showsPointsOfInterest: result[0]! as bool,
+      showsAnnotations: result[1]! as bool,
+      showsOverlays: result[2]! as bool,
     );
   }
 
@@ -1410,8 +1467,7 @@ class PlatformSnapshotOptions {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(showsBuildings, other.showsBuildings) &&
-        _deepEquals(showsPointsOfInterest, other.showsPointsOfInterest) &&
+    return _deepEquals(showsPointsOfInterest, other.showsPointsOfInterest) &&
         _deepEquals(showsAnnotations, other.showsAnnotations) &&
         _deepEquals(showsOverlays, other.showsOverlays);
   }
@@ -1422,7 +1478,7 @@ class PlatformSnapshotOptions {
 
   @override
   String toString() {
-    return 'PlatformSnapshotOptions(showsBuildings: $showsBuildings, showsPointsOfInterest: $showsPointsOfInterest, showsAnnotations: $showsAnnotations, showsOverlays: $showsOverlays)';
+    return 'PlatformSnapshotOptions(showsPointsOfInterest: $showsPointsOfInterest, showsAnnotations: $showsAnnotations, showsOverlays: $showsOverlays)';
   }
 }
 
@@ -1847,8 +1903,8 @@ class MapKitHostApi {
     );
   }
 
-  /// `MKMapView.camera`.
-  Future<PlatformMapCamera> getCamera() async {
+  /// `MKMapView.camera`; null before the first layout.
+  Future<PlatformMapCamera?> getCamera() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getCamera$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1862,13 +1918,13 @@ class MapKitHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: false,
+      isNullValid: true,
     );
-    return pigeonVar_replyValue! as PlatformMapCamera;
+    return pigeonVar_replyValue as PlatformMapCamera?;
   }
 
-  /// `MKMapView.region`.
-  Future<PlatformCoordinateRegion> getRegion() async {
+  /// `MKMapView.region`; null before the first layout.
+  Future<PlatformCoordinateRegion?> getRegion() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.getRegion$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1882,9 +1938,9 @@ class MapKitHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: false,
+      isNullValid: true,
     );
-    return pigeonVar_replyValue! as PlatformCoordinateRegion;
+    return pigeonVar_replyValue as PlatformCoordinateRegion?;
   }
 
   /// `MKMapView.convert(_:toPointTo:)`.
@@ -2049,9 +2105,11 @@ class MapKitHostApi {
     );
   }
 
-  Future<void> showCallout(String annotationId) async {
+  /// `MKMapView.selectAnnotation(_:animated:)`; false when the id is not on
+  /// the map or the annotation is hidden.
+  Future<bool> selectAnnotation(String annotationId) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.showCallout$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.selectAnnotation$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -2062,16 +2120,19 @@ class MapKitHostApi {
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
-    _extractReplyValueOrThrow(
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
+    return pigeonVar_replyValue! as bool;
   }
 
-  Future<void> hideCallout(String annotationId) async {
+  /// `MKMapView.deselectAnnotation(_:animated:)`; false when the id is not on
+  /// the map.
+  Future<bool> deselectAnnotation(String annotationId) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.hideCallout$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.deselectAnnotation$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -2082,16 +2143,17 @@ class MapKitHostApi {
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
-    _extractReplyValueOrThrow(
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
+    return pigeonVar_replyValue! as bool;
   }
 
-  Future<bool> isCalloutShown(String annotationId) async {
+  Future<bool> isAnnotationSelected(String annotationId) async {
     final pigeonVar_channelName =
-        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.isCalloutShown$pigeonVar_messageChannelSuffix';
+        'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.isAnnotationSelected$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -2132,6 +2194,8 @@ class MapKitHostApi {
     return pigeonVar_replyValue! as Uint8List;
   }
 
+  /// False when no scene exists. Throws: `look-around-failed`,
+  /// `unsupported-platform` (macOS).
   Future<bool> openLookAround(PlatformCoordinate coordinate) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.openLookAround$pigeonVar_messageChannelSuffix';
@@ -2153,6 +2217,7 @@ class MapKitHostApi {
     return pigeonVar_replyValue! as bool;
   }
 
+  /// Throws: `duplicate-id`.
   Future<void> addTileOverlay(PlatformTileOverlay overlay) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.addTileOverlay$pigeonVar_messageChannelSuffix';
@@ -2173,7 +2238,8 @@ class MapKitHostApi {
     );
   }
 
-  Future<void> removeTileOverlay(String tileOverlayId) async {
+  /// False when no tile overlay with this id is on the map.
+  Future<bool> removeTileOverlay(String tileOverlayId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.removeTileOverlay$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2186,11 +2252,12 @@ class MapKitHostApi {
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
-    _extractReplyValueOrThrow(
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
+    return pigeonVar_replyValue! as bool;
   }
 
   /// Tears down the native view: removes this host's channel handlers,
@@ -2224,7 +2291,9 @@ abstract class MapKitFlutterApi {
 
   void onCameraIdle();
 
-  void onAnnotationTap(String annotationId);
+  /// `MKMapViewDelegate.mapView(_:didChange:animated:)` — e.g. MapKit drops
+  /// to `none` when the user pans.
+  void onUserTrackingModeChanged(PlatformUserTrackingMode mode);
 
   /// `MKMapViewDelegate.mapView(_:didSelect:)` for a Flutter annotation.
   void onAnnotationSelect(String annotationId);
@@ -2343,7 +2412,7 @@ abstract class MapKitFlutterApi {
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onAnnotationTap$messageChannelSuffix',
+        'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.onUserTrackingModeChanged$messageChannelSuffix',
         pigeonChannelCodec,
         binaryMessenger: binaryMessenger,
       );
@@ -2352,9 +2421,10 @@ abstract class MapKitFlutterApi {
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final String arg_annotationId = args[0]! as String;
+          final PlatformUserTrackingMode arg_mode =
+              args[0]! as PlatformUserTrackingMode;
           try {
-            api.onAnnotationTap(arg_annotationId);
+            api.onUserTrackingModeChanged(arg_mode);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

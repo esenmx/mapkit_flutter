@@ -1,4 +1,5 @@
 import 'package:checks/checks.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
@@ -45,7 +46,7 @@ void main() {
         const MKStandardMapConfiguration(),
     bool isZoomEnabled = true,
     bool showsUserLocation = false,
-    MKCameraZoomRange cameraZoomRange = const MKCameraZoomRange(),
+    MKCameraZoomRange cameraZoomRange = MKCameraZoomRange.unbounded,
     void Function(MKMapViewController)? onMapCreated,
     VoidCallback? onCameraMoveStarted,
     ValueChanged<MKMapCamera>? onCameraMove,
@@ -83,7 +84,7 @@ void main() {
     testWidgets(
       'throws MapKitUnsupportedPlatformException off Apple platforms',
       (tester) async {
-        await tester.pumpWidget(const MKMapView(initialCamera: sampleCamera));
+        await tester.pumpWidget(MKMapView(initialCamera: sampleCamera));
         check(tester.takeException()).isA<MapKitUnsupportedPlatformException>();
       },
     );
@@ -252,9 +253,7 @@ void main() {
         map(
           isZoomEnabled: false,
           showsUserLocation: true,
-          cameraZoomRange: const MKCameraZoomRange(
-            minCenterCoordinateDistance: 500,
-          ),
+          cameraZoomRange: MKCameraZoomRange(minCenterCoordinateDistance: 500),
         ),
       );
       await tester.pump();
@@ -317,10 +316,9 @@ void main() {
       requireCreated().eventHandler
         ..onMapTap(platformCoord(1, 2))
         ..onMapLongPress(platformCoord(3, 4));
-      check(tapped)
-          .equals(const CLLocationCoordinate2D(latitude: 1, longitude: 2));
+      check(tapped).equals(CLLocationCoordinate2D(latitude: 1, longitude: 2));
       check(longPressed)
-          .equals(const CLLocationCoordinate2D(latitude: 3, longitude: 4));
+          .equals(CLLocationCoordinate2D(latitude: 3, longitude: 4));
     });
 
     testWidgets('camera lifecycle events reach the widget callbacks', (
@@ -346,45 +344,46 @@ void main() {
         ..onCameraIdle();
       check(events).deepEquals(['started', 'move', 'idle']);
       check(movedCamera).equals(
-        const MKMapCamera(
+        MKMapCamera(
           centerCoordinate: CLLocationCoordinate2D(latitude: 5, longitude: 6),
           distance: 700,
         ),
       );
     });
 
-    testWidgets('annotation taps reach the matching annotation', (
+    testWidgets('annotation selection reaches the matching annotation', (
       tester,
     ) async {
-      var tapCount = 0;
-      final tappable = MKPointAnnotation(
+      var selectCount = 0;
+      final selectable = MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
-        onTap: () => tapCount++,
+        onSelect: () => selectCount++,
       );
-      await tester.pumpWidget(map(annotations: {tappable}));
+      await tester.pumpWidget(map(annotations: {selectable}));
       await tester.pump();
 
       requireCreated().eventHandler
-        ..onAnnotationTap('a')
-        ..onAnnotationTap('missing');
-      check(tapCount).equals(1);
+        ..onAnnotationSelect('a')
+        ..onAnnotationSelect('missing');
+      check(selectCount).equals(1);
     });
 
-    testWidgets('annotation tap fires the latest closure after a rebuild', (
+    testWidgets('annotation select fires the latest closure after a rebuild', (
       tester,
     ) async {
       var fired = '';
       MKPointAnnotation tappable(String tag) => MKPointAnnotation(
         id: const MKAnnotationId('a'),
         coordinate: applePark,
-        onTap: () => fired = tag,
+        onSelect: () => fired = tag,
       );
 
       await tester.pumpWidget(map(annotations: {tappable('first')}));
       await tester.pump();
 
-      // Visually identical annotation (same id/coordinate/icon), fresh onTap.
+      // Visually identical annotation (same id/coordinate/icon), fresh
+      // onSelect.
       // The two are `==`-equal, so `setEquals` skips the native update — proven
       // by no updateAnnotations call — yet the dispatch table must still adopt
       // the new closure, or the tap would fire stale captured state.
@@ -392,7 +391,7 @@ void main() {
       await tester.pump();
 
       check(host.callNames).deepEquals(['initialize']);
-      requireCreated().eventHandler.onAnnotationTap('a');
+      requireCreated().eventHandler.onAnnotationSelect('a');
       check(fired).equals('second');
     });
 
@@ -403,6 +402,7 @@ void main() {
         MKPointAnnotation interactive(String tag) => MKPointAnnotation(
           id: const MKAnnotationId('a'),
           coordinate: applePark,
+          calloutConsumesTapEvents: true,
           onCalloutTap: () => events.add('callout-$tag'),
           onDragStart: (c) => events.add('start-$tag:${c.latitude}'),
           onDrag: (c) => events.add('drag-$tag:${c.latitude}'),
@@ -434,13 +434,22 @@ void main() {
         final events = <String>[];
         Widget buildOverlays(String tag) => map(
           polylines: {
-            polyline('line').copyWith(onTap: () => events.add('line-$tag')),
+            polyline('line').copyWith(
+              consumeTapEvents: true,
+              onTap: () => events.add('line-$tag'),
+            ),
           },
           polygons: {
-            polygon('poly').copyWith(onTap: () => events.add('poly-$tag')),
+            polygon('poly').copyWith(
+              consumeTapEvents: true,
+              onTap: () => events.add('poly-$tag'),
+            ),
           },
           circles: {
-            circle('circ').copyWith(onTap: () => events.add('circ-$tag')),
+            circle('circ').copyWith(
+              consumeTapEvents: true,
+              onTap: () => events.add('circ-$tag'),
+            ),
           },
         );
 
@@ -497,6 +506,24 @@ void main() {
       check(events).deepEquals(['select-second', 'deselect-second']);
     });
 
+    testWidgets('a tracking-mode change reaches onUserTrackingModeChanged', (
+      tester,
+    ) async {
+      final modes = <MKUserTrackingMode>[];
+      await tester.pumpWidget(
+        MKMapView(
+          initialCamera: sampleCamera,
+          userTrackingMode: .follow,
+          onUserTrackingModeChanged: modes.add,
+          debugControllerFactory: controllerFactory,
+        ),
+      );
+      await tester.pump();
+
+      requireCreated().eventHandler.onUserTrackingModeChanged(.none);
+      check(modes).deepEquals([MKUserTrackingMode.none]);
+    });
+
     testWidgets('a selected map feature reaches onMapFeatureSelected', (
       tester,
     ) async {
@@ -513,7 +540,7 @@ void main() {
         ),
       );
       check(selected).equals(
-        const MKMapFeature(
+        MKMapFeature(
           featureType: .territory,
           coordinate: CLLocationCoordinate2D(latitude: 1, longitude: 2),
           title: 'Cupertino',
@@ -522,4 +549,89 @@ void main() {
       );
     });
   });
+
+  group('iOS-only settings on macOS', () {
+    final cases = <String, MKMapView Function(MKMapViewEventSinkFactory)>{
+      'followWithHeading': (f) => MKMapView(
+        initialCamera: sampleCamera,
+        userTrackingMode: .followWithHeading,
+        debugControllerFactory: f,
+      ),
+      'selectableMapFeatures': (f) => MKMapView(
+        initialCamera: sampleCamera,
+        selectableMapFeatures: const {.pointsOfInterest},
+        debugControllerFactory: f,
+      ),
+      'onMapFeatureSelected': (f) => MKMapView(
+        initialCamera: sampleCamera,
+        onMapFeatureSelected: (_) {},
+        debugControllerFactory: f,
+      ),
+      'insetsLayoutMarginsFromSafeArea': (f) => MKMapView(
+        initialCamera: sampleCamera,
+        insetsLayoutMarginsFromSafeArea: false,
+        debugControllerFactory: f,
+      ),
+      'calloutConsumesTapEvents': (f) => MKMapView(
+        initialCamera: sampleCamera,
+        annotations: {
+          MKPointAnnotation(
+            id: const MKAnnotationId('a'),
+            coordinate: applePark,
+            calloutConsumesTapEvents: true,
+          ),
+        },
+        debugControllerFactory: f,
+      ),
+    };
+
+    for (final MapEntry(key: name, value: build) in cases.entries) {
+      testWidgets('$name throws on macOS instead of being ignored', (
+        tester,
+      ) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+        await tester.pumpWidget(build(controllerFactory));
+        debugDefaultTargetPlatformOverride = null;
+        check(tester.takeException())
+            .isA<MapKitUnsupportedPlatformException>()
+            .has((e) => e.feature, 'feature')
+            .isNotNull()
+            .contains(name);
+        check(host.callNames).isEmpty();
+      });
+
+      testWidgets('$name is accepted on iOS', (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        await tester.pumpWidget(build(controllerFactory));
+        debugDefaultTargetPlatformOverride = null;
+        check(tester.takeException()).isNull();
+      });
+    }
+
+    testWidgets('a rebuild that adds an iOS-only setting throws on macOS', (
+      tester,
+    ) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      await tester.pumpWidget(
+        MKMapView(
+          initialCamera: sampleCamera,
+          debugControllerFactory: controllerFactory,
+        ),
+      );
+      await tester.pump();
+      await tester.pumpWidget(
+        MKMapView(
+          initialCamera: sampleCamera,
+          userTrackingMode: .followWithHeading,
+          debugControllerFactory: controllerFactory,
+        ),
+      );
+      debugDefaultTargetPlatformOverride = null;
+      check(tester.takeException()).isA<MapKitUnsupportedPlatformException>();
+    });
+  });
 }
+
+typedef MKMapViewEventSinkFactory = MKMapViewControllerImpl Function(
+  MKMapViewEventSink sink,
+);

@@ -27,7 +27,7 @@ void main() {
       title: 'title',
       subtitle: 'subtitle',
       clusteringIdentifier: 'shops',
-      onTap: tap,
+      calloutConsumesTapEvents: true,
       onCalloutTap: tap,
       onDragStart: onCoordinate,
       onDrag: onCoordinate,
@@ -57,13 +57,6 @@ void main() {
         clear: (a) => a.copyWith(clusteringIdentifier: null),
         set: (a) => a.copyWith(clusteringIdentifier: 'next'),
         next: 'next',
-      ),
-      (
-        name: 'onTap',
-        read: (a) => a.onTap,
-        clear: (a) => a.copyWith(onTap: null),
-        set: (a) => a.copyWith(onTap: nextTap),
-        next: nextTap,
       ),
       (
         name: 'onCalloutTap',
@@ -122,18 +115,24 @@ void main() {
       check(last).equals(infiniteLoop);
     });
 
-    test('equality ignores closure identity but tracks onCalloutTap', () {
-      check(full.copyWith(onTap: nextTap)).equals(full);
-      check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
-      check(full.copyWith(onCalloutTap: null) == full).isFalse();
+    test('equality ignores closures; calloutConsumesTapEvents is state', () {
+      check(full.copyWith(onCalloutTap: nextTap)).equals(full);
+      check(full.copyWith(onCalloutTap: nextTap).hashCode)
+          .equals(full.hashCode);
+      check(full.copyWith(onCalloutTap: null)).equals(full);
+      check(
+        full.copyWith(onCalloutTap: null, calloutConsumesTapEvents: false) ==
+            full,
+      ).isFalse();
     });
   });
 
   group('MKPolyline.copyWith', () {
     final full = MKPolyline(
       id: const MKPolylineId('p'),
-      coordinates: const [applePark, infiniteLoop],
+      coordinates: [applePark, infiniteLoop],
       lineDashPattern: const [6, 3],
+      consumeTapEvents: true,
       onTap: tap,
     );
     const dash = [2.0, 4.0];
@@ -177,10 +176,12 @@ void main() {
           .deepEquals([1.0]);
     });
 
-    test('equality tracks whether onTap is set', () {
+    test('equality ignores closures; consumeTapEvents is state', () {
       check(full.copyWith(onTap: nextTap)).equals(full);
       check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
-      check(full.copyWith(onTap: null) == full).isFalse();
+      check(full.copyWith(onTap: null)).equals(full);
+      check(full.copyWith(onTap: null, consumeTapEvents: false) == full)
+          .isFalse();
     });
   });
 
@@ -189,6 +190,7 @@ void main() {
       id: const MKCircleId('c'),
       center: applePark,
       radius: 500,
+      consumeTapEvents: true,
       onTap: tap,
     );
 
@@ -209,15 +211,17 @@ void main() {
       });
     }
 
-    test('equality tracks whether onTap is set', () {
+    test('equality ignores closures; consumeTapEvents is state', () {
       check(full.copyWith(onTap: nextTap)).equals(full);
       check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
-      check(full.copyWith(onTap: null) == full).isFalse();
+      check(full.copyWith(onTap: null)).equals(full);
+      check(full.copyWith(onTap: null, consumeTapEvents: false) == full)
+          .isFalse();
     });
   });
 
   group('MKPolygon.copyWith', () {
-    final full = polygon('z').copyWith(onTap: tap);
+    final full = polygon('z').copyWith(consumeTapEvents: true, onTap: tap);
 
     for (final c in <_Case<MKPolygon>>[
       (
@@ -236,10 +240,12 @@ void main() {
       });
     }
 
-    test('equality tracks whether onTap is set', () {
+    test('equality ignores closures; consumeTapEvents is state', () {
       check(full.copyWith(onTap: nextTap)).equals(full);
       check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
-      check(full.copyWith(onTap: null) == full).isFalse();
+      check(full.copyWith(onTap: null)).equals(full);
+      check(full.copyWith(onTap: null, consumeTapEvents: false) == full)
+          .isFalse();
     });
   });
 }

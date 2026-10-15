@@ -45,25 +45,38 @@ final class MapKitDisposedException extends MapKitException {
 }
 
 /// Thrown when an `MKMapView` is built on a non-Apple platform (anything other
-/// than iOS or macOS). `mapkit_flutter`
-/// wraps Apple's MapKit, so there is no cross-platform fallback — this
-/// surfaces loudly instead of silently rendering an empty box.
+/// than iOS or macOS), or when it is configured with an iOS-only [feature] on
+/// macOS. `mapkit_flutter` wraps Apple's MapKit, so there is no fallback —
+/// this surfaces loudly instead of silently rendering an empty box or
+/// ignoring the setting.
 final class const MapKitUnsupportedPlatformException(
   /// The platform the widget was built on.
-  final TargetPlatform platform,
-) extends MapKitException {
-  /// Creates an exception for an unsupported [platform].
+  final TargetPlatform platform, {
+
+  /// The setting that has no effect on [platform], or `null` when
+  /// `MKMapView` cannot render on [platform] at all.
+  final String? feature,
+}) extends MapKitException {
+  /// Creates an exception for an unsupported [platform], optionally naming
+  /// the unsupported [feature].
   this
     : super(
-        'mapkit_flutter supports iOS and macOS only; '
-        'MKMapView cannot render here.',
+        feature == null
+            ? 'mapkit_flutter supports iOS and macOS only; '
+                  'MKMapView cannot render here.'
+            : '$feature is iOS only and has no effect here.',
       );
 
   @override
-  String toString() =>
+  String toString() => switch (feature) {
+    null =>
       'MapKitUnsupportedPlatformException: '
-      'mapkit_flutter supports iOS and macOS only and '
-      'cannot render on $platform.';
+          'mapkit_flutter supports iOS and macOS only and '
+          'cannot render on $platform.',
+    final feature =>
+      'MapKitUnsupportedPlatformException: $feature is iOS only and has no '
+          'effect on $platform.',
+  };
 }
 
 /// A failure reported by the native MapKit layer. Carries the original

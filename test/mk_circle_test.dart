@@ -9,12 +9,12 @@ import '_helpers/fixtures.dart';
 void main() {
   group('MKCircle wire mapping', () {
     test('serializes renderer vocabulary', () {
-      final platform = const MKCircle(
-        id: MKCircleId('radius'),
+      final platform = MKCircle(
+        id: const MKCircleId('radius'),
         center: applePark,
         radius: 750,
-        fillColor: Color(0x3300FF00),
-        strokeColor: Color(0xFF112233),
+        fillColor: const Color(0x3300FF00),
+        strokeColor: const Color(0xFF112233),
         lineWidth: 2,
         zIndex: 1,
       ).toPlatform();
@@ -37,7 +37,7 @@ void main() {
             center: applePark,
             radius: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
         check(
           () => MKCircle(
             id: const MKCircleId('bad'),
@@ -45,7 +45,7 @@ void main() {
             radius: 100,
             lineWidth: bad,
           ),
-        ).throws<AssertionError>();
+        ).throws<ArgumentError>();
       }
     });
   });
@@ -59,20 +59,26 @@ void main() {
   });
 
   group('tap consumption', () {
-    test('onTap implies consumeTapEvents on the wire', () {
-      final tappable = MKCircle(
-        id: const MKCircleId('c'),
-        center: applePark,
-        radius: 500,
-        onTap: () {},
-      );
-      check(tappable.consumeTapEvents).isFalse();
-      check(tappable.toPlatform().consumeTapEvents).isTrue();
+    test('consumeTapEvents is explicit on the wire', () {
+      check(circle('x').toPlatform().consumeTapEvents).isFalse();
+      final capturing = circle('x').copyWith(consumeTapEvents: true);
+      check(capturing.toPlatform().consumeTapEvents).isTrue();
+      check(capturing.copyWith(onTap: () {}).toPlatform().consumeTapEvents)
+          .isTrue();
     });
 
-    test('clearing onTap makes the overlay unequal', () {
-      final tappable = circle('c').copyWith(onTap: () {});
-      check(tappable.copyWith(onTap: null) == tappable).isFalse();
+    test('onTap without consumeTapEvents throws instead of never firing', () {
+      check(() => circle('x').copyWith(onTap: () {})).throws<ArgumentError>();
+      final tappable = circle('x')
+          .copyWith(consumeTapEvents: true, onTap: () {});
+      check(() => tappable.copyWith(consumeTapEvents: false))
+          .throws<ArgumentError>();
+    });
+
+    test('clearing onTap keeps the overlay equal (closures are not state)', () {
+      final tappable = circle('x')
+          .copyWith(consumeTapEvents: true, onTap: () {});
+      check(tappable.copyWith(onTap: null)).equals(tappable);
     });
   });
 }

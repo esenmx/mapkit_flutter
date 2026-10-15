@@ -15,7 +15,7 @@ void main() {
     final feature = MKMapFeature.fromPlatform(wire);
 
     check(feature).equals(
-      const MKMapFeature(
+      MKMapFeature(
         featureType: .pointOfInterest,
         coordinate: CLLocationCoordinate2D(
           latitude: 37.3346,
@@ -26,7 +26,7 @@ void main() {
       ),
     );
     check(feature.hashCode).equals(
-      const MKMapFeature(
+      MKMapFeature(
         featureType: .pointOfInterest,
         coordinate: CLLocationCoordinate2D(
           latitude: 37.3346,
@@ -38,7 +38,7 @@ void main() {
     );
     check(
       feature ==
-          const MKMapFeature(
+          MKMapFeature(
             featureType: .territory,
             coordinate: CLLocationCoordinate2D(
               latitude: 37.3346,

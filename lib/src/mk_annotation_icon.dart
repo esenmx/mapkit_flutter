@@ -16,7 +16,9 @@ final class MKAnnotationIcon {
   ///
   /// All-default renders the plain red marker. `markerTintColor` tints the
   /// balloon; brand the glyph with a short `glyphText` label or an SF Symbol
-  /// via [systemImage], tinted by `glyphTintColor`.
+  /// via [systemImage], tinted by `glyphTintColor`. An SF Symbol name the OS
+  /// doesn't know fails the map update with a `MapKitPlatformException`
+  /// (`invalid-icon`) instead of silently drawing a plain marker.
   const new marker({
     this._markerTintColor,
     this._glyphText,
@@ -29,7 +31,9 @@ final class MKAnnotationIcon {
 
   /// Raw PNG bytes as the annotation image (`MKAnnotationView.image`). Render
   /// any Flutter widget to a PNG (e.g. via `RenderRepaintBoundary.toImage`)
-  /// and pass it here for a fully custom marker.
+  /// and pass it here for a fully custom marker. Bytes the platform can't
+  /// decode fail the map update with a `MapKitPlatformException`
+  /// (`invalid-icon`) instead of rendering an invisible annotation.
   ///
   /// `imagePixelRatio` is the pixels-per-logical-point of [png] (pass the
   /// `pixelRatio` the widget was rendered with); defaults to the device pixel

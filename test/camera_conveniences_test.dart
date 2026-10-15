@@ -4,6 +4,7 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
 
 import '_helpers/controller_harness.dart';
+import '_helpers/fixtures.dart';
 import '_helpers/platform_fixtures.dart';
 import '_helpers/recorded_call.dart';
 
@@ -89,19 +90,12 @@ void main() {
       check(center.latitude).equals(5);
       check(animated).isFalse();
     });
-
-    test('is a no-op while the view has no layout', () async {
-      final harness = buildHarness();
-      harness.host.point = null;
-      await harness.controller.scrollBy(10, 10);
-      harness.expectCalls(['getCamera', 'convertToPoint']);
-    });
   });
 
   group('fitCoordinates', () {
     test('sets the containing region', () async {
       final harness = buildHarness();
-      await harness.controller.fitCoordinates(const [
+      await harness.controller.fitCoordinates([
         CLLocationCoordinate2D(latitude: 10, longitude: 20),
         CLLocationCoordinate2D(latitude: 30, longitude: 40),
       ], animated: false);
@@ -111,16 +105,10 @@ void main() {
       check(region.span.longitudeDelta).equals(20);
     });
 
-    test('is a no-op for an empty set', () async {
-      final harness = buildHarness();
-      await harness.controller.fitCoordinates(const []);
-      check(harness.host.calls).isEmpty();
-    });
-
     test('pads each side by a fraction of the span', () async {
       final harness = buildHarness();
       await harness.controller.fitCoordinates(
-        const [
+        [
           CLLocationCoordinate2D(latitude: 10, longitude: 20),
           CLLocationCoordinate2D(latitude: 30, longitude: 40),
         ],
@@ -136,12 +124,48 @@ void main() {
 
     test('frames a single coordinate at the minimum span', () async {
       final harness = buildHarness();
-      await harness.controller.fitCoordinates(const [
+      await harness.controller.fitCoordinates([
         CLLocationCoordinate2D(latitude: 10, longitude: 20),
       ], animated: false);
       final (region, _) = harness.expectSetRegion();
       check(region.span.latitudeDelta).equals(0.005);
       check(region.span.longitudeDelta).equals(0.005);
+    });
+
+    group('misuse fails loudly', () {
+      test('fitCoordinates with no coordinates throws', () async {
+        final harness = buildHarness();
+        await check(
+          harness.controller.fitCoordinates(const [], animated: false),
+        ).throws<ArgumentError>();
+        check(harness.host.callNames).not((it) => it.contains('setRegion'));
+      });
+
+      test('fitCoordinates rejects negative padding or minimumSpan', () async {
+        final harness = buildHarness();
+        await check(
+          harness.controller.fitCoordinates([applePark], padding: -0.1),
+        ).throws<ArgumentError>();
+        await check(
+          harness.controller.fitCoordinates([applePark], minimumSpan: -1),
+        ).throws<ArgumentError>();
+      });
+
+      test('camera helpers before layout throw a StateError', () async {
+        final harness = buildHarness();
+        harness.host.camera = null;
+        await check(harness.controller.getZoomLevel()).throws<StateError>();
+        await check(harness.controller.zoomTo(10)).throws<StateError>();
+        await check(harness.controller.zoomIn()).throws<StateError>();
+        await check(harness.controller.scrollBy(1, 1)).throws<StateError>();
+        check(harness.host.callNames).not((it) => it.contains('setCamera'));
+      });
+
+      test('scrollBy before layout throws instead of doing nothing', () async {
+        final harness = buildHarness();
+        harness.host.point = null;
+        await check(harness.controller.scrollBy(10, 10)).throws<StateError>();
+      });
     });
   });
 }

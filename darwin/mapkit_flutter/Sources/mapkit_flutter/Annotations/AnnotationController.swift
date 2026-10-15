@@ -26,13 +26,7 @@ extension MapKitViewHost {
         self.syncCalloutTapGestureRecognizer(for: annotation, on: view)
         #endif
         if self.suppressSelectionCallbacksForAnnotationId == id {
-            annotation.selectedProgrammatically = false
             return
-        }
-        if !annotation.selectedProgrammatically {
-            self.flutterApi.send { try await $0.onAnnotationTap(annotationId: id) }
-        } else {
-            annotation.selectedProgrammatically = false
         }
         self.flutterApi.send { try await $0.onAnnotationSelect(annotationId: id) }
     }
@@ -100,12 +94,7 @@ extension MapKitViewHost {
         if annotation.icon.isCustomImage {
             let customView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterCustomAnnotationView", for: annotation)
             customView.image = annotation.icon.image
-            #if os(iOS)
-            // Native normalized anchor (`MKAnnotationView.anchorPoint`,
-            // iOS-only) replaces the old manual centerOffset math. macOS
-            // centers the image on the coordinate by default.
-            customView.anchorPoint = annotation.anchorPoint
-            #endif
+            Self.applyAnchor(annotation, to: customView)
             view = customView
         } else {
             let markerView = self.mapView.dequeueReusableAnnotationView(withIdentifier: "FlutterMarkerAnnotationView", for: annotation) as? MKMarkerAnnotationView
@@ -125,8 +114,7 @@ extension MapKitViewHost {
         return view
     }
 
-    func annotationsToAdd(_ annotations: [PlatformAnnotation]) {
-        let toAdd = annotations.map(FlutterAnnotation.init(fromPlatform:))
+    func annotationsToAdd(_ toAdd: [FlutterAnnotation]) {
         let stale = toAdd.compactMap { self.annotationsById.removeValue(forKey: $0.id) }
         if !stale.isEmpty {
             self.mapView.removeAnnotations(stale)
@@ -137,13 +125,11 @@ extension MapKitViewHost {
         self.mapView.addAnnotations(toAdd)
     }
 
-    func annotationsToChange(_ annotations: [PlatformAnnotation]) {
-        for annotationData in annotations {
-            if let annotationToChange = self.getAnnotation(with: annotationData.id) {
-                let newAnnotation = FlutterAnnotation(fromPlatform: annotationData)
-                if annotationToChange != newAnnotation {
-                    updateAnnotation(annotation: newAnnotation)
-                }
+    func annotationsToChange(_ annotations: [FlutterAnnotation]) {
+        for newAnnotation in annotations {
+            if let annotationToChange = self.getAnnotation(with: newAnnotation.id),
+               annotationToChange != newAnnotation {
+                updateAnnotation(annotation: newAnnotation)
             }
         }
     }
@@ -155,19 +141,21 @@ extension MapKitViewHost {
         }
     }
 
-    func selectAnnotation(with id: String) {
-        guard let annotation = self.getAnnotation(with: id), !annotation.isHidden else { return }
-        annotation.selectedProgrammatically = true
+    /// Whether the annotation ended up selected: `false` for an id that is
+    /// not on the map or a hidden annotation, which MapKit can't select.
+    @discardableResult
+    func selectAnnotation(with id: String) -> Bool {
+        guard let annotation = self.getAnnotation(with: id), !annotation.isHidden else { return false }
         self.mapView.selectAnnotation(annotation, animated: true)
-        if !self.isAnnotationSelected(with: id) {
-            annotation.selectedProgrammatically = false
-        }
+        return self.isAnnotationSelected(with: id)
     }
 
-    func hideAnnotation(with id: String) {
-        if let annotation: FlutterAnnotation = self.getAnnotation(with: id) {
-            self.mapView.deselectAnnotation(annotation, animated: true)
-        }
+    /// `false` when the id is not on the map.
+    @discardableResult
+    func deselectAnnotation(with id: String) -> Bool {
+        guard let annotation = self.getAnnotation(with: id) else { return false }
+        self.mapView.deselectAnnotation(annotation, animated: true)
+        return true
     }
 
     func isAnnotationSelected(with id: String) -> Bool {
@@ -305,7 +293,7 @@ extension MapKitViewHost {
         oldAnnotation.icon = annotation.icon
 
         if annotation.isHidden && self.isAnnotationSelected(with: annotation.id) {
-            self.hideAnnotation(with: annotation.id)
+            self.deselectAnnotation(with: annotation.id)
         }
 
         // Re-apply the view-level properties the annotation view captured at
@@ -318,9 +306,7 @@ extension MapKitViewHost {
             view.clusteringIdentifier = annotation.clusteringIdentifier
             if annotation.icon.isCustomImage {
                 view.image = annotation.icon.image
-                #if os(iOS)
-                view.anchorPoint = annotation.anchorPoint
-                #endif
+                Self.applyAnchor(annotation, to: view)
             }
             if let marker = view as? MKMarkerAnnotationView {
                 self.applyMarkerStyle(marker, annotation.icon)
@@ -330,6 +316,21 @@ extension MapKitViewHost {
             self.syncCalloutTapGestureRecognizer(for: oldAnnotation, on: view)
             #endif
         }
+    }
+
+    /// Pins the image's normalized `anchorPoint` to the coordinate: natively on
+    /// iOS (`MKAnnotationView.anchorPoint`), via `centerOffset` on macOS where
+    /// `anchorPoint` doesn't exist (both platforms move the view down for a
+    /// positive y offset).
+    static func applyAnchor(_ annotation: FlutterAnnotation, to view: MKAnnotationView) {
+        #if os(iOS)
+        view.anchorPoint = annotation.anchorPoint
+        #elseif os(macOS)
+        let size = annotation.icon.image?.size ?? .zero
+        view.centerOffset = CGPoint(
+            x: size.width * (0.5 - annotation.anchorPoint.x),
+            y: size.height * (0.5 - annotation.anchorPoint.y))
+        #endif
     }
 
     /// Applies marker styling to `view`, assigning each property directly —

@@ -29,28 +29,28 @@ class const HomePage({super.key}) extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const _applePark = CLLocationCoordinate2D(
+  static final _applePark = CLLocationCoordinate2D(
     latitude: 37.334922,
     longitude: -122.009033,
   );
-  static const _infiniteLoop = CLLocationCoordinate2D(
+  static final _infiniteLoop = CLLocationCoordinate2D(
     latitude: 37.331820,
     longitude: -122.030419,
   );
-  static const _deAnza = CLLocationCoordinate2D(
+  static final _deAnza = CLLocationCoordinate2D(
     latitude: 37.319870,
     longitude: -122.045400,
   );
-  static const _mainStreet = CLLocationCoordinate2D(
+  static final _mainStreet = CLLocationCoordinate2D(
     latitude: 37.323200,
     longitude: -122.031900,
   );
-  static const _sanFrancisco = CLLocationCoordinate2D(
+  static final _sanFrancisco = CLLocationCoordinate2D(
     latitude: 37.7749,
     longitude: -122.4194,
   );
 
-  static const _pins = <(MKAnnotationId, CLLocationCoordinate2D, String)>[
+  static final _pins = <(MKAnnotationId, CLLocationCoordinate2D, String)>[
     (MKAnnotationId('apple-park'), _applePark, 'Apple Park'),
     (MKAnnotationId('infinite-loop'), _infiniteLoop, 'Infinite Loop'),
     (MKAnnotationId('de-anza'), _deAnza, 'De Anza'),
@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
   bool _suppressed = false;
 
   final Set<MKPolyline> _polylines = {
-    const .geodesic(
+    .geodesic(
       id: MKPolylineId('campus-to-sf'),
       coordinates: [_applePark, _sanFrancisco],
       lineWidth: 4,
@@ -98,7 +98,7 @@ class _HomePageState extends State<HomePage> {
   };
 
   final Set<MKPolygon> _polygons = {
-    const MKPolygon(
+    MKPolygon(
       id: MKPolygonId('campus-zone'),
       coordinates: [
         CLLocationCoordinate2D(latitude: 37.3380, longitude: -122.0150),
@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
   };
 
   final Set<MKCircle> _circles = {
-    const MKCircle(
+    MKCircle(
       id: MKCircleId('loop-radius'),
       center: _infiniteLoop,
       radius: 250,
@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
           : const Offset(0.5, 1),
       title: title,
       subtitle: style.subtitle,
-      onTap: () => _select(id),
+      onSelect: () => setState(() => _selectedId = id),
     );
   }
 
@@ -174,7 +174,7 @@ class _HomePageState extends State<HomePage> {
 
   void _select(MKAnnotationId id) {
     setState(() => _selectedId = id);
-    _controller?.showCallout(id);
+    _controller?.selectAnnotation(id);
   }
 
   void _selectNext() {
@@ -215,7 +215,7 @@ class _HomePageState extends State<HomePage> {
     final id = _selectedId;
     if (id == null) return _showMessage('Tap a pin to select it.');
     setState(() => _styles[id] = _styleOf(id).withNextSubtitle());
-    _controller?.showCallout(id);
+    _controller?.selectAnnotation(id);
     _showMessage('Subtitle → ${_styleOf(id).subtitle ?? '(none)'}');
   }
 
@@ -293,9 +293,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _openLookAround() async {
-    final opened = await _controller?.openLookAround(_applePark) ?? false;
-    if (!mounted) return;
-    if (!opened) _showMessage('No Look Around scene for this coordinate.');
+    final controller = _controller;
+    if (controller == null) return;
+    try {
+      final opened = await controller.openLookAround(_applePark);
+      if (mounted && !opened) {
+        _showMessage('No Look Around scene for this coordinate.');
+      }
+    } on MapKitPlatformException catch (e) {
+      // `unsupported-platform` on macOS; `look-around-failed` when offline.
+      if (mounted) _showMessage('Look Around unavailable (${e.code}).');
+    }
   }
 
   Future<void> _showSnapshot() async {
@@ -360,7 +368,7 @@ class _HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           MKMapView(
-            initialCamera: const MKMapCamera(
+            initialCamera: MKMapCamera(
               centerCoordinate: CLLocationCoordinate2D(
                 latitude: 37.3275,
                 longitude: -122.0270,

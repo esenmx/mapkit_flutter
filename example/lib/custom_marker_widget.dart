@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 /// A completely custom, Flutter-built marker: a rounded pill with an icon and
-/// label. Rasterized off-screen to a PNG and handed to `MKAnnotationIcon.image`,
-/// it proves any Flutter widget can back a map annotation — the counterpart to
-/// the native `MKAnnotationIcon.marker` balloon.
+/// label. Rasterized off-screen to a PNG and handed to
+/// `MKAnnotationIcon.image`, it proves any Flutter widget can back a map
+/// annotation — the counterpart to the native `MKAnnotationIcon.marker`
+/// balloon.
 ///
 /// The outer padding leaves room for the drop shadow so the `RepaintBoundary`
 /// capture doesn't clip it.

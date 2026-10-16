@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 
-import 'custom_marker_widget.dart';
-import 'restyle_lab.dart';
+import 'package:mapkit_flutter_example/custom_marker_widget.dart';
+import 'package:mapkit_flutter_example/restyle_lab.dart';
 
 void main() {
   runApp(const ExampleApp());
@@ -51,10 +51,10 @@ class _HomePageState extends State<HomePage> {
   );
 
   static final _pins = <(MKAnnotationId, CLLocationCoordinate2D, String)>[
-    (MKAnnotationId('apple-park'), _applePark, 'Apple Park'),
-    (MKAnnotationId('infinite-loop'), _infiniteLoop, 'Infinite Loop'),
-    (MKAnnotationId('de-anza'), _deAnza, 'De Anza'),
-    (MKAnnotationId('main-street'), _mainStreet, 'Main Street'),
+    (const MKAnnotationId('apple-park'), _applePark, 'Apple Park'),
+    (const MKAnnotationId('infinite-loop'), _infiniteLoop, 'Infinite Loop'),
+    (const MKAnnotationId('de-anza'), _deAnza, 'De Anza'),
+    (const MKAnnotationId('main-street'), _mainStreet, 'Main Street'),
   ];
 
   MKMapViewController? _controller;
@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage> {
 
   final Set<MKPolyline> _polylines = {
     .geodesic(
-      id: MKPolylineId('campus-to-sf'),
+      id: const MKPolylineId('campus-to-sf'),
       coordinates: [_applePark, _sanFrancisco],
       lineWidth: 4,
       gradientColors: [Colors.blue, Colors.purple],
@@ -99,14 +99,14 @@ class _HomePageState extends State<HomePage> {
 
   final Set<MKPolygon> _polygons = {
     MKPolygon(
-      id: MKPolygonId('campus-zone'),
+      id: const MKPolygonId('campus-zone'),
       coordinates: [
         CLLocationCoordinate2D(latitude: 37.3380, longitude: -122.0150),
         CLLocationCoordinate2D(latitude: 37.3380, longitude: -122.0035),
         CLLocationCoordinate2D(latitude: 37.3310, longitude: -122.0035),
         CLLocationCoordinate2D(latitude: 37.3310, longitude: -122.0150),
       ],
-      fillColor: Color(0x2200AA00),
+      fillColor: const Color(0x2200AA00),
       strokeColor: Colors.green,
       lineWidth: 2,
     ),
@@ -114,10 +114,10 @@ class _HomePageState extends State<HomePage> {
 
   final Set<MKCircle> _circles = {
     MKCircle(
-      id: MKCircleId('loop-radius'),
+      id: const MKCircleId('loop-radius'),
       center: _infiniteLoop,
       radius: 250,
-      fillColor: Color(0x22FF8800),
+      fillColor: const Color(0x22FF8800),
       strokeColor: Colors.orange,
       lineWidth: 2,
     ),
@@ -461,8 +461,9 @@ class const _RestyleBar({
                   child: Text(
                     selectedTitle == null
                         ? 'No pin selected — tap a pin'
-                        : 'Selected: $selectedTitle'
-                              '${isCustom ? '  ·  custom Flutter marker' : '  ·  native marker'}',
+                        : 'Selected: $selectedTitle  ·  '
+                              '${isCustom ? 'custom Flutter' : 'native'} '
+                              'marker',
                     style: TextTheme.of(context).labelLarge,
                   ),
                 ),

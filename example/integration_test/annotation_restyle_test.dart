@@ -75,7 +75,8 @@ void main() {
     });
     await pump({marker(tint: Colors.teal)});
 
-    // Remove, then re-add the same id with new styling — the dequeue-reuse path.
+    // Remove, then re-add the same id with new styling — the dequeue-reuse
+    // path.
     await pump(const {});
     await pump({
       marker(tint: Colors.pink, glyph: 'heart.fill', subtitle: 'reused'),

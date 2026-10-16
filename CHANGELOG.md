@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.1 - 2026-10-16
+
+### Fixed
+
+- README: tile overlays take only `alpha`, not stroke or fill styling;
+  `openLookAround` returns a `bool`; on macOS it throws a
+  `MapKitPlatformException` with code `unsupported-platform`, not a
+  `MapKitUnsupportedPlatformException`.
+
+### Changed
+
+- The README opens with what the package does, why to use it and a short
+  example. Every Dart sample in the README and the agent skill is analyzed
+  with the package's lints and fits pub.dev without scrolling sideways.
+- Regenerated the platform channel code with Pigeon 29.0.10 (header only).
+
 ## 0.5.0 - 2026-10-15
 
 Misuse now fails loudly in every build mode instead of being clamped, ignored or

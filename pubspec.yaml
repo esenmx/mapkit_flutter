@@ -1,6 +1,6 @@
 name: mapkit_flutter
 description: "MapKit for Flutter — MKMapView on iOS and macOS with Apple's exact symbol names: annotations, clustering, overlays, tile overlays, Look Around, snapshots, mockable controller."
-version: 0.5.0
+version: 0.5.1
 repository: https://github.com/esenmx/mapkit_flutter
 issue_tracker: https://github.com/esenmx/mapkit_flutter/issues
 topics:
@@ -20,12 +20,12 @@ dependencies:
   meta: ^1.17.0
 
 dev_dependencies:
-  build_runner: ^2.16.1
+  build_runner: ^2.16.2
   checks: ^0.3.2
   flutter_test:
     sdk: flutter
   mockito: ^5.8.1
-  pigeon: 29.0.6
+  pigeon: 29.0.10
   very_good_analysis: ^11.0.0
 
 flutter:

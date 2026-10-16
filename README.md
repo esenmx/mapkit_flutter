@@ -412,30 +412,33 @@ Future<void> tour(
 }
 ```
 
-| Member | MapKit | Result |
-| --- | --- | --- |
-| `camera` | `MKMapView.camera` | `MKMapCamera?` |
-| `region` | `MKMapView.region` | `MKCoordinateRegion?` |
-| `setCamera(camera, animated:)` | `setCamera(_:animated:)` | |
-| `setRegion(region, animated:)` | `setRegion(_:animated:)` | |
-| `setCenter(coordinate, animated:)` | `setCenter(_:animated:)` | |
-| `convertToPoint(coordinate)` | `convert(_:toPointTo:)` | `Offset?` |
-| `convertToCoordinate(offset)` | `convert(_:toCoordinateFrom:)` | `CLLocationCoordinate2D?` |
-| `selectAnnotation(id)` | `selectAnnotation(_:animated:)` | `bool` |
-| `deselectAnnotation(id)` | `deselectAnnotation(_:animated:)` | `bool` |
-| `isAnnotationSelected(id)` | `selectedAnnotations` | `bool` |
-| `openLookAround(coordinate)` | `MKLookAroundViewController` | `bool` |
-| `takeSnapshot([options])` | `MKMapSnapshotter` (`options` ≙ `MKMapSnapshotter.Options`) | PNG `Uint8List` |
-| `addTileOverlay(overlay)` | `addOverlay(_:level:)` | |
-| `removeTileOverlay(id)` | `removeOverlay(_:)` | `bool` |
-| `dispose()` | — | runs automatically on unmount |
+| Member | MapKit |
+| --- | --- |
+| `camera` | `MKMapView.camera` |
+| `region` | `MKMapView.region` |
+| `setCamera(camera, animated:)` | `setCamera(_:animated:)` |
+| `setRegion(region, animated:)` | `setRegion(_:animated:)` |
+| `setCenter(coordinate, animated:)` | `setCenter(_:animated:)` |
+| `convertToPoint(coordinate)` | `convert(_:toPointTo:)` |
+| `convertToCoordinate(offset)` | `convert(_:toCoordinateFrom:)` |
+| `selectAnnotation(id)` | `selectAnnotation(_:animated:)` |
+| `deselectAnnotation(id)` | `deselectAnnotation(_:animated:)` |
+| `isAnnotationSelected(id)` | `selectedAnnotations` |
+| `openLookAround(coordinate)` | `MKLookAroundViewController` |
+| `takeSnapshot([options])` | `MKMapSnapshotter` |
+| `addTileOverlay(overlay)` | `addOverlay(_:level:)` |
+| `removeTileOverlay(id)` | `removeOverlay(_:)` |
+| `dispose()` | — |
 
 `animated` defaults to `true`. `camera`, `region` and the conversions return
 `null` before the view's first layout — there is no meaningful camera for a
 zero-sized view yet. `selectAnnotation` / `deselectAnnotation` return `false`
 when the id isn't on the map (e.g. racing a rebuild that removed it) and
 `selectAnnotation` also for a hidden annotation, so you can tell whether
-anything happened.
+anything happened. `openLookAround` returns `false` when no Look Around scene
+exists for the coordinate, and `removeTileOverlay` when the id isn't on the map.
+`takeSnapshot` returns PNG bytes; its `options` mirror
+`MKMapSnapshotter.Options`.
 
 Calls run on an internal serial queue — concurrent calls execute in source
 order. `controller.dispose()` runs automatically when the owning `MKMapView`

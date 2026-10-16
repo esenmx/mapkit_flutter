@@ -139,7 +139,7 @@ void main() {
           showsOverlays: overlays,
         ),
       );
-      return .decode(bytes);
+      return await .decode(bytes);
     }
 
     // --- Annotation culling -------------------------------------------------
@@ -278,13 +278,13 @@ void main() {
 
 /// A decoded snapshot: raw RGBA bytes plus dimensions.
 final class _Rgba {
-  const _Rgba(this.bytes, this.width, this.height);
+  const new(this.bytes, this.width, this.height);
 
   static Future<_Rgba> decode(Uint8List png) async {
     final codec = await ui.instantiateImageCodec(png);
     final frame = await codec.getNextFrame();
     final image = frame.image;
-    final data = await image.toByteData(format: .rawRgba);
+    final data = await image.toByteData();
     if (data == null) {
       throw StateError('Failed to decode snapshot RGBA bytes');
     }

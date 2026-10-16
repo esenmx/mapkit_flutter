@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
-// ignore: implementation_imports
 import 'package:mapkit_flutter/src/messages.g.dart';
 
 Future<bool> answers(int id) async {
@@ -38,7 +37,7 @@ void main() {
               initialCamera: MKMapCamera(
                 centerCoordinate: CLLocationCoordinate2D(
                   latitude: 37.33,
-                  longitude: -122.0,
+                  longitude: -122,
                 ),
                 distance: 2000,
               ),

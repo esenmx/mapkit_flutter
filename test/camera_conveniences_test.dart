@@ -11,7 +11,7 @@ import '_helpers/recorded_call.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  ControllerHarness buildHarness() => ControllerHarness.autoTearDown(viewId: 2);
+  ControllerHarness buildHarness() => .autoTearDown(viewId: 2);
 
   group('getZoomLevel', () {
     test('derives the level from the host camera distance', () async {

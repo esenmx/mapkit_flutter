@@ -34,11 +34,10 @@ void main() {
           .throws<ArgumentError>();
       check(() => MKCameraZoomRange(maxCenterCoordinateDistance: -1))
           .throws<ArgumentError>();
-      check(() => MKCameraZoomRange(minCenterCoordinateDistance: double.nan))
+      check(() => MKCameraZoomRange(minCenterCoordinateDistance: .nan))
           .throws<ArgumentError>();
-      check(
-        () => MKCameraZoomRange(maxCenterCoordinateDistance: double.infinity),
-      ).throws<ArgumentError>();
+      check(() => MKCameraZoomRange(maxCenterCoordinateDistance: .infinity))
+          .throws<ArgumentError>();
     });
 
     test('serializes both distances', () {

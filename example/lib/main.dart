@@ -271,7 +271,7 @@ class _HomePageState extends State<HomePage> {
     final data = await image.toByteData(format: .png);
     image.dispose();
     if (mounted) setState(() => _captureChild = null);
-    return data == null ? null : Uint8List.sublistView(data);
+    return data == null ? null : .sublistView(data);
   }
 
   // ------------------------- Map controls -------------------------
@@ -450,7 +450,7 @@ class const _RestyleBar({
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const .symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisSize: .min,
           crossAxisAlignment: .start,

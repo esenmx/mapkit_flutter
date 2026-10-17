@@ -46,7 +46,7 @@ void main() {
         const MKStandardMapConfiguration(),
     bool isZoomEnabled = true,
     bool showsUserLocation = false,
-    MKCameraZoomRange cameraZoomRange = MKCameraZoomRange.unbounded,
+    MKCameraZoomRange cameraZoomRange = .unbounded,
     void Function(MKMapViewController)? onMapCreated,
     VoidCallback? onCameraMoveStarted,
     ValueChanged<MKMapCamera>? onCameraMove,
@@ -584,7 +584,7 @@ void main() {
       testWidgets('$name throws on macOS instead of being ignored', (
         tester,
       ) async {
-        debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+        debugDefaultTargetPlatformOverride = .macOS;
         await tester.pumpWidget(build(controllerFactory));
         debugDefaultTargetPlatformOverride = null;
         check(tester.takeException())
@@ -596,7 +596,7 @@ void main() {
       });
 
       testWidgets('$name is accepted on iOS', (tester) async {
-        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        debugDefaultTargetPlatformOverride = .iOS;
         await tester.pumpWidget(build(controllerFactory));
         debugDefaultTargetPlatformOverride = null;
         check(tester.takeException()).isNull();
@@ -606,7 +606,7 @@ void main() {
     testWidgets('a rebuild that adds an iOS-only setting throws on macOS', (
       tester,
     ) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      debugDefaultTargetPlatformOverride = .macOS;
       await tester.pumpWidget(
         MKMapView(
           initialCamera: sampleCamera,

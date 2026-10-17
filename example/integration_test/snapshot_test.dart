@@ -288,7 +288,7 @@ final class _Rgba {
     if (data == null) {
       throw StateError('Failed to decode snapshot RGBA bytes');
     }
-    final rgba = _Rgba(Uint8List.sublistView(data), image.width, image.height);
+    final rgba = _Rgba(.sublistView(data), image.width, image.height);
     image.dispose();
     codec.dispose();
     return rgba;

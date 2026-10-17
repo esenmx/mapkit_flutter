@@ -1,7 +1,6 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
-import 'package:mapkit_flutter/src/messages.g.dart';
 
 void main() {
   group('MKPointOfInterestFilter wire mapping', () {
@@ -20,7 +19,7 @@ void main() {
     test('including carries its categories', () {
       const filter = MKPointOfInterestFilter.including([.cafe, .museum]);
       final platform = filter.toPlatform();
-      check(platform.mode).equals(PlatformPOIMode.including);
+      check(platform.mode).equals(.including);
       check(platform.categories).deepEquals([
         MKPointOfInterestCategory.cafe,
         MKPointOfInterestCategory.museum,
@@ -30,7 +29,7 @@ void main() {
     test('excluding carries its categories', () {
       const filter = MKPointOfInterestFilter.excluding([.nightlife]);
       final platform = filter.toPlatform();
-      check(platform.mode).equals(PlatformPOIMode.excluding);
+      check(platform.mode).equals(.excluding);
       const expected = [MKPointOfInterestCategory.nightlife];
       check(platform.categories).deepEquals(expected);
     });

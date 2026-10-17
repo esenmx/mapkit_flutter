@@ -97,8 +97,8 @@ void main() {
       [0],
       [0, 0],
       [-1, 3],
-      [6, double.nan],
-      [double.infinity, 3],
+      [6, .nan],
+      [.infinity, 3],
     ]) {
       test('rejects $bad on both constructors', () {
         for (final create in [MKPolyline.new, MKPolyline.geodesic]) {

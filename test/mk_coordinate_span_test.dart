@@ -18,8 +18,8 @@ void main() {
       check(() => span(0, -1)).throws<ArgumentError>();
       check(() => span(180.1, 0)).throws<ArgumentError>();
       check(() => span(0, 360.1)).throws<ArgumentError>();
-      check(() => span(double.nan, 0)).throws<ArgumentError>();
-      check(() => span(0, double.infinity)).throws<ArgumentError>();
+      check(() => span(.nan, 0)).throws<ArgumentError>();
+      check(() => span(0, .infinity)).throws<ArgumentError>();
     });
 
     test('round-trips through the platform type', () {

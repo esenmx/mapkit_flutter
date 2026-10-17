@@ -13,7 +13,7 @@ final class ControllerHarness {
   factory({int viewId = 1, RecordingSink? sink}) {
     final effectiveSink = sink ?? RecordingSink();
     final host = FakeHostApi();
-    return ControllerHarness._(
+    return ._(
       sink: effectiveSink,
       host: host,
       controller: MKMapViewControllerImpl(

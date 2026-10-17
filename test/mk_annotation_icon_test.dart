@@ -5,13 +5,12 @@ import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
-import 'package:mapkit_flutter/src/messages.g.dart';
 
 void main() {
   group('MKAnnotationIcon.marker', () {
     test('plain marker serializes with no styling', () {
       final platform = const MKAnnotationIcon.marker().toPlatform();
-      check(platform.type).equals(PlatformAnnotationIconType.marker);
+      check(platform.type).equals(.marker);
       check(platform.markerTintArgb).isNull();
       check(platform.glyphText).isNull();
       check(platform.glyphSystemImage).isNull();
@@ -39,7 +38,7 @@ void main() {
     test('serializes raw bytes', () {
       final png = Uint8List.fromList([1, 2, 3]);
       final platform = MKAnnotationIcon.image(png).toPlatform();
-      check(platform.type).equals(PlatformAnnotationIconType.image);
+      check(platform.type).equals(.image);
       check(platform.imageBytes).isNotNull().deepEquals(png);
       check(platform.markerTintArgb).isNull();
     });
@@ -84,7 +83,7 @@ void main() {
         markerTintColor: Color(0xFF112233),
       );
       check(tinted).equals(tinted);
-      check(tinted == const MKAnnotationIcon.marker()).isFalse();
+      check(tinted == const .marker()).isFalse();
     });
 
     test('images compare by byte content', () {
@@ -101,7 +100,7 @@ void main() {
       final a = MKAnnotationIcon.image(bytes, imagePixelRatio: 2);
       final b = MKAnnotationIcon.image(bytes, imagePixelRatio: 3);
       check(a == b).isFalse();
-      check(a).equals(MKAnnotationIcon.image(bytes, imagePixelRatio: 2));
+      check(a).equals(.image(bytes, imagePixelRatio: 2));
     });
 
     test('marker and image never compare equal', () {

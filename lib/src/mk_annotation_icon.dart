@@ -65,7 +65,7 @@ final class MKAnnotationIcon {
     final data = await key.bundle.load(key.name);
     // key.scale is the resolved variant's scale (1x/2x/3x), which is the
     // ratio of the bytes actually loaded — not necessarily the screen's.
-    return .image(Uint8List.sublistView(data), imagePixelRatio: key.scale);
+    return .image(.sublistView(data), imagePixelRatio: key.scale);
   }
 
   final PlatformAnnotationIconType _type;

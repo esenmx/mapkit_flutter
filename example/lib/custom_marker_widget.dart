@@ -12,13 +12,13 @@ Widget customMarkerWidget({required String label, required Color color}) {
   return Material(
     type: .transparency,
     child: Padding(
-      padding: const EdgeInsets.all(6),
+      padding: const .all(6),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const .symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white, width: 2),
+          borderRadius: .circular(16),
+          border: .all(color: Colors.white, width: 2),
           boxShadow: const [
             BoxShadow(
               color: Colors.black38,

@@ -78,7 +78,7 @@ void main() {
   );
 
   Widget map(Set<MKPointAnnotation> annotations) => Directionality(
-    textDirection: TextDirection.ltr,
+    textDirection: .ltr,
     child: MKMapView(initialCamera: sampleCamera, annotations: annotations),
   );
 
@@ -100,7 +100,7 @@ void main() {
       await rig.nativeTap('a');
       check(taps).deepEquals(['b', 'a-new']);
     },
-    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    variant: TargetPlatformVariant.only(.iOS),
   );
 
   testWidgets('control: the same rebuild after creation dispatches correctly', (
@@ -119,7 +119,7 @@ void main() {
     await rig.nativeTap('b');
     await rig.nativeTap('a');
     check(taps).deepEquals(['b', 'a-new']);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+  }, variant: TargetPlatformVariant.only(.iOS));
 
   testWidgets('control: unmount before creation never wires a controller', (
     tester,
@@ -128,7 +128,7 @@ void main() {
     var created = 0;
     await tester.pumpWidget(
       Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: .ltr,
         child: MKMapView(
           initialCamera: sampleCamera,
           onMapCreated: (_) => created++,
@@ -140,5 +140,5 @@ void main() {
     await tester.pumpAndSettle();
     check(created).equals(0);
     check(rig.hostCalls).isEmpty();
-  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+  }, variant: TargetPlatformVariant.only(.iOS));
 }

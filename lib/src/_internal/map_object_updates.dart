@@ -19,7 +19,7 @@ final class MapObjectUpdates<T extends Object> {
     final beforeById = {for (final o in before) idOf(o): o};
     final afterById = {for (final o in after) idOf(o): o};
 
-    return MapObjectUpdates._(
+    return ._(
       toAdd: {
         for (final e in afterById.entries)
           if (!beforeById.containsKey(e.key)) e.value,

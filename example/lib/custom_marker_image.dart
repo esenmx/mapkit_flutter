@@ -33,5 +33,5 @@ Future<Uint8List> renderCircleMarkerPng(Color color, {int size = 96}) async {
   if (data == null) {
     throw StateError('Failed to encode circle marker image to PNG');
   }
-  return Uint8List.sublistView(data);
+  return .sublistView(data);
 }

@@ -12,7 +12,7 @@ import '_helpers/recorded_call.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  ControllerHarness buildHarness() => ControllerHarness.autoTearDown();
+  ControllerHarness buildHarness() => .autoTearDown();
 
   group('outbound — camera', () {
     test('setCamera forwards the camera and the animated flag', () async {
@@ -259,7 +259,7 @@ void main() {
       final harness = buildHarness();
       harness.controller.eventHandler.onUserTrackingModeChanged(.none);
       check(harness.expectSink<MKUserTrackingMode>('userTrackingModeChanged'))
-          .equals(MKUserTrackingMode.none);
+          .equals(.none);
     });
 
     test('annotation drag lifecycle', () {

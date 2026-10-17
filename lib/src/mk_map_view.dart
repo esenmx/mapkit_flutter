@@ -91,7 +91,7 @@ final class const MKMapView({
   final ValueChanged<MKUserTrackingMode>? onUserTrackingModeChanged,
 
   /// Camera distance limits in meters (`MKMapView.cameraZoomRange`).
-  final MKCameraZoomRange cameraZoomRange = MKCameraZoomRange.unbounded,
+  final MKCameraZoomRange cameraZoomRange = .unbounded,
 
   /// Region the camera center is constrained to
   /// (`MKMapView.cameraBoundary`).

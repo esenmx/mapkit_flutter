@@ -838,16 +838,16 @@ final class SnapshotOverlayTests: XCTestCase {
 
     func testTileAlphaBlendsOverTheBaseMap() throws {
         let host = oceanHost()
-        let sample = point(host, 0.2, -0.2)
-        let base = try snapshot(host).rgba(at: sample)
+        // Blend over a known solid circle in the same snapshot rather than
+        // comparing two MKMapSnapshotter calls: on headless macOS VMs, an
+        // uncached base snapshot can render black on the first call and ocean
+        // blue on the second.
+        try host.updateCircles(toAdd: [greenCircle()], toChange: [], idsToRemove: [])
         try host.addTileOverlay(overlay: tiles(try TileFolder(test: self).template, alpha: 0.5))
 
-        let blended = try snapshot(host).rgba(at: sample)
+        let blended = try snapshot(host).rgba(at: point(host, 0.05, -0.05))
 
-        assertColor(blended, (
-            UInt8((Int(TileFolder.northWest.0) + base.r) / 2),
-            UInt8((Int(TileFolder.northWest.1) + base.g) / 2),
-            UInt8((Int(TileFolder.northWest.2) + base.b) / 2)), "half-transparent tile over \(base)")
+        assertColor(blended, (127, 127, 127), "half-transparent magenta tile over green circle")
     }
 
     func testOverlaysDrawInTheirMapOrder() throws {

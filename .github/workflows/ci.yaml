@@ -133,11 +133,14 @@ jobs:
       - run: flutter pub get
         working-directory: example
       - name: Pigeon outputs match the schema
+        # Exclude mapkit_flutter.h: swiftc -emit-objc-header boilerplate varies
+        # across Xcode/Swift compiler versions, while the generated Dart, Swift,
+        # ObjC (.m), and ffigen config files are deterministic.
         run: |
           dart run pigeon --input pigeons/messages.dart
           rm -f darwin/mapkit_flutter/Sources/mapkit_flutter_objc_gen/*.o
           git ls-files -z -- '*.dart' | xargs -0 dart format
-          git diff --exit-code -- lib/src/ darwin/mapkit_flutter/Sources/ example/tool/pigeon/
+          git diff --exit-code -- lib/src/ darwin/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift darwin/mapkit_flutter/Sources/mapkit_flutter_objc_gen/messages.g.m example/tool/pigeon/
       - name: Mocks match the annotations
         # Blank-line-insensitive: analyzer/source_gen versions differ in blank lines after the header.
         run: |

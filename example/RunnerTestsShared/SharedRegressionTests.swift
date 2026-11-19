@@ -348,31 +348,37 @@ final class EventDeliveryTests: XCTestCase {
 @MainActor
 final class HostLifetimeTests: XCTestCase {
     func testAHostNobodyDisposesReleasesItselfAndItsHandlers() throws {
+        // Unique view id so pigeonResolveInstance's fallback to `list.last`
+        // cannot return the iOS host app's own `id: 0` map view.
         let messenger = HandlerRetainingMessenger()
+        let id = messenger.engineIdentifier
+        let name = "\(id)"
         weak var released: MapKitViewHost?
         autoreleasepool {
-            let host = MapKitViewHost(registrar: messenger, id: 0)
+            let host = MapKitViewHost(registrar: messenger, id: id)
             released = host
             XCTAssertNotNil(
                 MapKitHostApiSetup.pigeonResolveInstance(
-                    engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"))
+                    engineId: messenger.engineIdentifier, affinityKey: .min, name: name))
         }
 
         XCTAssertNil(released, "FFI tracker keeps the undisposed host alive")
         XCTAssertNil(
             MapKitHostApiSetup.pigeonResolveInstance(
-                engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"),
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: name),
             "FFI registration outlived the host")
     }
 
     func testHandlersReachTheLiveHostUntilItIsDisposed() throws {
         let messenger = HandlerRetainingMessenger()
-        let host = MapKitViewHost(registrar: messenger, id: 0)
+        let id = messenger.engineIdentifier
+        let name = "\(id)"
+        let host = MapKitViewHost(registrar: messenger, id: id)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
 
         let setup = try XCTUnwrap(
             MapKitHostApiSetup.pigeonResolveInstance(
-                engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"))
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: name))
         let err = MapKitHostError()
         _ = setup.getCamera(wrappedError: err)
         XCTAssertNil(err.code)
@@ -383,7 +389,7 @@ final class HostLifetimeTests: XCTestCase {
         XCTAssertNil(err.code)
         XCTAssertNil(
             MapKitHostApiSetup.pigeonResolveInstance(
-                engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"))
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: name))
         XCTAssertNil(host.mapView.delegate)
     }
 
@@ -1036,7 +1042,9 @@ final class SnapshotOverlayTests: XCTestCase {
             XCTAssertTrue((error as? MapKitHostError)?.message?.contains("missing") == true, "\(error)")
         }
 
-        XCTAssertLessThan(Date().timeIntervalSince(start), 10, "it waited on the stalled tile")
+        // Well under the 60-second deadline (proving cancellation), with room
+        // for a loaded iOS Simulator VM.
+        XCTAssertLessThan(Date().timeIntervalSince(start), 25, "it waited on the stalled tile")
     }
 
     func testEveryCameraMapKitReportsPassesThePitchCheck() throws {

@@ -5,6 +5,7 @@ analyzer:
     - build/**
     - ios/**
     - macos/**
+    - tool/pigeon/**
 
 linter:
   rules:

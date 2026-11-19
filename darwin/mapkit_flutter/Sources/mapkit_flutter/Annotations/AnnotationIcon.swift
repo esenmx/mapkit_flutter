@@ -48,9 +48,9 @@ class AnnotationIcon: Equatable {
             }
         case .image:
             self.iconType = .image
-            guard let data = icon.imageBytes?.data,
+            guard let bytes = icon.imageBytes,
                   let image = PlatformImage.fromImageData(
-                    data, pixelRatio: CGFloat(icon.imagePixelRatio ?? 1)) else {
+                    Data(bytes), pixelRatio: CGFloat(icon.imagePixelRatio ?? 1)) else {
                 throw mapKitError(.invalidIcon, "Annotation image bytes could not be decoded.")
             }
             self.image = image

@@ -1,9 +1,9 @@
 import 'package:checks/checks.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter_example/custom_marker_image.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Drives the marker-restyle fix against a real `MKMapView`: rapid in-place
 /// restyles, an icon-type swap, and a remove→re-add (dequeue-reuse) cycle, then

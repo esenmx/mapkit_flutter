@@ -26,7 +26,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testCalloutRecognizerAddedOncePerView() throws {
-        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
         try host.updateAnnotations(toAdd: [annotation("a", callout: true)], toChange: [], idsToRemove: [])
         let view = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
 
@@ -74,7 +74,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testCalloutRecognizerRemovedWhenCalloutDisabled() throws {
-        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
         try host.updateAnnotations(toAdd: [annotation("a", callout: true)], toChange: [], idsToRemove: [])
         let view = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
 
@@ -104,7 +104,7 @@ final class FixedPointTap: UITapGestureRecognizer {
 @MainActor
 final class CameraAndTapTests: XCTestCase {
     func testCameraMoveBeforeFirstLayoutSurvivesIt() throws {
-        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
         try host.initialize(params: PlatformMapViewCreationParams(
             initialCamera: PlatformMapCamera(
                 centerCoordinate: PlatformCoordinate(latitude: 10, longitude: 10), distance: 500_000, heading: 0, pitch: 0),
@@ -129,7 +129,7 @@ final class CameraAndTapTests: XCTestCase {
 
     func testTapOnAnAnnotationViewIsNotAMapTap() async throws {
         let messenger = NoopMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         let pin = MKAnnotationView(annotation: try FlutterAnnotation(fromPlatform: annotation("a")), reuseIdentifier: nil)
         pin.frame = CGRect(x: 100, y: 100, width: 40, height: 40)
@@ -207,7 +207,7 @@ final class LookAroundPresentationTests: XCTestCase {
 @MainActor
 final class SnapshotDrawOrderTests: XCTestCase {
     private func oceanHost() -> MapKitViewHost {
-        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -223,7 +223,7 @@ final class SnapshotDrawOrderTests: XCTestCase {
             context.fill(CGRect(x: 0, y: 0, width: 30, height: 30))
         }
         return PlatformAnnotationIcon(
-            type: .image, imageBytes: FlutterStandardTypedData(bytes: try XCTUnwrap(image.pngData())), imagePixelRatio: 1)
+            type: .image, imageBytes: [UInt8](try XCTUnwrap(image.pngData())), imagePixelRatio: 1)
     }
 
     /// RGBA bytes of the snapshot, top row first.
@@ -232,7 +232,7 @@ final class SnapshotDrawOrderTests: XCTestCase {
         var png: Data?
         host.takeSnapshot(options: PlatformSnapshotOptions(
             showsPointsOfInterest: false, showsAnnotations: true, showsOverlays: true)) { result in
-            if case .success(let data) = result { png = data.data }
+            if case .success(let data) = result { png = Data(data) }
             exp.fulfill()
         }
         wait(for: [exp], timeout: 20)
@@ -327,7 +327,7 @@ final class CalloutTests: XCTestCase {
         window.rootViewController = root
         window.makeKeyAndVisible()
         addTeardownBlock { @MainActor in window.isHidden = true }
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         root.view.addSubview(host.view())
         host.view().frame = root.view.bounds
         host.mapView.frame = root.view.bounds
@@ -387,7 +387,7 @@ final class CalloutTests: XCTestCase {
             context.fill(CGRect(x: 0, y: 0, width: 40, height: 40))
         }
         let (host, view, callout) = try await mapWithSelectedCallout(messenger, icon: PlatformAnnotationIcon(
-            type: .image, imageBytes: FlutterStandardTypedData(bytes: png), imagePixelRatio: 1))
+            type: .image, imageBytes: [UInt8](png), imagePixelRatio: 1))
 
         try await tap(host, view, at: CGPoint(x: view.bounds.midX, y: view.bounds.midY))
         XCTAssertEqual(messenger.sent("onCalloutTap"), 0)
@@ -407,7 +407,7 @@ final class CalloutTests: XCTestCase {
     }
 
     func testRecognizerDoesNotKeepItsViewAlive() throws {
-        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
         try host.updateAnnotations(
             toAdd: [titledAnnotation("a", title: "A", callout: true)], toChange: [], idsToRemove: [])
         weak var released: MKAnnotationView?
@@ -429,7 +429,7 @@ final class CalloutTests: XCTestCase {
         window.rootViewController = root
         window.makeKeyAndVisible()
         addTeardownBlock { @MainActor in window.isHidden = true }
-        let host = MapKitViewHost(messenger: NoopMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
         root.view.addSubview(host.view())
         host.view().frame = root.view.bounds
         host.mapView.frame = root.view.bounds

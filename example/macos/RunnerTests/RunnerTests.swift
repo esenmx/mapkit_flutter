@@ -4,71 +4,7 @@ import MapKit
 import XCTest
 @testable import mapkit_flutter
 
-/// Records every host -> Dart message and answers with pigeon's success envelope.
-final class RecordingMessenger: NSObject, FlutterBinaryMessenger {
-    private(set) var sent: [(channel: String, args: [Any?])] = []
-    private var pending: [(method: String, expectation: XCTestExpectation)] = []
-
-    func send(onChannel channel: String, message: Data?) {
-        record(channel, message)
-    }
-
-    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {
-        record(channel, message)
-        callback?(MessagesPigeonCodec.shared.encode([] as [Any?]))
-    }
-
-    func setMessageHandlerOnChannel(
-        _ channel: String,
-        binaryMessageHandler handler: FlutterBinaryMessageHandler?
-    ) -> FlutterBinaryMessengerConnection {
-        0
-    }
-
-    func cleanUpConnection(_ connection: FlutterBinaryMessengerConnection) {}
-
-    func args(of method: String) -> [[Any?]] {
-        sent.filter { $0.channel.contains(".\(method).") }.map(\.args)
-    }
-
-    func expectation(for method: String, in test: XCTestCase) -> XCTestExpectation {
-        let expectation = test.expectation(description: method)
-        expectation.assertForOverFulfill = false
-        pending.append((method, expectation))
-        return expectation
-    }
-
-    private func record(_ channel: String, _ message: Data?) {
-        let args = MessagesPigeonCodec.shared.decode(message) as? [Any?] ?? []
-        sent.append((channel, args))
-        for entry in pending where channel.contains(".\(entry.method).") {
-            entry.expectation.fulfill()
-        }
-    }
-}
-
-/// Hands out a fresh connection per handler and tracks which are still registered.
-final class ConnectionCountingMessenger: NSObject, FlutterBinaryMessenger {
-    private(set) var live: Set<FlutterBinaryMessengerConnection> = []
-    private var next: FlutterBinaryMessengerConnection = 0
-
-    func send(onChannel channel: String, message: Data?) {}
-
-    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {}
-
-    func setMessageHandlerOnChannel(
-        _ channel: String,
-        binaryMessageHandler handler: FlutterBinaryMessageHandler?
-    ) -> FlutterBinaryMessengerConnection {
-        next += 1
-        live.insert(next)
-        return next
-    }
-
-    func cleanUpConnection(_ connection: FlutterBinaryMessengerConnection) {
-        live.remove(connection)
-    }
-}
+typealias RecordingMessenger = NoopMessenger
 
 private func annotation(_ id: String, title: String? = nil, callout: Bool = false) -> PlatformAnnotation {
     PlatformAnnotation(
@@ -97,7 +33,7 @@ private func pngIcon(width: CGFloat = 20, height: CGFloat = 40) -> PlatformAnnot
     NSRect(x: 0, y: 0, width: width, height: height).fill()
     NSGraphicsContext.restoreGraphicsState()
     let png = rep.representation(using: .png, properties: [:])!
-    return PlatformAnnotationIcon(type: .image, imageBytes: FlutterStandardTypedData(bytes: png), imagePixelRatio: 1)
+    return PlatformAnnotationIcon(type: .image, imageBytes: [UInt8](png), imagePixelRatio: 1)
 }
 
 private func configuration(
@@ -146,16 +82,34 @@ private func circle(
 @MainActor
 final class RunnerTests: XCTestCase {
     func testDisposeRemovesEveryHandler() throws {
-        let messenger = ConnectionCountingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let messenger = RecordingMessenger(id: 77)
+        let host = MapKitViewHost(registrar: messenger, id: 77)
         host.mapView.showsUserLocation = true
-        XCTAssertFalse(messenger.live.isEmpty)
+        XCTAssertNotNil(
+            MapKitHostApiSetup.pigeonResolveInstance(
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: "77"))
 
         try host.dispose()
 
-        XCTAssertEqual(messenger.live, [])
+        XCTAssertNil(
+            MapKitHostApiSetup.pigeonResolveInstance(
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: "77"))
         XCTAssertNil(host.mapView.delegate)
         XCTAssertFalse(host.mapView.showsUserLocation)
+    }
+
+    func testDeinitUnregistersHostWithoutExplicitDispose() {
+        let messenger = RecordingMessenger(id: 78)
+        autoreleasepool {
+            let host = MapKitViewHost(registrar: messenger, id: 78)
+            _ = host
+            XCTAssertNotNil(
+                MapKitHostApiSetup.pigeonResolveInstance(
+                    engineId: messenger.engineIdentifier, affinityKey: .min, name: "78"))
+        }
+        XCTAssertNil(
+            MapKitHostApiSetup.pigeonResolveInstance(
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: "78"))
     }
 
     func testGeodesicPolylineIsSafeToStyle() {
@@ -214,7 +168,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testCalloutToggleReachesNative() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.updateAnnotations(toAdd: [annotation("a")], toChange: [], idsToRemove: [])
 
         try host.updateAnnotations(toAdd: [], toChange: [annotation("a", callout: true)], idsToRemove: [])
@@ -223,7 +177,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testFirstUpdateAfterDragApplies() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.updateAnnotations(toAdd: [annotation("a", title: "A")], toChange: [], idsToRemove: [])
         let view = MKAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
         host.mapView(host.mapView, annotationView: view, didChange: .ending, fromOldState: .dragging)
@@ -234,7 +188,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testCalloutOffsetIgnoresViewPosition() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let flutterAnnotation = try FlutterAnnotation(fromPlatform: annotation("a"))
         let view = MKAnnotationView(annotation: flutterAnnotation, reuseIdentifier: nil)
         view.frame = CGRect(x: 300, y: 120, width: 40, height: 40)
@@ -246,7 +200,7 @@ final class RunnerTests: XCTestCase {
 
     func testHiddenOverlayDoesNotConsumeTap() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         try host.updateCircles(toAdd: [circle("hidden", hidden: true)], toChange: [], idsToRemove: [])
         let mapTap = messenger.expectation(for: "onMapTap", in: self)
 
@@ -259,7 +213,7 @@ final class RunnerTests: XCTestCase {
 
     func testOnlyTopMostOverlayReceivesTap() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         try host.updateCircles(
             toAdd: [circle("high", zIndex: 1), circle("low", zIndex: 0)], toChange: [], idsToRemove: [])
         let circleTap = messenger.expectation(for: "onCircleTap", in: self)
@@ -285,7 +239,7 @@ final class RunnerTests: XCTestCase {
 
     func testLabelsLevelOverlayTakesTapBeforeRoadsLevel() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         try host.updateCircles(
             toAdd: [circle("roads", zIndex: 5, level: .aboveRoads), circle("labels", zIndex: 0, level: .aboveLabels)],
             toChange: [], idsToRemove: [])
@@ -300,7 +254,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testSnapshotInputCarriesMapConfigurationAndAppearance() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
         try host.mapView.apply(configuration: configuration(kind: .imagery))
         host.mapView.appearance = NSAppearance(named: .darkAqua)
@@ -314,7 +268,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testAddingATileOverlayIdTwiceThrowsAndKeepsTheFirst() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let tiles = PlatformTileOverlay(
             id: "osm",
             urlTemplate: "https://tile.example.com/{z}/{x}/{y}.png",
@@ -338,7 +292,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testTrackingButtonAppliesOnMacOS() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
 
         try host.mapView.apply(configuration: configuration(trackingButton: true))
 
@@ -371,7 +325,7 @@ final class RunnerTests: XCTestCase {
 
     func testSelectAndDeselectReachDart() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         try host.updateAnnotations(toAdd: [annotation("a")], toChange: [], idsToRemove: [])
         let view = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
         let selected = messenger.expectation(for: "onAnnotationSelect", in: self)
@@ -386,7 +340,7 @@ final class RunnerTests: XCTestCase {
 
     func testVisibleRegionChangeStreamsCamera() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
         try await Task.sleep(for: .milliseconds(200))
         let before = messenger.args(of: "onCameraMove").count
@@ -399,7 +353,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testCrossTypeOverlaysShareIdIndependently() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let poly = PlatformPolyline(
             id: "zone",
             coordinates: [
@@ -486,7 +440,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testSelectionReportsWhetherItTook() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         var hidden = annotation("hidden")
         hidden = PlatformAnnotation(
             id: hidden.id,
@@ -521,7 +475,7 @@ final class RunnerTests: XCTestCase {
 
     func testIconTypeSwapWhileSelectedSuppressesSelectionCallbacks() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         try host.updateAnnotations(toAdd: [annotation("a", title: "Pin")], toChange: [], idsToRemove: [])
         let initialView = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
         let initialSelected = messenger.expectation(for: "onAnnotationSelect", in: self)
@@ -554,7 +508,7 @@ final class RunnerTests: XCTestCase {
 
     func testIconTypeSwapToHiddenSendsDeselect() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         try host.updateAnnotations(toAdd: [annotation("a", title: "Pin")], toChange: [], idsToRemove: [])
         let initialView = MKMarkerAnnotationView(annotation: host.annotationsById["a"], reuseIdentifier: nil)
         let initialSelected = messenger.expectation(for: "onAnnotationSelect", in: self)
@@ -583,7 +537,7 @@ final class RunnerTests: XCTestCase {
     }
 
     func testTakeSnapshotRejectsZeroSizedMapView() {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         host.mapView.frame = .zero
         let exp = expectation(description: "snapshot fails on zero size")
 
@@ -612,7 +566,7 @@ final class RunnerTests: XCTestCase {
 @MainActor
 final class NaturalApiTests: XCTestCase {
     func testShowsUserLocationAppliesWithoutPrompting() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.mapView.apply(configuration: configuration(userLocation: true))
         XCTAssertTrue(host.mapView.showsUserLocation)
         try host.mapView.apply(configuration: configuration(userLocation: false))
@@ -621,7 +575,7 @@ final class NaturalApiTests: XCTestCase {
 
     private func polylineHost(lineWidth: Double) throws -> (MapKitViewHost, RecordingMessenger) {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -661,7 +615,7 @@ final class NaturalApiTests: XCTestCase {
 
     func testClickOnAnAnnotationViewIsNotAMapTap() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         let pin = MKAnnotationView(annotation: try FlutterAnnotation(fromPlatform: annotation("a")), reuseIdentifier: nil)
         pin.frame = CGRect(x: 100, y: 100, width: 40, height: 40)
@@ -698,7 +652,7 @@ final class NaturalApiTests: XCTestCase {
 
     func testSingleClickIsAMapTap() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         let window = clickWindow(host)
         let mapTap = messenger.expectation(for: "onMapTap", in: self)
 
@@ -709,7 +663,7 @@ final class NaturalApiTests: XCTestCase {
 
     func testDoubleClickIsNotAMapTap() async throws {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         let window = clickWindow(host)
         let noMapTap = messenger.expectation(for: "onMapTap", in: self)
         noMapTap.isInverted = true
@@ -721,7 +675,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testDoubleClickStillZoomsTheMap() async throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let window = clickWindow(host)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -736,10 +690,10 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testUndecodableImageBytesFailTheWholeUpdate() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let broken = PlatformAnnotation(
             id: "broken", coordinate: PlatformCoordinate(latitude: 0, longitude: 0),
-            icon: PlatformAnnotationIcon(type: .image, imageBytes: FlutterStandardTypedData(bytes: Data([1, 2, 3]))),
+            icon: PlatformAnnotationIcon(type: .image, imageBytes: [1, 2, 3]),
             calloutConsumesTapEvents: false, alpha: 1, anchorPointX: 0.5, anchorPointY: 1,
             isDraggable: false, isHidden: false, zPriority: 500)
         XCTAssertThrowsError(
@@ -762,7 +716,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testOpenLookAroundIsUnsupportedOnMacOS() {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let done = expectation(description: "look around")
         host.openLookAround(coordinate: PlatformCoordinate(latitude: 0, longitude: 0)) { result in
             switch result {
@@ -775,7 +729,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testRejectedZoomRangeThrowsAndLeavesTheMapUnchanged() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.mapView.apply(configuration: configuration(scale: false))
         var invalid = configuration(scale: true)
         invalid.cameraZoomRange = PlatformCameraZoomRange(minCenterCoordinateDistance: 10, maxCenterCoordinateDistance: 5)
@@ -786,7 +740,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testRejectedCameraBoundaryThrows() {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         let before = host.mapView.cameraBoundary
         var invalid = configuration()
         invalid.cameraBoundary = PlatformCoordinateRegion(
@@ -799,7 +753,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testFollowWithHeadingIsUnsupportedOnMacOS() {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         XCTAssertThrowsError(try host.mapView.apply(configuration: configuration(tracking: .followWithHeading))) { error in
             XCTAssertEqual((error as? MapKitHostError)?.code, "unsupported-platform")
         }
@@ -807,7 +761,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testCameraAndRegionAreNilBeforeLayout() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         XCTAssertNil(try host.getCamera())
         XCTAssertNil(try host.getRegion())
 
@@ -829,7 +783,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testInitialCameraAppliesAtFirstLayout() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
 
         layOut(host)
@@ -855,7 +809,7 @@ final class NaturalApiTests: XCTestCase {
             ("setCenter", { try $0.setCenter(coordinate: target, animated: true) }),
         ]
         for (name, move) in moves {
-            let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+            let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
             try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
             try move(host)
 
@@ -868,7 +822,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testSetCenterBeforeFirstLayoutKeepsTheInitialDistance() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
         try host.setCenter(coordinate: PlatformCoordinate(latitude: 40, longitude: 20), animated: false)
 
@@ -878,7 +832,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testCameraMoveBetweenResizeAndFirstLayoutWins() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         try host.initialize(params: creationParams(center: PlatformCoordinate(latitude: 10, longitude: 10)))
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         try host.setCamera(
@@ -907,10 +861,10 @@ final class NaturalApiTests: XCTestCase {
             try host.setRegion(region: region, animated: false)
             try host.setCenter(coordinate: PlatformCoordinate(latitude: 41, longitude: 21), animated: false)
         }
-        let reference = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let reference = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         layOut(reference)
         try moves(reference)
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         layOut(host)
         host.mapView.frame = .zero
 
@@ -926,7 +880,7 @@ final class NaturalApiTests: XCTestCase {
     }
 
     func testImageAnchorPointIsHonoredOnMacOS() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         func pin(_ anchorY: Double) -> PlatformAnnotation {
             PlatformAnnotation(
                 id: "img", coordinate: PlatformCoordinate(latitude: 0, longitude: 0), icon: pngIcon(width: 20, height: 40),
@@ -944,7 +898,7 @@ final class NaturalApiTests: XCTestCase {
 
     func testUserTrackingModeChangeReachesDart() async {
         let messenger = RecordingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         let changed = messenger.expectation(for: "onUserTrackingModeChanged", in: self)
 
         host.mapView(host.mapView, didChange: .none, animated: true)
@@ -969,7 +923,7 @@ final class SnapshotCompositingTests: XCTestCase {
     /// at 0.25°N 0.25°W (upper-left quadrant) and a green polygon around
     /// 0.2°S 0.2°E (lower-right quadrant).
     private func compositingHost() throws -> MapKitViewHost {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -998,7 +952,7 @@ final class SnapshotCompositingTests: XCTestCase {
         var bytes: Data?
         host.takeSnapshot(options: PlatformSnapshotOptions(
             showsPointsOfInterest: false, showsAnnotations: annotations, showsOverlays: overlays)) { result in
-            if case .success(let data) = result { bytes = data.data }
+            if case .success(let data) = result { bytes = Data(data) }
             exp.fulfill()
         }
         wait(for: [exp], timeout: 20)
@@ -1034,7 +988,7 @@ final class SnapshotCompositingTests: XCTestCase {
     }
 
     func testMacOSSnapshotDrawsMarkerAnnotations() throws {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -1076,7 +1030,7 @@ final class SnapshotCompositingTests: XCTestCase {
     }
 
     private func oceanHost() -> MapKitViewHost {
-        let host = MapKitViewHost(messenger: RecordingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: RecordingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),

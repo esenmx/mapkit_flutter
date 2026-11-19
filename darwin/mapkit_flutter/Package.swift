@@ -15,14 +15,22 @@ let package = Package(
     .package(name: "FlutterFramework", path: "../FlutterFramework")
   ],
   targets: [
-    // swiftLanguageMode defaults to v6 under tools 6.0 — data-race safety is
-    // compiler-enforced, matching the podspec's swift_version = '6.0'.
+    .target(
+      name: "mapkit_flutter_objc_gen",
+      dependencies: [],
+      publicHeadersPath: "."
+    ),
+    // Swift 5 language mode until upstream Pigeon annotates the mutable static
+    // globals its `useFfi: true` Swift generator emits (`#MutableGlobalVariable`
+    // in Swift 6).
     .target(
       name: "mapkit_flutter",
       dependencies: [
+        "mapkit_flutter_objc_gen",
         .product(name: "FlutterFramework", package: "FlutterFramework")
       ],
-      resources: [.process("PrivacyInfo.xcprivacy")]
+      resources: [.process("PrivacyInfo.xcprivacy")],
+      swiftSettings: [.swiftLanguageMode(.v5)]
     )
   ]
 )

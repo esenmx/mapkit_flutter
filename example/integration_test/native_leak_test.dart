@@ -1,23 +1,26 @@
 // Leak oracle (native): after an MKMapView widget unmounts, its native
-// MapKitViewHost must stop answering Pigeon host calls. If the per-view
-// channel still replies, the host (and its MKMapView + CLLocationManager) is
-// still alive. On macOS this also catches a nil handler left registered on a
-// channel: the next message to it crashes the app.
+// MapKitViewHost must unregister its FFI host API entry and stop answering
+// calls. If the per-view FFI instance still resolves and answers, the host
+// (and its MKMapView + CLLocationManager) is still alive.
 import 'dart:async';
 
 import 'package:checks/checks.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
+import 'package:material_ui/material_ui.dart';
 
-Future<bool> answers(int id) async {
+bool answers(int id) {
   try {
-    await MapKitHostApi(messageChannelSuffix: '$id').getCamera();
+    final instance = MapKitHostApiForNativeInterop.getInstance(
+      channelName: '$id',
+    );
+    if (instance == null) return false;
+    instance.getCamera();
     return true;
-  } on PlatformException {
+  } on Object {
     return false;
   }
 }
@@ -26,7 +29,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('disposed maps stop answering host calls', (tester) async {
-    check(await answers(999), because: 'control: unknown id').isFalse();
+    check(answers(999), because: 'control: unknown id').isFalse();
 
     final live = <int>[];
     for (var round = 0; round < 3; round++) {
@@ -47,7 +50,7 @@ void main() {
       await tester.pumpAndSettle(const .new(milliseconds: 200));
       await Future<void>.delayed(const .new(milliseconds: 500));
       for (var id = 0; id < 100; id++) {
-        if (!live.contains(id) && await answers(id)) live.add(id);
+        if (!live.contains(id) && answers(id)) live.add(id);
       }
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
@@ -58,7 +61,7 @@ void main() {
 
     final stillAnswering = [
       for (final id in live)
-        if (await answers(id)) id,
+        if (answers(id)) id,
     ];
     debugPrint(
       'leak-oracle ids still answering after unmount: $stillAnswering',
@@ -108,7 +111,7 @@ void main() {
     );
     final id = await created.future;
     await tester.pumpWidget(const SizedBox());
-    check(await answers(id), because: 'control: native built it').isTrue();
+    check(answers(id), because: 'control: native built it').isTrue();
 
     releaseCreate.complete();
     // The iOS engine only releases a disposed view while submitting a frame
@@ -135,7 +138,7 @@ void main() {
       await tester.pump(const .new(milliseconds: 100));
       await Future<void>.delayed(const .new(milliseconds: 100));
       if (await next?.region == null) continue;
-      stillAnswering = await answers(id);
+      stillAnswering = answers(id);
     }
 
     check(mapCreated, because: 'the race must really be lost').isFalse();

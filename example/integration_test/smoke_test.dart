@@ -1,8 +1,8 @@
 import 'package:checks/checks.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// End-to-end check of the pigeon channel against a real MKMapView: the only
 /// automated coverage of the Swift wiring (per-view channel suffix, host

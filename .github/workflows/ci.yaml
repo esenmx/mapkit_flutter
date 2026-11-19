@@ -66,7 +66,7 @@ jobs:
         with: { channel: stable, cache: true }
       - run: flutter pub get
       - name: README and skill snippets compile
-        run: dart run tool/check_snippets.dart --import package:mapkit_flutter/mapkit_flutter.dart --import package:flutter/material.dart --import dart:typed_data
+        run: dart run tool/check_snippets.dart --dep material_ui --import package:mapkit_flutter/mapkit_flutter.dart --import package:material_ui/material_ui.dart --import dart:typed_data
       - run: flutter analyze --fatal-infos --fatal-warnings
       - run: flutter pub get
         working-directory: example
@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: floor, channel: stable, version: '3.47.0' }
+          - { name: floor, channel: stable, version: '3.50.0' }
           - { name: stable, channel: stable, version: '' }
           - { name: beta, channel: beta, version: '' }
     steps:
@@ -129,10 +129,14 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: { channel: stable, cache: true }
       - run: flutter pub get
+      - run: flutter pub get
+        working-directory: example
       - name: Pigeon outputs match the schema
         run: |
-          dart run pigeon --input pigeons/messages.dart && dart format lib/src/messages.g.dart
-          git diff --exit-code -- lib/src/messages.g.dart darwin/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift
+          dart run pigeon --input pigeons/messages.dart
+          rm -f darwin/mapkit_flutter/Sources/mapkit_flutter_objc_gen/*.o
+          git ls-files -z -- '*.dart' | xargs -0 dart format
+          git diff --exit-code -- lib/src/ darwin/mapkit_flutter/Sources/ example/tool/pigeon/
       - name: Mocks match the annotations
         # Blank-line-insensitive: analyzer/source_gen versions differ in blank lines after the header.
         run: |

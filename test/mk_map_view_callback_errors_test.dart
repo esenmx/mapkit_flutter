@@ -1,16 +1,17 @@
-// A throwing callback must reach FlutterError, through the real Pigeon
-// channel: an error reply would be dropped by the native side, so a callback
-// exception would otherwise vanish in every build mode.
+// A throwing callback must reach FlutterError rather than escaping the
+// MapKitFlutterApi handler: an escaped throw would cross FFI back to the native
+// sender (which can only log and drop it), so a callback exception would
+// otherwise vanish from Flutter's error pipeline in every build mode.
 import 'package:checks/checks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
+import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 
+import '_helpers/fake_host_api.dart';
 import '_helpers/fixtures.dart';
-
-const MessageCodec<Object?> _codec = MapKitHostApi.pigeonChannelCodec;
 
 void main() {
   void boom(String name) => throw StateError('boom:$name');
@@ -80,79 +81,59 @@ void main() {
     pitch: 0,
   );
 
-  var viewId = 0;
+  late MapKitFlutterApi flutterApi;
 
   Future<void> mount(WidgetTester tester) async {
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
-      call,
-    ) async {
-      if (call.method == 'create') {
-        viewId = (call.arguments as Map)['id'] as int;
-        messenger.setMockMessageHandler(
-          'dev.flutter.pigeon.mapkit_flutter.MapKitHostApi.initialize.$viewId',
-          (_) async => _codec.encodeMessage(<Object?>[null]),
-        );
-      }
-      return null;
-    });
+    MKMapViewControllerImpl.debugPlatformHostFactory = (_, eventHandler) {
+      flutterApi = eventHandler;
+      return FakeHostApi();
+    };
+    addTearDown(() => MKMapViewControllerImpl.debugPlatformHostFactory = null);
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform_views,
+      (_) async => null,
+    );
     await tester.pumpWidget(map());
     await tester.pumpAndSettle();
   }
 
-  Future<List<Object?>?> deliver(
-    WidgetTester tester,
-    String method,
-    List<Object?> args,
-  ) async {
-    Object? reply;
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      'dev.flutter.pigeon.mapkit_flutter.MapKitFlutterApi.$method.$viewId',
-      args.isEmpty ? null : _codec.encodeMessage(args),
-      (data) => reply = data == null ? null : _codec.decodeMessage(data),
-    );
-    await tester.pump();
-    return switch (reply) {
-      final List<Object?> list => list,
-      _ => null,
-    };
-  }
-
-  final events = <String, List<Object?> Function()>{
-    'onCameraMoveStarted': () => [],
-    'onCameraMove': () => [camera()],
-    'onCameraIdle': () => [],
-    'onUserTrackingModeChanged': () => [PlatformUserTrackingMode.follow],
-    'onAnnotationSelect': () => ['a'],
-    'onAnnotationDeselect': () => ['a'],
-    'onMapFeatureSelected': () => [
+  final events = <String, void Function(MapKitFlutterApi)>{
+    'onCameraMoveStarted': (api) => api.onCameraMoveStarted(),
+    'onCameraMove': (api) => api.onCameraMove(camera()),
+    'onCameraIdle': (api) => api.onCameraIdle(),
+    'onUserTrackingModeChanged': (api) =>
+        api.onUserTrackingModeChanged(.follow),
+    'onAnnotationSelect': (api) => api.onAnnotationSelect('a'),
+    'onAnnotationDeselect': (api) => api.onAnnotationDeselect('a'),
+    'onMapFeatureSelected': (api) => api.onMapFeatureSelected(
       PlatformMapFeature(featureType: .territory, coordinate: coordinate),
-    ],
-    'onAnnotationDragStart': () => ['a', coordinate],
-    'onAnnotationDragEnd': () => ['a', coordinate],
-    'onCalloutTap': () => ['a'],
-    'onPolylineTap': () => ['l'],
-    'onPolygonTap': () => ['g'],
-    'onCircleTap': () => ['c'],
-    'onMapTap': () => [coordinate],
-    'onMapLongPress': () => [coordinate],
-    'onDidFailLoadingMap': () => ['offline'],
-    'onDidFailToLocateUser': () => ['denied'],
+    ),
+    'onAnnotationDragStart': (api) =>
+        api.onAnnotationDragStart('a', coordinate),
+    'onAnnotationDragEnd': (api) => api.onAnnotationDragEnd('a', coordinate),
+    'onCalloutTap': (api) => api.onCalloutTap('a'),
+    'onPolylineTap': (api) => api.onPolylineTap('l'),
+    'onPolygonTap': (api) => api.onPolygonTap('g'),
+    'onCircleTap': (api) => api.onCircleTap('c'),
+    'onMapTap': (api) => api.onMapTap(coordinate),
+    'onMapLongPress': (api) => api.onMapLongPress(coordinate),
+    'onDidFailLoadingMap': (api) => api.onDidFailLoadingMap('offline'),
+    'onDidFailToLocateUser': (api) => api.onDidFailToLocateUser('denied'),
   };
 
-  for (final MapEntry(key: method, value: args) in events.entries) {
-    testWidgets('$method: a throw reaches FlutterError, not the reply', (
+  for (final MapEntry(key: method, value: invoke) in events.entries) {
+    testWidgets('$method: a throw reaches FlutterError without rethrowing', (
       tester,
     ) async {
       await mount(tester);
 
-      final reply = await deliver(tester, method, args());
+      invoke(flutterApi);
+      await tester.pump();
 
       check(tester.takeException())
           .isA<StateError>()
           .has((e) => e.message, 'message')
           .equals('boom:$method');
-      check(reply).isNotNull().isEmpty();
     }, variant: TargetPlatformVariant.only(.iOS));
   }
 
@@ -163,7 +144,8 @@ void main() {
     FlutterError.onError = reported.add;
     addTearDown(() => FlutterError.onError = original);
 
-    await deliver(tester, 'onMapTap', [coordinate]);
+    flutterApi.onMapTap(coordinate);
+    await tester.pump();
     FlutterError.onError = original;
 
     final details = reported.single;
@@ -177,9 +159,9 @@ void main() {
   ) async {
     await mount(tester);
 
-    final reply = await deliver(tester, 'onCameraMove', [camera(distance: 0)]);
+    flutterApi.onCameraMove(camera(distance: 0));
+    await tester.pump();
 
     check(tester.takeException()).isA<ArgumentError>();
-    check(reply).isNotNull().isEmpty();
   }, variant: TargetPlatformVariant.only(.iOS));
 }

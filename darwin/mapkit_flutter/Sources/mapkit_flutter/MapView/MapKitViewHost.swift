@@ -21,8 +21,10 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     var contentView: UIView
     #endif
     var mapView: FlutterMapView
-    var flutterApi: MapKitFlutterApi
-    private let hostMessenger: ConnectionTrackingMessenger
+    var flutterApi: FlutterEventSender
+    private let registrar: FlutterPluginRegistrar
+    private let channelSuffix: String
+    private let weakHostApi: WeakMapKitHostApi
     var currentlySelectedAnnotation: String?
     var suppressSelectionCallbacksForAnnotationId: String?
     var tileOverlays: [String: FlutterTileOverlay] = [:]
@@ -33,17 +35,16 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
     private(set) var isDisposed = false
 
     public convenience init(withFrame frame: CGRect, withRegistrar registrar: FlutterPluginRegistrar, withId id: Int64) {
-        #if os(iOS)
-        self.init(messenger: registrar.messenger(), id: id)
-        #elseif os(macOS)
-        self.init(messenger: registrar.messenger, id: id)
-        #endif
+        self.init(registrar: registrar, id: id)
     }
 
-    init(messenger: FlutterBinaryMessenger, id: Int64) {
+    init(registrar: FlutterPluginRegistrar, id: Int64) {
         let suffix = "\(id)"
-        self.hostMessenger = ConnectionTrackingMessenger(messenger)
-        self.flutterApi = MapKitFlutterApi(binaryMessenger: messenger, messageChannelSuffix: suffix)
+        let weakHostApi = WeakMapKitHostApi()
+        self.registrar = registrar
+        self.channelSuffix = suffix
+        self.weakHostApi = weakHostApi
+        self.flutterApi = FlutterEventSender(registrar: registrar, name: suffix)
         self.mapView = FlutterMapView()
 
         #if os(iOS)
@@ -55,17 +56,17 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
         super.init()
 
+        weakHostApi.host = self
         self.mapView.delegate = self
         self.mapView.flutterApi = self.flutterApi
-        MapKitHostApiSetup.setUp(
-            binaryMessenger: hostMessenger, api: WeakMapKitHostApi(self), messageChannelSuffix: suffix)
+        MapKitHostApiSetup.register(api: weakHostApi, registrar: registrar, name: suffix)
     }
 
     /// Dart's `dispose` never comes for a view unmounted before its creation
     /// finished. The engine then still drops the platform view, so the host
-    /// goes away with it and takes its channel handlers along.
+    /// goes away with it and unregisters its FFI entry.
     deinit {
-        hostMessenger.removeAllHandlers()
+        MapKitHostApiSetup.unregister(api: weakHostApi, registrar: registrar, name: channelSuffix)
     }
 
     // MARK: - MapKitHostApi
@@ -181,7 +182,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
         return self.isAnnotationSelected(with: annotationId)
     }
 
-    func takeSnapshot(options: PlatformSnapshotOptions, completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void) {
+    func takeSnapshot(options: PlatformSnapshotOptions, completion: @escaping (Result<[UInt8], Error>) -> Void) {
         Task { @MainActor in
             do {
                 guard let data = try await self.takeSnapshot(options: options) else {
@@ -304,7 +305,7 @@ public class MapKitViewHost: NSObject, @preconcurrency MapKitHostApi {
 
     func dispose() throws {
         isDisposed = true
-        hostMessenger.removeAllHandlers()
+        MapKitHostApiSetup.unregister(api: weakHostApi, registrar: registrar, name: channelSuffix)
         mapView.tearDown()
         annotationsById.removeAll()
         polylinesById.removeAll()
@@ -358,35 +359,35 @@ extension MapKitViewHost: MKMapViewDelegate {
     public func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
         if self.mapView.bounds.size != .zero {
             let camera = self.mapView.currentPlatformCamera()
-            self.flutterApi.send { try await $0.onCameraMove(camera: camera) }
+            self.flutterApi.send { try $0.onCameraMove(camera: camera) }
         }
-        self.flutterApi.send { try await $0.onCameraIdle() }
+        self.flutterApi.send { try $0.onCameraIdle() }
     }
 
     public func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
         guard self.mapView.bounds.size != .zero else { return }
         let camera = self.mapView.currentPlatformCamera()
-        flutterApi.send { try await $0.onCameraMove(camera: camera) }
+        flutterApi.send { try $0.onCameraMove(camera: camera) }
     }
 
     // onMoveStarted
     public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-        self.flutterApi.send { try await $0.onCameraMoveStarted() }
+        self.flutterApi.send { try $0.onCameraMoveStarted() }
     }
 
     public func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
         let platformMode = PlatformUserTrackingMode(mkMode: mode)
-        self.flutterApi.send { try await $0.onUserTrackingModeChanged(mode: platformMode) }
+        self.flutterApi.send { try $0.onUserTrackingModeChanged(mode: platformMode) }
     }
 
     public func mapViewDidFailLoadingMap(_ mapView: MKMapView, withError error: Error) {
         let message = error.localizedDescription
-        self.flutterApi.send { try await $0.onDidFailLoadingMap(error: message) }
+        self.flutterApi.send { try $0.onDidFailLoadingMap(error: message) }
     }
 
     public func mapView(_ mapView: MKMapView, didFailToLocateUserWithError error: Error) {
         let message = error.localizedDescription
-        self.flutterApi.send { try await $0.onDidFailToLocateUser(error: message) }
+        self.flutterApi.send { try $0.onDidFailToLocateUser(error: message) }
     }
 
     public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -477,7 +478,7 @@ extension MapKitViewHost {
         }
     }
 
-    private func takeSnapshot(options: PlatformSnapshotOptions) async throws -> FlutterStandardTypedData? {
+    private func takeSnapshot(options: PlatformSnapshotOptions) async throws -> [UInt8]? {
         let input = snapshotInput(options)
         let viewport = tileViewport()
         guard input.size.width > 0, input.size.height > 0 else {
@@ -541,7 +542,7 @@ extension MapKitViewHost {
             return nil
         }
         #endif
-        return FlutterStandardTypedData(bytes: imageData)
+        return [UInt8](imageData)
     }
 
     #if os(macOS)

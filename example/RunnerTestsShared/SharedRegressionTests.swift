@@ -10,87 +10,163 @@ import Network
 import XCTest
 @testable import mapkit_flutter
 
-/// Swallows every message, recording which host -> Dart methods were sent.
-final class NoopMessenger: NSObject, FlutterBinaryMessenger {
-    private(set) var channels: [String] = []
-
-    func send(onChannel channel: String, message: Data?) {
-        channels.append(channel)
-    }
-
-    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {
-        channels.append(channel)
-        callback?(MessagesPigeonCodec.shared.encode([] as [Any?]))
-    }
-
-    func sent(_ method: String) -> Int {
-        channels.filter { $0.contains(".\(method).") }.count
-    }
-
-    func setMessageHandlerOnChannel(
-        _ channel: String,
-        binaryMessageHandler handler: FlutterBinaryMessageHandler?
-    ) -> FlutterBinaryMessengerConnection {
-        0
-    }
-
-    func cleanUpConnection(_ connection: FlutterBinaryMessengerConnection) {}
-}
-
-/// Remembers every handler the way the engine does, so a host retained by its
-/// own channel handlers stays alive here too.
-final class HandlerRetainingMessenger: NSObject, FlutterBinaryMessenger {
-    private(set) var handlers: [FlutterBinaryMessengerConnection: (channel: String, handler: FlutterBinaryMessageHandler)] = [:]
-    private var next: FlutterBinaryMessengerConnection = 0
-
+private final class NoopBinaryMessenger: NSObject, FlutterBinaryMessenger {
     func send(onChannel channel: String, message: Data?) {}
-
-    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {
-        callback?(MessagesPigeonCodec.shared.encode([] as [Any?]))
-    }
-
-    func setMessageHandlerOnChannel(
-        _ channel: String,
-        binaryMessageHandler handler: FlutterBinaryMessageHandler?
-    ) -> FlutterBinaryMessengerConnection {
-        next += 1
-        if let handler { handlers[next] = (channel, handler) }
-        return next
-    }
-
-    func cleanUpConnection(_ connection: FlutterBinaryMessengerConnection) {
-        handlers.removeValue(forKey: connection)
-    }
-
-    /// The decoded reply of the host handler for `method`.
-    func call(_ method: String, _ args: [Any?]? = nil) -> [Any?]? {
-        var reply: [Any?]?
-        let message = args.flatMap { MessagesPigeonCodec.shared.encode($0) }
-        handlers.values.first { $0.channel.contains(".\(method).") }?.handler(message) { data in
-            reply = data.flatMap { MessagesPigeonCodec.shared.decode($0) } as? [Any?]
-        }
-        return reply
-    }
-}
-
-/// Answers every host -> Dart event with a canned reply envelope.
-final class ReplyingMessenger: NSObject, FlutterBinaryMessenger {
-    private let reply: [Any?]?
-    init(reply: [Any?]?) { self.reply = reply }
-
-    func send(onChannel channel: String, message: Data?) {}
-
-    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {
-        callback?(reply.flatMap { MessagesPigeonCodec.shared.encode($0) })
-    }
-
+    func send(onChannel channel: String, message: Data?, binaryReply callback: FlutterBinaryReply?) {}
     func setMessageHandlerOnChannel(
         _ channel: String,
         binaryMessageHandler handler: FlutterBinaryMessageHandler?
     ) -> FlutterBinaryMessengerConnection { 0 }
-
     func cleanUpConnection(_ connection: FlutterBinaryMessengerConnection) {}
 }
+
+private final class NoopTextureRegistry: NSObject, FlutterTextureRegistry {
+    func register(_ texture: FlutterTexture) -> Int64 { 0 }
+    func textureFrameAvailable(_ textureId: Int64) {}
+    func unregisterTexture(_ textureId: Int64) {}
+}
+
+/// Cross-platform `FlutterPluginRegistrar` + `MapKitFlutterApiBridge` test double
+/// that records every host -> Dart FFI callback for its own unique `engineIdentifier`.
+final class NoopMessenger: NSObject, FlutterPluginRegistrar, MapKitFlutterApiBridge {
+    private static let idLock = NSLock()
+    private static var nextEngineId: Int64 = 1000
+
+    let engineIdentifier: Int64
+    private let stubMessenger: FlutterBinaryMessenger = NoopBinaryMessenger()
+    private let stubTextures: FlutterTextureRegistry = NoopTextureRegistry()
+    private let suffix: String
+    private let failureCode: String?
+    private let failureMessage: String?
+
+    private(set) var sent: [(method: String, args: [Any?])] = []
+    private var pending: [(method: String, expectation: XCTestExpectation)] = []
+
+    init(id: Int64 = 0, failureCode: String? = nil, failureMessage: String? = nil) {
+        Self.idLock.lock()
+        let engineId = Self.nextEngineId
+        Self.nextEngineId += 1
+        Self.idLock.unlock()
+
+        self.engineIdentifier = engineId
+        self.suffix = "\(id)"
+        self.failureCode = failureCode
+        self.failureMessage = failureMessage
+        super.init()
+        MapKitFlutterApiRegistrar.registerInstance(
+            api: self, engineId: engineId, affinityKey: engineId, name: suffix)
+    }
+
+    deinit {
+        MapKitFlutterApiRegistrar.unregisterInstance(api: self, name: suffix)
+    }
+
+    #if os(iOS)
+    var viewController: UIViewController? { nil }
+    func messenger() -> FlutterBinaryMessenger { stubMessenger }
+    func textures() -> FlutterTextureRegistry { stubTextures }
+    func register(_ factory: FlutterPlatformViewFactory, withId factoryId: String) {}
+    func register(
+        _ factory: FlutterPlatformViewFactory,
+        withId factoryId: String,
+        gestureRecognizersBlockingPolicy: FlutterPlatformViewGestureRecognizersBlockingPolicy
+    ) {}
+    func publish(_ value: NSObject) {}
+    func addMethodCallDelegate(_ delegate: FlutterPlugin, channel: FlutterMethodChannel) {}
+    func addApplicationDelegate(_ delegate: FlutterPlugin) {}
+    func addSceneDelegate(_ delegate: FlutterSceneLifeCycleDelegate) {}
+    func lookupKey(forAsset asset: String) -> String { asset }
+    func lookupKey(forAsset asset: String, fromPackage package: String) -> String { asset }
+    func valuePublished(byPlugin pluginKey: String) -> NSObject? { nil }
+    #elseif os(macOS)
+    var messenger: FlutterBinaryMessenger { stubMessenger }
+    var textures: FlutterTextureRegistry { stubTextures }
+    var view: NSView? { nil }
+    var viewController: NSViewController? { nil }
+    func addMethodCallDelegate(_ delegate: FlutterPlugin, channel: FlutterMethodChannel) {}
+    func addApplicationDelegate(_ delegate: FlutterAppLifecycleDelegate) {}
+    func register(_ factory: FlutterPlatformViewFactory, withId factoryId: String) {}
+    func publish(_ value: NSObject) {}
+    func valuePublished(byPlugin pluginKey: String) -> NSObject? { nil }
+    func lookupKey(forAsset asset: String) -> String { asset }
+    func lookupKey(forAsset asset: String, fromPackage package: String) -> String { asset }
+    #endif
+
+    func sent(_ method: String) -> Int {
+        sent.filter { $0.method == method }.count
+    }
+
+    func args(of method: String) -> [[Any?]] {
+        sent.filter { $0.method == method }.map(\.args)
+    }
+
+    func expectation(for method: String, in test: XCTestCase) -> XCTestExpectation {
+        let expectation = test.expectation(description: method)
+        expectation.assertForOverFulfill = false
+        pending.append((method, expectation))
+        return expectation
+    }
+
+    private func record(_ method: String, _ args: [Any?] = [], error: MapKitHostError) {
+        if let failureCode {
+            error.code = failureCode
+            error.message = failureMessage
+            return
+        }
+        sent.append((method, args))
+        for entry in pending where entry.method == method {
+            entry.expectation.fulfill()
+        }
+    }
+
+    func onCameraMoveStarted(error: MapKitHostError) { record("onCameraMoveStarted", error: error) }
+    func onCameraMove(pigeonVar_args: NSData, error: MapKitHostError) { record("onCameraMove", error: error) }
+    func onCameraIdle(error: MapKitHostError) { record("onCameraIdle", error: error) }
+    func onUserTrackingModeChanged(mode modeArg: Int64, error: MapKitHostError) {
+        record("onUserTrackingModeChanged", [PlatformUserTrackingMode(rawValue: Int(modeArg))], error: error)
+    }
+    func onAnnotationSelect(annotationId annotationIdArg: NSString, error: MapKitHostError) {
+        record("onAnnotationSelect", [annotationIdArg as String], error: error)
+    }
+    func onAnnotationDeselect(annotationId annotationIdArg: NSString, error: MapKitHostError) {
+        record("onAnnotationDeselect", [annotationIdArg as String], error: error)
+    }
+    func onMapFeatureSelected(pigeonVar_args: NSData, error: MapKitHostError) {
+        record("onMapFeatureSelected", error: error)
+    }
+    func onAnnotationDragStart(
+        annotationId annotationIdArg: NSString, pigeonVar_args: NSData, error: MapKitHostError
+    ) {
+        record("onAnnotationDragStart", [annotationIdArg as String], error: error)
+    }
+    func onAnnotationDragEnd(
+        annotationId annotationIdArg: NSString, pigeonVar_args: NSData, error: MapKitHostError
+    ) {
+        record("onAnnotationDragEnd", [annotationIdArg as String], error: error)
+    }
+    func onCalloutTap(annotationId annotationIdArg: NSString, error: MapKitHostError) {
+        record("onCalloutTap", [annotationIdArg as String], error: error)
+    }
+    func onPolylineTap(polylineId polylineIdArg: NSString, error: MapKitHostError) {
+        record("onPolylineTap", [polylineIdArg as String], error: error)
+    }
+    func onPolygonTap(polygonId polygonIdArg: NSString, error: MapKitHostError) {
+        record("onPolygonTap", [polygonIdArg as String], error: error)
+    }
+    func onCircleTap(circleId circleIdArg: NSString, error: MapKitHostError) {
+        record("onCircleTap", [circleIdArg as String], error: error)
+    }
+    func onMapTap(pigeonVar_args: NSData, error: MapKitHostError) { record("onMapTap", error: error) }
+    func onMapLongPress(pigeonVar_args: NSData, error: MapKitHostError) { record("onMapLongPress", error: error) }
+    func onDidFailLoadingMap(error errorArg: NSString, error: MapKitHostError) {
+        record("onDidFailLoadingMap", [errorArg as String], error: error)
+    }
+    func onDidFailToLocateUser(error errorArg: NSString, error: MapKitHostError) {
+        record("onDidFailToLocateUser", [errorArg as String], error: error)
+    }
+}
+
+typealias HandlerRetainingMessenger = NoopMessenger
 
 private extension MKMapView {
     #if os(iOS)
@@ -229,7 +305,7 @@ final class StalledTileServer: @unchecked Sendable {
 
 @MainActor
 final class EventDeliveryTests: XCTestCase {
-    private func failure(whenReplying reply: [Any?]?) async throws -> MapKitHostError {
+    private func failure(code: String, message: String?) async throws -> MapKitHostError {
         let original = EventDeliveryFailure.report
         defer { EventDeliveryFailure.report = original }
         var reported: Error?
@@ -239,20 +315,21 @@ final class EventDeliveryTests: XCTestCase {
             delivered.fulfill()
         }
 
-        let api = MapKitFlutterApi(binaryMessenger: ReplyingMessenger(reply: reply), messageChannelSuffix: "0")
-        api.send { try await $0.onCameraIdle() }
+        let registrar = NoopMessenger(id: 0, failureCode: code, failureMessage: message)
+        let sender = FlutterEventSender(registrar: registrar, name: "0")
+        sender.send { try $0.onCameraIdle() }
 
         await fulfillment(of: [delivered], timeout: 2)
         return try XCTUnwrap(reported as? MapKitHostError)
     }
 
     func testAnErrorReplyIsReportedNotDropped() async throws {
-        let error = try await failure(whenReplying: ["wire-failure", "decoding failed", nil])
+        let error = try await failure(code: "wire-failure", message: "decoding failed")
         XCTAssertEqual(error.code, "wire-failure")
     }
 
-    func testAMissingListenerIsReportedAsAChannelError() async throws {
-        let error = try await failure(whenReplying: nil)
+    func testAChannelErrorIsReported() async throws {
+        let error = try await failure(code: "channel-error", message: nil)
         XCTAssertEqual(error.code, "channel-error")
     }
 }
@@ -263,32 +340,45 @@ final class HostLifetimeTests: XCTestCase {
         let messenger = HandlerRetainingMessenger()
         weak var released: MapKitViewHost?
         autoreleasepool {
-            let host = MapKitViewHost(messenger: messenger, id: 0)
+            let host = MapKitViewHost(registrar: messenger, id: 0)
             released = host
-            XCTAssertFalse(messenger.handlers.isEmpty)
+            XCTAssertNotNil(
+                MapKitHostApiSetup.pigeonResolveInstance(
+                    engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"))
         }
 
-        XCTAssertNil(released, "channel handlers keep the undisposed host alive")
-        XCTAssertTrue(messenger.handlers.isEmpty, "\(messenger.handlers.count) handlers outlived the host")
+        XCTAssertNil(released, "FFI tracker keeps the undisposed host alive")
+        XCTAssertNil(
+            MapKitHostApiSetup.pigeonResolveInstance(
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"),
+            "FFI registration outlived the host")
     }
 
     func testHandlersReachTheLiveHostUntilItIsDisposed() throws {
         let messenger = HandlerRetainingMessenger()
-        let host = MapKitViewHost(messenger: messenger, id: 0)
+        let host = MapKitViewHost(registrar: messenger, id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
 
-        XCTAssertEqual(messenger.call("getCamera")?.count, 1)
-        XCTAssertEqual(
-            messenger.call("selectAnnotation", ["missing"])?.first as? Bool, false)
+        let setup = try XCTUnwrap(
+            MapKitHostApiSetup.pigeonResolveInstance(
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"))
+        let err = MapKitHostError()
+        _ = setup.getCamera(wrappedError: err)
+        XCTAssertNil(err.code)
+        XCTAssertEqual(setup.selectAnnotation(annotationId: "missing", wrappedError: err)?.boolValue, false)
+        XCTAssertNil(err.code)
 
-        XCTAssertEqual(messenger.call("dispose")?.count, 1)
-        XCTAssertTrue(messenger.handlers.isEmpty)
+        setup.dispose(wrappedError: err)
+        XCTAssertNil(err.code)
+        XCTAssertNil(
+            MapKitHostApiSetup.pigeonResolveInstance(
+                engineId: messenger.engineIdentifier, affinityKey: .min, name: "0"))
         XCTAssertNil(host.mapView.delegate)
     }
 
     #if os(iOS)
     func testDisposeDuringLookAroundFailsIt() throws {
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         let done = expectation(description: "look around")
         var result: Result<Bool, Error>?
         host.openLookAround(coordinate: PlatformCoordinate(latitude: 37.3346, longitude: -122.0090)) {
@@ -312,7 +402,7 @@ final class HostLifetimeTests: XCTestCase {
         window.rootViewController = root
         window.makeKeyAndVisible()
         addTeardownBlock { @MainActor in window.isHidden = true }
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         let failed = expectation(description: "fails after transition")
         let vc = UIViewController()
 
@@ -338,7 +428,7 @@ final class HostLifetimeTests: XCTestCase {
 @MainActor
 final class AnnotationUpdateTests: XCTestCase {
     func testChangingAnAnnotationNativeNeverAcceptedAddsIt() throws {
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
 
         try host.updateAnnotations(toAdd: [], toChange: [titledAnnotation("a", title: "A")], idsToRemove: [])
 
@@ -347,7 +437,7 @@ final class AnnotationUpdateTests: XCTestCase {
     }
 
     func testTitleAndSubtitleChangesAreObservableByMapKit() throws {
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         try host.updateAnnotations(
             toAdd: [titledAnnotation("a", title: "A", subtitle: "S")], toChange: [], idsToRemove: [])
         let annotation = try XCTUnwrap(host.annotationsById["a"])
@@ -487,7 +577,7 @@ final class SnapshotOverlayTests: XCTestCase {
     private func oceanHost(
         latitude: Double = 0, longitude: Double = 0, heading: Double? = nil
     ) -> MapKitViewHost {
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
@@ -521,8 +611,8 @@ final class SnapshotOverlayTests: XCTestCase {
     /// anything these tests claim. Every other outcome comes back as it was.
     private func snapshotResult(
         _ host: MapKitViewHost, overlays: Bool = true
-    ) -> Result<FlutterStandardTypedData, Error> {
-        var result: Result<FlutterStandardTypedData, Error> = .failure(mapKitError(.snapshotFailed, "never finished"))
+    ) -> Result<[UInt8], Error> {
+        var result: Result<[UInt8], Error> = .failure(mapKitError(.snapshotFailed, "never finished"))
         for _ in 0..<3 {
             let done = expectation(description: "snapshot")
             host.takeSnapshot(options: PlatformSnapshotOptions(
@@ -538,7 +628,7 @@ final class SnapshotOverlayTests: XCTestCase {
     }
 
     private func snapshot(_ host: MapKitViewHost, overlays: Bool = true) throws -> SnapshotPixels {
-        try SnapshotPixels(png: try snapshotResult(host, overlays: overlays).get().data)
+        try SnapshotPixels(png: Data(try snapshotResult(host, overlays: overlays).get()))
     }
 
     /// Where `coordinate` lands, from the top-left of the map view.
@@ -634,7 +724,7 @@ final class SnapshotOverlayTests: XCTestCase {
         let flatSide = MKMapSize.world.width / Double(1 << 8)
         let flatTileRect = MKMapRect(x: 128 * flatSide, y: 128 * flatSide, width: flatSide, height: flatSide)
         let flatCenter = MKMapPoint(x: flatTileRect.midX, y: flatTileRect.midY).coordinate
-        let flatHost = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let flatHost = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         flatHost.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         flatHost.mapView.setRegion(MKCoordinateRegion(
             center: flatCenter, span: MKCoordinateSpan(latitudeDelta: 0.6, longitudeDelta: 0.6)), animated: false)
@@ -659,7 +749,7 @@ final class SnapshotOverlayTests: XCTestCase {
         let pitchedSide = MKMapSize.world.width / Double(1 << 12)
         let pitchedTileRect = MKMapRect(x: 2048 * pitchedSide, y: 2048 * pitchedSide, width: pitchedSide, height: pitchedSide)
         let pitchedCenter = MKMapPoint(x: pitchedTileRect.midX, y: pitchedTileRect.midY).coordinate
-        let pitchedHost = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let pitchedHost = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         pitchedHost.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         pitchedHost.mapView.setCamera(MKMapCamera(
             lookingAtCenter: pitchedCenter, fromDistance: 1500, pitch: 60, heading: 20), animated: false)
@@ -722,7 +812,7 @@ final class SnapshotOverlayTests: XCTestCase {
                 try folder.write(try folder.png(TileFolder.northWest), z: 1, x: x, y: y)
             }
         }
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -839,7 +929,7 @@ final class SnapshotOverlayTests: XCTestCase {
         for (longitude, distance) in [
             (-179.999, 2_000.0), (-179.99, 200_000), (-180, 2_000), (179.999, 2_000), (180, 2_000), (0, 2_000),
         ] {
-            let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+            let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
             host.mapView.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
             host.mapView.setCamera(MKMapCamera(
                 lookingAtCenter: CLLocationCoordinate2D(latitude: 0, longitude: longitude), fromDistance: distance,
@@ -874,7 +964,7 @@ final class SnapshotOverlayTests: XCTestCase {
         try host.addTileOverlay(overlay: tiles(try TileFolder(test: self).template))
         let sample = point(host, 0.2, -0.2)
         let done = expectation(description: "snapshot")
-        var result: Result<FlutterStandardTypedData, Error>?
+        var result: Result<[UInt8], Error>?
         host.takeSnapshot(options: PlatformSnapshotOptions(
             showsPointsOfInterest: false, showsAnnotations: false, showsOverlays: true)) {
             result = $0
@@ -887,7 +977,7 @@ final class SnapshotOverlayTests: XCTestCase {
         }
         wait(for: [done], timeout: snapshotWait)
 
-        let shot = try SnapshotPixels(png: try XCTUnwrap(result).get().data)
+        let shot = try SnapshotPixels(png: Data(try XCTUnwrap(result).get()))
 
         assertColor(shot.rgba(at: sample), TileFolder.northWest, "the snapshotted view's tile")
     }
@@ -977,7 +1067,7 @@ final class SnapshotOverlayTests: XCTestCase {
         width: CGFloat, height: CGFloat, distance: Double, heading: Double = 30, latitude: Double = 37.33,
         longitude: Double = -122
     ) -> MapKitViewHost {
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: width, height: height)
         host.mapView.setCamera(MKMapCamera(
             lookingAtCenter: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), fromDistance: distance,
@@ -1004,7 +1094,7 @@ final class SnapshotOverlayTests: XCTestCase {
     /// MapKit caps pitch by distance and view size; asking for 89 gets the cap.
     func testAViewAtThePitchCapNeedsFarFewerTilesThanTheLimit() throws {
         for (width, height) in [(390.0, 844.0), (820, 1180)] as [(CGFloat, CGFloat)] {
-            let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+            let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
             host.mapView.frame = CGRect(x: 0, y: 0, width: width, height: height)
             for distance in [100.0, 200, 300, 500] {
                 for heading in [0.0, 30, 137] {
@@ -1154,7 +1244,7 @@ final class SnapshotOverlayTests: XCTestCase {
 
     func testTheGroundFollowsTheEdgesOfTheViewPastTheEdgeOfTheMercatorWorld() throws {
         let world = MKMapSize.world.width
-        let host = MapKitViewHost(messenger: HandlerRetainingMessenger(), id: 0)
+        let host = MapKitViewHost(registrar: HandlerRetainingMessenger(), id: 0)
         host.mapView.frame = CGRect(x: 0, y: 0, width: 820, height: 1180)
         for latitude in [-70.0, -60, 0, 37.33, 60, 70, 84.5] {
             for distance in [200.0, 300, 500] {
@@ -1314,9 +1404,9 @@ final class SnapshotOverlayTests: XCTestCase {
         XCTAssertFalse(pixel.r > 230 && pixel.g < 30 && pixel.b > 230, "\(what) is covered by a tile: \(pixel)")
     }
 
-    private func disposeDuringTheSnapshot(of host: MapKitViewHost) -> Result<FlutterStandardTypedData, Error> {
+    private func disposeDuringTheSnapshot(of host: MapKitViewHost) -> Result<[UInt8], Error> {
         let done = expectation(description: "snapshot")
-        var result: Result<FlutterStandardTypedData, Error> = .failure(mapKitError(.snapshotFailed, "never finished"))
+        var result: Result<[UInt8], Error> = .failure(mapKitError(.snapshotFailed, "never finished"))
         host.takeSnapshot(options: PlatformSnapshotOptions(
             showsPointsOfInterest: false, showsAnnotations: true, showsOverlays: true)) {
             result = $0
@@ -1329,7 +1419,7 @@ final class SnapshotOverlayTests: XCTestCase {
         return result
     }
 
-    private func assertDisposalFailed(_ result: Result<FlutterStandardTypedData, Error>, file: StaticString = #filePath, line: UInt = #line) {
+    private func assertDisposalFailed(_ result: Result<[UInt8], Error>, file: StaticString = #filePath, line: UInt = #line) {
         switch result {
         case .success:
             XCTFail("a disposed map's snapshot came back as a success", file: file, line: line)
@@ -1361,7 +1451,7 @@ final class SnapshotOverlayTests: XCTestCase {
         let host = oceanHost()
         try host.addTileOverlay(overlay: tiles(server.template))
         let done = expectation(description: "snapshot")
-        var result: Result<FlutterStandardTypedData, Error> = .failure(mapKitError(.snapshotFailed, "never finished"))
+        var result: Result<[UInt8], Error> = .failure(mapKitError(.snapshotFailed, "never finished"))
         host.takeSnapshot(options: PlatformSnapshotOptions(
             showsPointsOfInterest: false, showsAnnotations: false, showsOverlays: true)) {
             result = $0

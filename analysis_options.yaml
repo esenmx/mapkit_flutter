@@ -4,6 +4,7 @@ analyzer:
   exclude:
     - build/**
     - "**/*.g.dart"
+    - "**/*.g.ffi.dart"
     - "**/*.mocks.dart"
 
 linter:

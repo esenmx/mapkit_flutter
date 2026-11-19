@@ -161,8 +161,7 @@ abstract interface class MKMapViewController {
 }
 
 /// Pigeon-backed implementation of [MKMapViewController], plus the
-/// state-driven mutations the `MKMapView` diff pipeline pushes over the
-/// channel.
+/// state-driven mutations the `MKMapView` diff pipeline pushes over FFI.
 ///
 /// Those mutations stay off [MKMapViewController] so a test double only has
 /// to cover the public API, and so their signatures can change without
@@ -171,26 +170,48 @@ abstract interface class MKMapViewController {
 final class MKMapViewControllerImpl implements MKMapViewController {
   /// Creates the controller for a platform view.
   ///
-  /// [hostApi] is injectable for tests; in production it defaults to a Pigeon
-  /// host API bound to this view's id.
+  /// [hostApi] is injectable for tests; in production it binds to the native
+  /// FFI host registered under this view's id.
   factory({
     required int viewId,
     required MKMapViewEventSink sink,
     @visibleForTesting MapKitHostApi? hostApi,
   }) {
     final suffix = '$viewId';
-    final host = hostApi ?? .new(messageChannelSuffix: suffix);
-    return ._(host, sink, suffix);
+    final eventHandler = _MKMapViewFlutterApi(sink);
+    var effectiveHost = hostApi;
+    assert(() {
+      effectiveHost ??= debugPlatformHostFactory?.call(viewId, eventHandler);
+      return true;
+    }(), 'test-only platform host injection');
+    final useNativeInterop = effectiveHost == null;
+    final host =
+        effectiveHost ??
+        .createWithNativeInteropApi(messageChannelSuffix: suffix);
+    if (useNativeInterop) {
+      MapKitFlutterApiRegistrar().register(eventHandler, name: suffix);
+    }
+    return ._(host, eventHandler, suffix, useNativeInterop: useNativeInterop);
   }
 
-  new _(this._host, MKMapViewEventSink sink, this._channelSuffix)
-    : _eventHandler = _MKMapViewFlutterApi(sink) {
-    MapKitFlutterApi.setUp(_eventHandler, messageChannelSuffix: _channelSuffix);
-  }
+  new _(
+    this._host,
+    this._eventHandler,
+    this._channelSuffix, {
+    required this._useNativeInterop,
+  });
+
+  /// Test-only hook for widget tests that drive `UiKitView`/`AppKitView`
+  /// without a live native host. Read only inside `assert`, so release builds
+  /// compile it out and Dart AOT + `@RecordUse` can tree-shake unused bindings.
+  @visibleForTesting
+  static MapKitHostApi Function(int viewId, MapKitFlutterApi eventHandler)?
+  debugPlatformHostFactory;
 
   final MapKitHostApi _host;
   final String _channelSuffix;
   final MapKitFlutterApi _eventHandler;
+  final bool _useNativeInterop;
   bool _disposed = false;
 
   /// The host→Flutter event handler, exposed for unit tests to simulate
@@ -498,7 +519,12 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
-    MapKitFlutterApi.setUp(null, messageChannelSuffix: _channelSuffix);
+    if (_useNativeInterop) {
+      MapKitFlutterApiRegistrar().unregister(
+        _eventHandler,
+        name: _channelSuffix,
+      );
+    }
     try {
       await _host.dispose();
     } on PlatformException {

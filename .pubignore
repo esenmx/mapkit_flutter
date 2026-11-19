@@ -10,3 +10,7 @@ plans/
 example/build/
 example/ios/Flutter/ephemeral/
 example/macos/Flutter/ephemeral/
+example/tool/pigeon/
+darwin/**/.build/
+darwin/**/.swiftpm/
+darwin/**/*.o

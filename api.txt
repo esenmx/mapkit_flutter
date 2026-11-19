@@ -1,6 +1,6 @@
 environment:
-  flutter: >=3.47.0
-  sdk: ^3.13.0
+  flutter: >=3.50.0
+  sdk: ^3.14.0
 package:mapkit_flutter/mapkit_flutter.dart:
   CLLocationCoordinate2D (class extends Object, final, immutable):
     new (constructor: CLLocationCoordinate2D Function({required double latitude, required double longitude}))

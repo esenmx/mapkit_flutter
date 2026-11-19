@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A completely custom, Flutter-built marker: a rounded pill with an icon and
 /// label. Rasterized off-screen to a PNG and handed to

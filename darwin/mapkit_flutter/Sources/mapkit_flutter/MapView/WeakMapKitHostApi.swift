@@ -6,17 +6,17 @@ import Flutter
 import FlutterMacOS
 #endif
 
-/// What the generated channel handlers hold instead of the host. They live
-/// until `cleanUpConnection`, and holding the host would keep it (and its
+/// What the generated FFI tracker holds instead of the host. Registrations live
+/// until `unregister`, and holding the host strongly would keep it (and its
 /// `MKMapView`) alive whenever `dispose` never arrives.
 ///
-/// `@preconcurrency`: the engine calls handlers on the platform thread, as for
-/// the host's own conformance.
+/// `@preconcurrency`: FFI host calls execute on the root isolate's thread
+/// (main), as for the host's own conformance.
 @MainActor
 final class WeakMapKitHostApi: @preconcurrency MapKitHostApi {
-    private weak var host: MapKitViewHost?
+    weak var host: MapKitViewHost?
 
-    init(_ host: MapKitViewHost) { self.host = host }
+    init(_ host: MapKitViewHost? = nil) { self.host = host }
 
     /// The same answer Dart gets from a channel with no handler.
     private func live() throws -> MapKitViewHost {
@@ -83,7 +83,7 @@ final class WeakMapKitHostApi: @preconcurrency MapKitHostApi {
     }
 
     func takeSnapshot(
-        options: PlatformSnapshotOptions, completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void
+        options: PlatformSnapshotOptions, completion: @escaping (Result<[UInt8], Error>) -> Void
     ) {
         do {
             try live().takeSnapshot(options: options, completion: completion)

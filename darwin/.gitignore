@@ -35,6 +35,7 @@ Icon?
 
 /Flutter/Generated.xcconfig
 
-# Swift Package Manager
+# Swift Package Manager & FFIgen intermediate artifacts
 .build/
 .swiftpm/
+*.o

@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:checks/checks.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// `takeSnapshot` end to end, through the channel and `MKTileOverlay.loadTile`:
 /// a tile's pixels appear on the snapshot, and a tile that can't load fails it.

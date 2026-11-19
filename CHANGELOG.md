@@ -4,6 +4,8 @@
 
 ### Breaking
 
+- **Requires Dart `^3.14.0` and Flutter `>=3.50.0`.** Needed for Pigeon 30
+  direct Swift FFI bindings and `package:objective_c` native tree-shaking.
 - **Polylines, polygons and point-of-interest filters keep unmodifiable copies
   of the lists you pass.** Mutating a list after handing it over could hide the
   change from the map diff and slip past validation. `MKPolyline`
@@ -48,6 +50,12 @@
 - A title-only system marker with `calloutConsumesTapEvents` now shows a callout
   bubble to tap. MapKit otherwise draws a lone title as a label and shows no
   bubble.
+
+### Changed
+
+- **Direct Swift FFI interop via Pigeon 30 (`package:objective_c`).** Replaces
+  serialized `BasicMessageChannel` calls with generated Objective-C/FFI
+  bindings so unused native interop bindings are tree-shaken in release builds.
 
 ### Fixed
 

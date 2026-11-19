@@ -2,7 +2,8 @@
 //
 // Regenerate after editing (outputs are checked in; never hand-edit them):
 //   dart run pigeon --input pigeons/messages.dart
-//   dart format lib/src/messages.g.dart
+//   rm -f darwin/mapkit_flutter/Sources/mapkit_flutter_objc_gen/*.o
+//   git ls-files -z -- '*.dart' | xargs -0 dart format
 // CI regenerates and fails on any diff.
 //
 // Naming: every type here carries a `Platform` prefix — including enums that
@@ -41,9 +42,14 @@ import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
   PigeonOptions(
+    configDirectory: 'example/',
     dartOut: 'lib/src/messages.g.dart',
     swiftOut: 'darwin/mapkit_flutter/Sources/mapkit_flutter/messages.g.swift',
-    swiftOptions: SwiftOptions(errorClassName: 'MapKitHostError'),
+    swiftOptions: SwiftOptions(
+      errorClassName: 'MapKitHostError',
+      useFfi: true,
+      ffiModuleName: 'mapkit_flutter',
+    ),
     dartPackageName: 'mapkit_flutter',
   ),
 )
@@ -594,7 +600,6 @@ abstract class MapKitHostApi {
 
   // Pigeon API methods don't support named parameters, so the `animated`
   // bools below must stay positional.
-  // ignore_for_file: avoid_positional_boolean_parameters
 
   /// `MKMapView.setCamera(_:animated:)`.
   void setCamera(PlatformMapCamera camera, bool animated);

@@ -6,21 +6,27 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.13.0
-  flutter: ">=3.47.0"
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
 
 dependencies:
   flutter:
     sdk: flutter
   mapkit_flutter:
     path: ../
+  material_ui: ^1.6.0
 
 dev_dependencies:
   checks: ^0.3.2
+  ffigen: 22.0.0
   flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter
+  path: ^1.9.1
+  pub_semver: ^2.2.1
+  swift2objc: 0.3.1
+  swiftgen: 0.2.0
   very_good_analysis: ^11.0.0
 
 flutter:

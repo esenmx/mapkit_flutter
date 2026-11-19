@@ -14,7 +14,7 @@ and modern MapKit configurations.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Mehmet Esen' => 'mehmetesen@proton.me' }
   s.source           = { :path => '.' }
-  s.source_files = 'mapkit_flutter/Sources/mapkit_flutter/**/*.swift'
+  s.source_files = 'mapkit_flutter/Sources/**/*.{swift,m,h}'
   s.resource_bundles = {'mapkit_flutter_privacy' => ['mapkit_flutter/Sources/mapkit_flutter/PrivacyInfo.xcprivacy']}
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'
@@ -22,13 +22,12 @@ and modern MapKit configurations.
 
   s.ios.deployment_target = '17.0'
   s.osx.deployment_target = '14.0'
-  # Swift 6 language mode: data-race safety enforced by the compiler, not a
-  # flag stack (subsumes the old -strict-concurrency=complete). Needs
-  # Xcode 16+, already below Flutter's own minimum.
-  s.swift_version = '6.0'
+  # Swift 5 language mode until upstream Pigeon annotates the mutable static
+  # globals its `useFfi: true` Swift generator emits.
+  s.swift_version = '5.0'
 
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'SWIFT_VERSION' => '6.0'
+    'SWIFT_VERSION' => '5.0'
   }
 end

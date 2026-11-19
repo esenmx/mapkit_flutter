@@ -10,7 +10,7 @@ import FlutterMacOS
 #endif
 
 class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
-    weak var flutterApi: MapKitFlutterApi?
+    weak var flutterApi: FlutterEventSender?
 
     /// Camera moves made while the view has no size, oldest first; replayed
     /// once it has real bounds so MapKit doesn't resolve them against a zero
@@ -318,7 +318,7 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
         let locationInView = sender.location(in: self)
         let locationOnMap = self.convert(locationInView, toCoordinateFrom: self)
         let coordinate = PlatformCoordinate.from(locationOnMap)
-        self.flutterApi?.send { try await $0.onMapLongPress(coordinate: coordinate) }
+        self.flutterApi?.send { try $0.onMapLongPress(coordinate: coordinate) }
     }
 
     @objc func onTap(_ tap: PlatformGestureRecognizer) {

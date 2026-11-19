@@ -15,7 +15,7 @@ extension MapKitViewHost {
         #if os(iOS)
         if let feature = view.annotation as? MKMapFeatureAnnotation {
             let payload = PlatformMapFeature.from(feature)
-            self.flutterApi.send { try await $0.onMapFeatureSelected(feature: payload) }
+            self.flutterApi.send { try $0.onMapFeatureSelected(feature: payload) }
             return
         }
         #endif
@@ -28,7 +28,7 @@ extension MapKitViewHost {
         if self.suppressSelectionCallbacksForAnnotationId == id {
             return
         }
-        self.flutterApi.send { try await $0.onAnnotationSelect(annotationId: id) }
+        self.flutterApi.send { try $0.onAnnotationSelect(annotationId: id) }
     }
 
     public func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
@@ -45,7 +45,7 @@ extension MapKitViewHost {
         if self.suppressSelectionCallbacksForAnnotationId == id {
             return
         }
-        self.flutterApi.send { try await $0.onAnnotationDeselect(annotationId: id) }
+        self.flutterApi.send { try $0.onAnnotationDeselect(annotationId: id) }
     }
 
     public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -69,9 +69,9 @@ extension MapKitViewHost {
         let coordinate = PlatformCoordinate.from(annotation.coordinate)
         switch newState {
         case .starting:
-            self.flutterApi.send { try await $0.onAnnotationDragStart(annotationId: id, coordinate: coordinate) }
+            self.flutterApi.send { try $0.onAnnotationDragStart(annotationId: id, coordinate: coordinate) }
         case .ending, .canceling:
-            self.flutterApi.send { try await $0.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) }
+            self.flutterApi.send { try $0.onAnnotationDragEnd(annotationId: id, coordinate: coordinate) }
         default:
             break
         }
@@ -214,7 +214,7 @@ extension MapKitViewHost {
             infoWindowTap.annotationView?.removeGestureRecognizer(infoWindowTap)
             return
         }
-        self.flutterApi.send { try await $0.onCalloutTap(annotationId: annotationId) }
+        self.flutterApi.send { try $0.onCalloutTap(annotationId: annotationId) }
     }
 
     func syncCalloutTapGestureRecognizer(for annotation: FlutterAnnotation, on view: MKAnnotationView) {
@@ -278,7 +278,7 @@ extension MapKitViewHost {
             } else if wasSelected && self.currentlySelectedAnnotation == annotation.id {
                 self.currentlySelectedAnnotation = nil
                 let id = annotation.id
-                self.flutterApi.send { try await $0.onAnnotationDeselect(annotationId: id) }
+                self.flutterApi.send { try $0.onAnnotationDeselect(annotationId: id) }
             }
             return
         }

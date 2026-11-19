@@ -15,6 +15,9 @@ and modern MapKit configurations.
   s.author           = { 'Mehmet Esen' => 'mehmetesen@proton.me' }
   s.source           = { :path => '.' }
   s.source_files = 'mapkit_flutter/Sources/**/*.{swift,m,h}'
+  # Keep the swiftgen-emitted header out of the pod's umbrella header so its
+  # MAPKIT_FLUTTER_SWIFT_H include guard does not shadow mapkit_flutter-Swift.h.
+  s.private_header_files = 'mapkit_flutter/Sources/mapkit_flutter_objc_gen/mapkit_flutter.h'
   s.resource_bundles = {'mapkit_flutter_privacy' => ['mapkit_flutter/Sources/mapkit_flutter/PrivacyInfo.xcprivacy']}
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'

@@ -26,15 +26,71 @@ private final class NoopTextureRegistry: NSObject, FlutterTextureRegistry {
     func unregisterTexture(_ textureId: Int64) {}
 }
 
-/// Cross-platform `FlutterPluginRegistrar` + `MapKitFlutterApiBridge` test double
-/// that records every host -> Dart FFI callback for its own unique `engineIdentifier`.
-final class NoopMessenger: NSObject, FlutterPluginRegistrar, MapKitFlutterApiBridge {
+/// Weak forwarding bridge registered with `MapKitFlutterApiRegistrar` so the
+/// process-global registrar does not retain `NoopMessenger` and prevent its
+/// `deinit` from unregistering the test entry.
+private final class WeakFlutterApiBridge: NSObject, MapKitFlutterApiBridge {
+    weak var target: NoopMessenger?
+
+    func onCameraMoveStarted(error: MapKitHostError) { target?.record("onCameraMoveStarted", error: error) }
+    func onCameraMove(pigeonVar_args: NSData, error: MapKitHostError) { target?.record("onCameraMove", error: error) }
+    func onCameraIdle(error: MapKitHostError) { target?.record("onCameraIdle", error: error) }
+    func onUserTrackingModeChanged(mode modeArg: Int64, error: MapKitHostError) {
+        target?.record("onUserTrackingModeChanged", [PlatformUserTrackingMode(rawValue: Int(modeArg))], error: error)
+    }
+    func onAnnotationSelect(annotationId annotationIdArg: NSString, error: MapKitHostError) {
+        target?.record("onAnnotationSelect", [annotationIdArg as String], error: error)
+    }
+    func onAnnotationDeselect(annotationId annotationIdArg: NSString, error: MapKitHostError) {
+        target?.record("onAnnotationDeselect", [annotationIdArg as String], error: error)
+    }
+    func onMapFeatureSelected(pigeonVar_args: NSData, error: MapKitHostError) {
+        target?.record("onMapFeatureSelected", error: error)
+    }
+    func onAnnotationDragStart(
+        annotationId annotationIdArg: NSString, pigeonVar_args: NSData, error: MapKitHostError
+    ) {
+        target?.record("onAnnotationDragStart", [annotationIdArg as String], error: error)
+    }
+    func onAnnotationDragEnd(
+        annotationId annotationIdArg: NSString, pigeonVar_args: NSData, error: MapKitHostError
+    ) {
+        target?.record("onAnnotationDragEnd", [annotationIdArg as String], error: error)
+    }
+    func onCalloutTap(annotationId annotationIdArg: NSString, error: MapKitHostError) {
+        target?.record("onCalloutTap", [annotationIdArg as String], error: error)
+    }
+    func onPolylineTap(polylineId polylineIdArg: NSString, error: MapKitHostError) {
+        target?.record("onPolylineTap", [polylineIdArg as String], error: error)
+    }
+    func onPolygonTap(polygonId polygonIdArg: NSString, error: MapKitHostError) {
+        target?.record("onPolygonTap", [polygonIdArg as String], error: error)
+    }
+    func onCircleTap(circleId circleIdArg: NSString, error: MapKitHostError) {
+        target?.record("onCircleTap", [circleIdArg as String], error: error)
+    }
+    func onMapTap(pigeonVar_args: NSData, error: MapKitHostError) { target?.record("onMapTap", error: error) }
+    func onMapLongPress(pigeonVar_args: NSData, error: MapKitHostError) {
+        target?.record("onMapLongPress", error: error)
+    }
+    func onDidFailLoadingMap(error errorArg: NSString, error: MapKitHostError) {
+        target?.record("onDidFailLoadingMap", [errorArg as String], error: error)
+    }
+    func onDidFailToLocateUser(error errorArg: NSString, error: MapKitHostError) {
+        target?.record("onDidFailToLocateUser", [errorArg as String], error: error)
+    }
+}
+
+/// Cross-platform `FlutterPluginRegistrar` test double that records every
+/// host -> Dart FFI callback for its own unique `engineIdentifier`.
+final class NoopMessenger: NSObject, FlutterPluginRegistrar {
     private static let idLock = NSLock()
     private static var nextEngineId: Int64 = 1000
 
     let engineIdentifier: Int64
     private let stubMessenger: FlutterBinaryMessenger = NoopBinaryMessenger()
     private let stubTextures: FlutterTextureRegistry = NoopTextureRegistry()
+    private let bridge = WeakFlutterApiBridge()
     private let suffix: String
     private let failureCode: String?
     private let failureMessage: String?
@@ -53,12 +109,13 @@ final class NoopMessenger: NSObject, FlutterPluginRegistrar, MapKitFlutterApiBri
         self.failureCode = failureCode
         self.failureMessage = failureMessage
         super.init()
+        bridge.target = self
         MapKitFlutterApiRegistrar.registerInstance(
-            api: self, engineId: engineId, affinityKey: engineId, name: suffix)
+            api: bridge, engineId: engineId, affinityKey: engineId, name: suffix)
     }
 
     deinit {
-        MapKitFlutterApiRegistrar.unregisterInstance(api: self, name: suffix)
+        MapKitFlutterApiRegistrar.unregisterInstance(api: bridge, name: suffix)
     }
 
     #if os(iOS)
@@ -107,7 +164,7 @@ final class NoopMessenger: NSObject, FlutterPluginRegistrar, MapKitFlutterApiBri
         return expectation
     }
 
-    private func record(_ method: String, _ args: [Any?] = [], error: MapKitHostError) {
+    fileprivate func record(_ method: String, _ args: [Any?] = [], error: MapKitHostError) {
         if let failureCode {
             error.code = failureCode
             error.message = failureMessage
@@ -117,52 +174,6 @@ final class NoopMessenger: NSObject, FlutterPluginRegistrar, MapKitFlutterApiBri
         for entry in pending where entry.method == method {
             entry.expectation.fulfill()
         }
-    }
-
-    func onCameraMoveStarted(error: MapKitHostError) { record("onCameraMoveStarted", error: error) }
-    func onCameraMove(pigeonVar_args: NSData, error: MapKitHostError) { record("onCameraMove", error: error) }
-    func onCameraIdle(error: MapKitHostError) { record("onCameraIdle", error: error) }
-    func onUserTrackingModeChanged(mode modeArg: Int64, error: MapKitHostError) {
-        record("onUserTrackingModeChanged", [PlatformUserTrackingMode(rawValue: Int(modeArg))], error: error)
-    }
-    func onAnnotationSelect(annotationId annotationIdArg: NSString, error: MapKitHostError) {
-        record("onAnnotationSelect", [annotationIdArg as String], error: error)
-    }
-    func onAnnotationDeselect(annotationId annotationIdArg: NSString, error: MapKitHostError) {
-        record("onAnnotationDeselect", [annotationIdArg as String], error: error)
-    }
-    func onMapFeatureSelected(pigeonVar_args: NSData, error: MapKitHostError) {
-        record("onMapFeatureSelected", error: error)
-    }
-    func onAnnotationDragStart(
-        annotationId annotationIdArg: NSString, pigeonVar_args: NSData, error: MapKitHostError
-    ) {
-        record("onAnnotationDragStart", [annotationIdArg as String], error: error)
-    }
-    func onAnnotationDragEnd(
-        annotationId annotationIdArg: NSString, pigeonVar_args: NSData, error: MapKitHostError
-    ) {
-        record("onAnnotationDragEnd", [annotationIdArg as String], error: error)
-    }
-    func onCalloutTap(annotationId annotationIdArg: NSString, error: MapKitHostError) {
-        record("onCalloutTap", [annotationIdArg as String], error: error)
-    }
-    func onPolylineTap(polylineId polylineIdArg: NSString, error: MapKitHostError) {
-        record("onPolylineTap", [polylineIdArg as String], error: error)
-    }
-    func onPolygonTap(polygonId polygonIdArg: NSString, error: MapKitHostError) {
-        record("onPolygonTap", [polygonIdArg as String], error: error)
-    }
-    func onCircleTap(circleId circleIdArg: NSString, error: MapKitHostError) {
-        record("onCircleTap", [circleIdArg as String], error: error)
-    }
-    func onMapTap(pigeonVar_args: NSData, error: MapKitHostError) { record("onMapTap", error: error) }
-    func onMapLongPress(pigeonVar_args: NSData, error: MapKitHostError) { record("onMapLongPress", error: error) }
-    func onDidFailLoadingMap(error errorArg: NSString, error: MapKitHostError) {
-        record("onDidFailLoadingMap", [errorArg as String], error: error)
-    }
-    func onDidFailToLocateUser(error errorArg: NSString, error: MapKitHostError) {
-        record("onDidFailToLocateUser", [errorArg as String], error: error)
     }
 }
 

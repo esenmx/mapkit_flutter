@@ -78,23 +78,23 @@ void main() {
     });
 
     // Selection still round-trips on the reused, restyled annotation.
-    check(await ctrl.selectAnnotation(id)).isTrue();
+    check(await ctrl.selectAnnotation(id)).isTrue;
     var shown = false;
     while (!shown && DateTime.now().isBefore(deadline)) {
       await tester.pump(const .new(milliseconds: 150));
       shown = await ctrl.isAnnotationSelected(id);
     }
-    check(shown, because: 'selection never took on the reused pin').isTrue();
+    check(shown, because: 'selection never took on the reused pin').isTrue;
 
-    check(await ctrl.deselectAnnotation(id)).isTrue();
+    check(await ctrl.deselectAnnotation(id)).isTrue;
     await tester.pump(const .new(milliseconds: 300));
-    check(await ctrl.isAnnotationSelected(id)).isFalse();
+    check(await ctrl.isAnnotationSelected(id)).isFalse;
 
     // The channel is still responsive after every restyle.
     check(await ctrl.camera)
         .isNotNull()
-        .has((c) => c.distance, 'distance')
+        .has('distance', (c) => c.distance)
         .isGreaterThan(0);
-    check(tester.takeException()).isNull();
+    check(tester.takeException()).isNull;
   });
 }

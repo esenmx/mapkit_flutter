@@ -66,7 +66,7 @@ void main() {
     }
 
     final bare = await centerOf(await map.takeSnapshot());
-    check(_isNear(bare, magenta)).isFalse();
+    check(_isNear(bare, magenta)).isFalse;
 
     await map.addTileOverlay(
       .new(
@@ -76,12 +76,12 @@ void main() {
       ),
     );
     final withTiles = await centerOf(await map.takeSnapshot());
-    check(_isNear(withTiles, magenta)).isTrue();
+    check(_isNear(withTiles, magenta)).isTrue;
 
     final withoutOverlays = await centerOf(
       await map.takeSnapshot(const .new(showsOverlays: false)),
     );
-    check(_isNear(withoutOverlays, magenta)).isFalse();
+    check(_isNear(withoutOverlays, magenta)).isFalse;
 
     await map.removeTileOverlay(const .new('solid'));
     await map.addTileOverlay(
@@ -97,7 +97,7 @@ void main() {
     );
     check(failure)
         .isA<MapKitPlatformException>()
-        .has((e) => e.code, 'code')
+        .has('code', (e) => e.code)
         .equals('snapshot-failed');
   });
 }

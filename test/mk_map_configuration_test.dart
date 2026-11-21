@@ -10,16 +10,16 @@ void main() {
       check(config.emphasisStyle).equals(.standard);
       final filter = config.pointOfInterestFilter;
       check(filter).equals(.includingAll);
-      check(config.showsTraffic).isFalse();
+      check(config.showsTraffic).isFalse;
     });
 
     test('equality covers every field', () {
       const traffic = MKStandardMapConfiguration(showsTraffic: true);
       check(traffic).equals(traffic);
-      check(traffic == const .new()).isFalse();
+      check(traffic == const .new()).isFalse;
       check(
         const MKStandardMapConfiguration(emphasisStyle: .muted) == const .new(),
-      ).isFalse();
+      ).isFalse;
     });
 
     test('toString includes pointOfInterestFilter', () {
@@ -38,7 +38,7 @@ void main() {
         const MKHybridMapConfiguration(pointOfInterestFilter: .excludingAll),
       ).equals(const .new(pointOfInterestFilter: .excludingAll));
       check(const MKHybridMapConfiguration(showsTraffic: true) == const .new())
-          .isFalse();
+          .isFalse;
     });
 
     test('toString includes pointOfInterestFilter', () {
@@ -56,13 +56,13 @@ void main() {
       check(
         const MKImageryMapConfiguration() ==
             const .new(elevationStyle: .realistic),
-      ).isFalse();
+      ).isFalse;
     });
 
     test('variants of different kinds never compare equal', () {
       const MKMapConfiguration standard = MKStandardMapConfiguration();
       const MKMapConfiguration imagery = MKImageryMapConfiguration();
-      check(standard == imagery).isFalse();
+      check(standard == imagery).isFalse;
     });
   });
 }

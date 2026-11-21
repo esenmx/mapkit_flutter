@@ -61,8 +61,8 @@ void main() {
       for (final bad in [-0.001, -10.0, 90.0, 90.001, 170.0, 360.0, 400.0]) {
         test('$bad is rejected: MapKit would not honour it', () {
           check(() => at(bad)).throws<ArgumentError>()
-            ..has((e) => e.name, 'name').equals('pitch')
-            ..has((e) => e.invalidValue, 'invalidValue').equals(bad);
+            ..has('name', (e) => e.name).equals('pitch')
+            ..has('invalidValue', (e) => e.invalidValue).equals(bad);
         });
       }
 

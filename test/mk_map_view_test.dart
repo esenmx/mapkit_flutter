@@ -111,7 +111,7 @@ void main() {
       check(params.initialCamera?.distance).equals(sampleCamera.distance);
       check(params.annotations).length.equals(1);
       check(params.polylines).length.equals(1);
-      check(params.polygons).isEmpty();
+      check(params.polygons).isEmpty;
     });
 
     testWidgets('assembles MKMapView defaults onto the wire', (tester) async {
@@ -122,26 +122,26 @@ void main() {
       check(config.kind).equals(.standard);
       check(config.emphasisStyle).equals(.standard);
       check(config.elevationStyle).equals(.flat);
-      check(config.isZoomEnabled).isTrue();
-      check(config.isScrollEnabled).isTrue();
-      check(config.showsCompass).isTrue();
-      check(config.showsScale).isFalse();
-      check(config.showsUserLocation).isFalse();
-      check(config.showsUserTrackingButton).isFalse();
+      check(config.isZoomEnabled).isTrue;
+      check(config.isScrollEnabled).isTrue;
+      check(config.showsCompass).isTrue;
+      check(config.showsScale).isFalse;
+      check(config.showsUserLocation).isFalse;
+      check(config.showsUserTrackingButton).isFalse;
       check(config.userTrackingMode).equals(.none);
-      check(config.selectableMapFeatures).isEmpty();
+      check(config.selectableMapFeatures).isEmpty;
       check(config.pointOfInterestFilter)
           .isNotNull()
-          .has((f) => f.mode, 'mode')
+          .has('mode', (f) => f.mode)
           .equals(.all);
       check(config.cameraZoomRange)
           .isNotNull()
           .has(
-            (r) => r.minCenterCoordinateDistance,
             'minCenterCoordinateDistance',
+            (r) => r.minCenterCoordinateDistance,
           )
-          .isNull();
-      check(config.cameraBoundary).isNull();
+          .isNull;
+      check(config.cameraBoundary).isNull;
     });
 
     testWidgets('flattens hybrid and imagery configurations', (tester) async {
@@ -157,10 +157,10 @@ void main() {
 
       final config = host.initializeParams().configuration;
       check(config.kind).equals(.hybrid);
-      check(config.showsTraffic).isTrue();
+      check(config.showsTraffic).isTrue;
       check(config.pointOfInterestFilter)
           .isNotNull()
-          .has((f) => f.mode, 'mode')
+          .has('mode', (f) => f.mode)
           .equals(.none);
     });
   });
@@ -187,7 +187,7 @@ void main() {
       check(toAdd.single.id).equals('b');
       check(toChange).length.equals(1);
       check(toChange.single.id).equals('a');
-      check(idsToRemove).isEmpty();
+      check(idsToRemove).isEmpty;
     });
 
     testWidgets('an icon-only restyle routes to toChange with the new tint', (
@@ -214,8 +214,8 @@ void main() {
       host.expectCalls(['initialize', 'updateAnnotations']);
       final (toAdd, toChange, idsToRemove) = host.calls
           .expectLastArgs<AnnotationUpdate>('updateAnnotations');
-      check(toAdd).isEmpty();
-      check(idsToRemove).isEmpty();
+      check(toAdd).isEmpty;
+      check(idsToRemove).isEmpty;
       check(toChange).length.equals(1);
       check(toChange.single.id).equals('a');
       check(toChange.single.icon.markerTintArgb).equals(0xFFFF5722);
@@ -306,9 +306,9 @@ void main() {
 
       final params = host.initializeParams();
       check(params.annotations.map((a) => a.id)).deepEquals(['a']);
-      check(params.polylines).isEmpty();
-      check(params.polygons).isEmpty();
-      check(params.circles).isEmpty();
+      check(params.polylines).isEmpty;
+      check(params.polygons).isEmpty;
+      check(params.circles).isEmpty;
 
       await tester.pumpWidget(build());
       await tester.pump();
@@ -343,13 +343,13 @@ void main() {
       final config = host.calls.expectLastArgs<PlatformMapConfiguration>(
         'updateMapConfiguration',
       );
-      check(config.isZoomEnabled).isFalse();
-      check(config.showsUserLocation).isTrue();
+      check(config.isZoomEnabled).isFalse;
+      check(config.showsUserLocation).isTrue;
       check(config.cameraZoomRange)
           .isNotNull()
           .has(
-            (r) => r.minCenterCoordinateDistance,
             'minCenterCoordinateDistance',
+            (r) => r.minCenterCoordinateDistance,
           )
           .equals(500);
     });
@@ -369,7 +369,7 @@ void main() {
         'updateMapConfiguration',
       );
       check(config.kind).equals(.imagery);
-      check(config.pointOfInterestFilter).isNull();
+      check(config.pointOfInterestFilter).isNull;
     });
 
     testWidgets('identical rebuild sends nothing', (tester) async {
@@ -422,8 +422,8 @@ void main() {
       );
       check($1.map((a) => a.id)).deepEquals(['a', 'b']);
       check($1.last.title).equals('good');
-      check($2).isEmpty();
-      check($3).isEmpty();
+      check($2).isEmpty;
+      check($3).isEmpty;
     });
 
     testWidgets('a rebuild that changes nothing does not resend a rejection', (
@@ -538,7 +538,7 @@ void main() {
         tester,
         map(annotations: {annotation('a'), badThenGood('bad')}),
       );
-      check(host.callNames).isEmpty();
+      check(host.callNames).isEmpty;
 
       await tester.pumpWidget(
         map(
@@ -550,7 +550,7 @@ void main() {
 
       final params = host.initializeParams();
       check(params.initialCamera?.distance).equals(sampleCamera.distance);
-      check(params.configuration.isZoomEnabled).isFalse();
+      check(params.configuration.isZoomEnabled).isFalse;
       check(params.annotations.map((a) => a.title)).deepEquals([null, 'good']);
 
       await tester.pumpWidget(
@@ -605,7 +605,7 @@ void main() {
 
         check(host.callNames).deepEquals(['initialize']);
         final params = host.initializeParams();
-        check(params.configuration.isZoomEnabled).isFalse();
+        check(params.configuration.isZoomEnabled).isFalse;
         check(params.annotations.single.title).equals('good');
         check(params.polylines.single.id).equals('p');
         check(params.polygons.single.id).equals('g');
@@ -639,7 +639,7 @@ void main() {
         );
         check(host.callNames).deepEquals(['setCamera']);
 
-        check((await retry(tester)).initialCamera).isNull();
+        check((await retry(tester)).initialCamera).isNull;
       });
 
       testWidgets('setRegion survives the retry', (tester) async {
@@ -653,7 +653,7 @@ void main() {
           ),
         );
 
-        check((await retry(tester)).initialCamera).isNull();
+        check((await retry(tester)).initialCamera).isNull;
       });
 
       testWidgets('setCenter keeps the rest of the initial camera', (
@@ -754,7 +754,7 @@ void main() {
       await snapshot;
       await tester.pump();
 
-      check(tester.takeException()).isNull();
+      check(tester.takeException()).isNull;
       check(host.callNames)
           .deepEquals(['initialize', 'dispose', 'takeSnapshot']);
     });
@@ -1023,7 +1023,7 @@ void main() {
       await tester.pumpWidget(map(onMapFeatureSelected: (_) {}));
       check(tester.takeException())
           .isA<ArgumentError>()
-          .has((e) => e.name, 'name')
+          .has('name', (e) => e.name)
           .equals('onMapFeatureSelected');
     });
 
@@ -1036,7 +1036,7 @@ void main() {
           onMapFeatureSelected: (_) {},
         ),
       );
-      check(tester.takeException()).isNull();
+      check(tester.takeException()).isNull;
       await tester.pumpWidget(map(onMapFeatureSelected: (_) {}));
       check(tester.takeException()).isA<ArgumentError>();
     });
@@ -1055,7 +1055,7 @@ void main() {
 
       await tester.pumpWidget(tracking(.none));
 
-      check(tester.takeException()).isNull();
+      check(tester.takeException()).isNull;
     });
   });
 
@@ -1102,15 +1102,15 @@ void main() {
         await tester.pumpWidget(build(controllerFactory));
         check(tester.takeException())
             .isA<MapKitUnsupportedPlatformException>()
-            .has((e) => e.feature, 'feature')
+            .has('feature', (e) => e.feature)
             .isNotNull()
             .contains(name);
-        check(host.callNames).isEmpty();
+        check(host.callNames).isEmpty;
       }, variant: TargetPlatformVariant.only(.macOS));
 
       testWidgets('$name is accepted on iOS', (tester) async {
         await tester.pumpWidget(build(controllerFactory));
-        check(tester.takeException()).isNull();
+        check(tester.takeException()).isNull;
       }, variant: TargetPlatformVariant.only(.iOS));
     }
 

@@ -18,11 +18,8 @@ void main() {
           clusteringIdentifier: 'shops',
         );
         final b = a.copyWith(clusteringIdentifier: null, title: null);
-        check(
-          because: 'cannot leave a cluster',
-          b.clusteringIdentifier,
-        ).isNull();
-        check(because: 'cannot drop the callout title', b.title).isNull();
+        check(because: 'cannot leave a cluster', b.clusteringIdentifier).isNull;
+        check(because: 'cannot drop the callout title', b.title).isNull;
       },
     );
 
@@ -34,7 +31,7 @@ void main() {
           coordinates: [here, here],
           lineDashPattern: const [6, 3],
         );
-        check(dashed.copyWith(lineDashPattern: null).lineDashPattern).isNull();
+        check(dashed.copyWith(lineDashPattern: null).lineDashPattern).isNull;
       },
     );
   });

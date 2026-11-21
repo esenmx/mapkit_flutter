@@ -27,21 +27,21 @@ void main() {
       check(platform.alpha).equals(0.8);
       check(platform.anchorPointX).equals(0.5);
       check(platform.anchorPointY).equals(0.5);
-      check(platform.isDraggable).isTrue();
-      check(platform.isHidden).isFalse();
+      check(platform.isDraggable).isTrue;
+      check(platform.isHidden).isFalse;
       check(platform.zPriority).equals(750);
       check(platform.clusteringIdentifier).equals('offices');
     });
 
     test('callout tap capture is the explicit flag', () {
-      check(annotation('a').toPlatform().calloutConsumesTapEvents).isFalse();
+      check(annotation('a').toPlatform().calloutConsumesTapEvents).isFalse;
       check(
         MKPointAnnotation(
           id: const .new('a'),
           coordinate: applePark,
           calloutConsumesTapEvents: true,
         ).toPlatform().calloutConsumesTapEvents,
-      ).isTrue();
+      ).isTrue;
     });
 
     test('defaults mirror MKAnnotationView', () {
@@ -50,8 +50,8 @@ void main() {
       check(platform.anchorPointX).equals(0.5);
       check(platform.anchorPointY).equals(1);
       check(platform.zPriority).equals(500);
-      check(platform.isDraggable).isFalse();
-      check(platform.clusteringIdentifier).isNull();
+      check(platform.isDraggable).isFalse;
+      check(platform.clusteringIdentifier).isNull;
     });
 
     test('rejects out of bounds alpha values', () {
@@ -149,10 +149,10 @@ void main() {
           onCalloutTap: () {},
         );
         final consumingTitled = consuming.copyWith(title: 'title');
-        check(consuming == plain).isFalse();
+        check(consuming == plain).isFalse;
         check(withCallout).equals(consumingTitled);
-        check(withCallout.toPlatform().calloutConsumesTapEvents).isTrue();
-        check(plain.toPlatform().calloutConsumesTapEvents).isFalse();
+        check(withCallout.toPlatform().calloutConsumesTapEvents).isTrue;
+        check(plain.toPlatform().calloutConsumesTapEvents).isFalse;
       },
     );
 
@@ -222,8 +222,8 @@ void main() {
     ]) {
       test('$name that could never fire throws', () {
         check(build).throws<ArgumentError>()
-          ..has((e) => e.name, 'name').equals(name)
-          ..has((e) => e.message.toString(), 'message').contains('requires');
+          ..has('name', (e) => e.name).equals(name)
+          ..has('message', (e) => e.message.toString()).contains('requires');
       });
     }
 
@@ -280,7 +280,7 @@ void main() {
 
     test('different coordinates compare unequal', () {
       final moved = annotation('a', coordinate: infiniteLoop);
-      check(annotation('a') == moved).isFalse();
+      check(annotation('a') == moved).isFalse;
     });
   });
 
@@ -292,7 +292,7 @@ void main() {
       ).copyWith(coordinate: infiniteLoop, isDraggable: true);
       check(moved.id).equals(const .new('a'));
       check(moved.coordinate).equals(infiniteLoop);
-      check(moved.isDraggable).isTrue();
+      check(moved.isDraggable).isTrue;
       check(moved.title).equals('t');
     });
   });

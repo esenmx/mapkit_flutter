@@ -6,8 +6,8 @@ void main() {
   group('MKCameraZoomRange', () {
     test('defaults to unbounded', () {
       final range = MKCameraZoomRange();
-      check(range.minCenterCoordinateDistance).isNull();
-      check(range.maxCenterCoordinateDistance).isNull();
+      check(range.minCenterCoordinateDistance).isNull;
+      check(range.maxCenterCoordinateDistance).isNull;
     });
 
     test('equality is value-based', () {

@@ -29,7 +29,7 @@ void main() {
       harness.expectCalls(['getCamera', 'setCamera']);
       final (camera, animated) = harness.expectSetCamera();
       check(camera.distance).isCloseTo(591657550.5 / 512, 1e-6);
-      check(animated).isFalse();
+      check(animated).isFalse;
     });
 
     test('preserves center, heading, and pitch', () async {
@@ -88,7 +88,7 @@ void main() {
       check(shifted.y).equals(170);
       final (center, animated) = harness.expectSetCenter();
       check(center.latitude).equals(5);
-      check(animated).isFalse();
+      check(animated).isFalse;
     });
   });
 
@@ -160,7 +160,7 @@ void main() {
         await check(
           harness.controller.fitCoordinates(const [], animated: false),
         ).throws<ArgumentError>();
-        check(harness.host.callNames).not((it) => it.contains('setRegion'));
+        check(harness.host.callNames).not(.it()..contains('setRegion'));
       });
 
       test('fitCoordinates rejects negative padding or minimumSpan', () async {
@@ -180,7 +180,7 @@ void main() {
         await check(harness.controller.zoomTo(10)).throws<StateError>();
         await check(harness.controller.zoomIn()).throws<StateError>();
         await check(harness.controller.scrollBy(1, 1)).throws<StateError>();
-        check(harness.host.callNames).not((it) => it.contains('setCamera'));
+        check(harness.host.callNames).not(.it()..contains('setCamera'));
       });
 
       test('scrollBy before layout throws instead of doing nothing', () async {

@@ -29,7 +29,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('disposed maps stop answering host calls', (tester) async {
-    check(answers(999), because: 'control: unknown id').isFalse();
+    check(answers(999), because: 'control: unknown id').isFalse;
 
     final live = <int>[];
     for (var round = 0; round < 3; round++) {
@@ -66,7 +66,7 @@ void main() {
     debugPrint(
       'leak-oracle ids still answering after unmount: $stillAnswering',
     );
-    check(stillAnswering, because: 'native hosts leaked').isEmpty();
+    check(stillAnswering, because: 'native hosts leaked').isEmpty;
   });
 
   // Flutter skips onPlatformViewCreated for a view unmounted while its creation
@@ -111,7 +111,7 @@ void main() {
     );
     final id = await created.future;
     await tester.pumpWidget(const SizedBox());
-    check(answers(id), because: 'control: native built it').isTrue();
+    check(answers(id), because: 'control: native built it').isTrue;
 
     releaseCreate.complete();
     // The iOS engine only releases a disposed view while submitting a frame
@@ -141,7 +141,7 @@ void main() {
       stillAnswering = answers(id);
     }
 
-    check(mapCreated, because: 'the race must really be lost').isFalse();
-    check(stillAnswering, because: 'native host leaked').isFalse();
+    check(mapCreated, because: 'the race must really be lost').isFalse;
+    check(stillAnswering, because: 'native host leaked').isFalse;
   });
 }

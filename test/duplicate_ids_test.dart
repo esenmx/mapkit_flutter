@@ -44,7 +44,7 @@ void main() {
     );
     check(tester.takeException())
         .isA<ArgumentError>()
-        .has((e) => '${e.message}', 'message')
+        .has('message', (e) => '${e.message}')
         .contains('route');
   });
 }

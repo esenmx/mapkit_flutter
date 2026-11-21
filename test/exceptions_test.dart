@@ -9,10 +9,10 @@ void main() {
         .new(code: 'boom', message: 'kaboom', details: 42),
       );
       check(e).isA<MapKitPlatformException>()
-        ..has((p) => p.code, 'code').equals('boom')
-        ..has((p) => p.message, 'message').equals('kaboom')
-        ..has((p) => p.details, 'details').equals(42)
-        ..has((p) => p.toString(), 'toString()').contains('boom');
+        ..has('code', (p) => p.code).equals('boom')
+        ..has('message', (p) => p.message).equals('kaboom')
+        ..has('details', (p) => p.details).equals(42)
+        ..has('toString()', (p) => p.toString()).contains('boom');
     });
 
     test('falls back to a generic message when the platform sends none', () {

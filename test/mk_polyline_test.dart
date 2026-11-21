@@ -31,17 +31,17 @@ void main() {
       check(platform.lineDashPattern).isNotNull().deepEquals([6, 3]);
       check(platform.zIndex).equals(2);
       check(platform.level).equals(.aboveLabels);
-      check(platform.consumeTapEvents).isTrue();
-      check(platform.isGeodesic).isFalse();
-      check(platform.isHidden).isFalse();
+      check(platform.consumeTapEvents).isTrue;
+      check(platform.isGeodesic).isFalse;
+      check(platform.isHidden).isFalse;
     });
 
     test('defaults mirror MKOverlayPathRenderer', () {
       final platform = polyline('p').toPlatform();
       check(platform.lineCap).equals(.round);
       check(platform.lineJoin).equals(.round);
-      check(platform.lineDashPattern).isNull();
-      check(platform.gradientColorsArgb).isNull();
+      check(platform.lineDashPattern).isNull;
+      check(platform.gradientColorsArgb).isNull;
     });
 
     test('gradient colors serialize as ARGB32 when present', () {
@@ -110,7 +110,7 @@ void main() {
                 ),
               )
               .throws<ArgumentError>()
-              .has((e) => e.name, 'name')
+              .has('name', (e) => e.name)
               .equals('lineDashPattern');
         }
       });
@@ -134,7 +134,7 @@ void main() {
         id: const .new('arc'),
         coordinates: [applePark, infiniteLoop],
       ).toPlatform();
-      check(platform.isGeodesic).isTrue();
+      check(platform.isGeodesic).isTrue;
       check(platform.coordinates).length.equals(2);
     });
 
@@ -143,8 +143,8 @@ void main() {
         id: const .new('arc'),
         coordinates: [applePark, infiniteLoop],
       );
-      check(arc.copyWith(lineWidth: 2).isGeodesic).isTrue();
-      check(polyline('p').copyWith(lineWidth: 2).isGeodesic).isFalse();
+      check(arc.copyWith(lineWidth: 2).isGeodesic).isTrue;
+      check(polyline('p').copyWith(lineWidth: 2).isGeodesic).isFalse;
     });
 
     test('straight and geodesic lines compare unequal', () {
@@ -153,7 +153,7 @@ void main() {
         id: const .new('p'),
         coordinates: [applePark, infiniteLoop],
       );
-      check(straight == arc).isFalse();
+      check(straight == arc).isFalse;
     });
   });
 
@@ -173,7 +173,7 @@ void main() {
         ),
       );
       final dashed = polyline('p').copyWith(lineDashPattern: const [1]);
-      check(polyline('p') == dashed).isFalse();
+      check(polyline('p') == dashed).isFalse;
     });
   });
 
@@ -201,7 +201,7 @@ void main() {
         check(before.coordinates).length.equals(2);
         check(before.lineDashPattern).isNotNull().length.equals(2);
         check(before.gradientColors).length.equals(2);
-        check(before == build()).isFalse();
+        check(before == build()).isFalse;
         check(() => before.coordinates.add(applePark))
             .throws<UnsupportedError>();
         check(() => before.lineDashPattern?.add(1)).throws<UnsupportedError>();
@@ -212,11 +212,11 @@ void main() {
 
   group('tap consumption', () {
     test('consumeTapEvents is explicit on the wire', () {
-      check(polyline('x').toPlatform().consumeTapEvents).isFalse();
+      check(polyline('x').toPlatform().consumeTapEvents).isFalse;
       final capturing = polyline('x').copyWith(consumeTapEvents: true);
-      check(capturing.toPlatform().consumeTapEvents).isTrue();
+      check(capturing.toPlatform().consumeTapEvents).isTrue;
       check(capturing.copyWith(onTap: () {}).toPlatform().consumeTapEvents)
-          .isTrue();
+          .isTrue;
     });
 
     test('onTap without consumeTapEvents throws instead of never firing', () {

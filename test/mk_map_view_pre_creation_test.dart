@@ -120,6 +120,6 @@ void main() {
     rig.createGate.complete();
     await tester.pumpAndSettle();
     check(created).equals(0);
-    check(rig.host.calls).isEmpty();
+    check(rig.host.calls).isEmpty;
   }, variant: TargetPlatformVariant.only(.iOS));
 }

@@ -33,7 +33,7 @@ void main() {
       check(platform.fillColorArgb).equals(0x6600FF00);
       check(platform.strokeColorArgb).equals(0xFF112233);
       check(platform.lineWidth).equals(3);
-      check(platform.isHidden).isFalse();
+      check(platform.isHidden).isFalse;
     });
 
     test('rejects negative or non-finite lineWidth', () {
@@ -64,7 +64,7 @@ void main() {
                 ],
               ],
             ),
-      ).isFalse();
+      ).isFalse;
     });
   });
 
@@ -96,7 +96,7 @@ void main() {
       check(before.coordinates).length.equals(3);
       check(before.interiorPolygons).length.equals(1);
       check(before.interiorPolygons.single).length.equals(3);
-      check(before == build()).isFalse();
+      check(before == build()).isFalse;
       check(() => before.coordinates.add(applePark)).throws<UnsupportedError>();
       check(() => before.interiorPolygons.add([])).throws<UnsupportedError>();
       check(() => before.interiorPolygons.single.add(applePark))
@@ -112,17 +112,17 @@ void main() {
       );
       final before = build();
       hole.add(infiniteLoop);
-      check(before == build()).isFalse();
+      check(before == build()).isFalse;
     });
   });
 
   group('tap consumption', () {
     test('consumeTapEvents is explicit on the wire', () {
-      check(polygon('x').toPlatform().consumeTapEvents).isFalse();
+      check(polygon('x').toPlatform().consumeTapEvents).isFalse;
       final capturing = polygon('x').copyWith(consumeTapEvents: true);
-      check(capturing.toPlatform().consumeTapEvents).isTrue();
+      check(capturing.toPlatform().consumeTapEvents).isTrue;
       check(capturing.copyWith(onTap: () {}).toPlatform().consumeTapEvents)
-          .isTrue();
+          .isTrue;
     });
 
     test('onTap without consumeTapEvents throws instead of never firing', () {

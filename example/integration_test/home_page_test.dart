@@ -41,7 +41,7 @@ void main() {
     await tap(find.text('Rebuild'));
     await tester.pump(const .new(milliseconds: 500));
 
-    check(tester.takeException()).isNull();
+    check(tester.takeException()).isNull;
   });
 }
 

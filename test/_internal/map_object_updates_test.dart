@@ -24,28 +24,28 @@ void main() {
     test('detects additions', () {
       final updates = diff({}, {marker('a', 0, 0)});
       check(updates.toAdd).length.equals(1);
-      check(updates.toChange).isEmpty();
-      check(updates.idsToRemove).isEmpty();
+      check(updates.toChange).isEmpty;
+      check(updates.idsToRemove).isEmpty;
     });
 
     test('detects removals by id', () {
       final updates = diff({marker('a', 0, 0)}, {});
       check(updates.idsToRemove).deepEquals({'a'});
-      check(updates.toAdd).isEmpty();
+      check(updates.toAdd).isEmpty;
     });
 
     test('detects changes (same id, different fields)', () {
       final updates = diff({marker('a', 0, 0)}, {marker('a', 1, 1)});
       check(updates.toChange).length.equals(1);
-      check(updates.toAdd).isEmpty();
-      check(updates.idsToRemove).isEmpty();
+      check(updates.toAdd).isEmpty;
+      check(updates.idsToRemove).isEmpty;
     });
 
     test('no diff for identical sets', () {
       final updates = diff({marker('a', 0, 0)}, {marker('a', 0, 0)});
-      check(updates.toAdd).isEmpty();
-      check(updates.toChange).isEmpty();
-      check(updates.idsToRemove).isEmpty();
+      check(updates.toAdd).isEmpty;
+      check(updates.toChange).isEmpty;
+      check(updates.idsToRemove).isEmpty;
     });
 
     test('mixed add/change/remove', () {

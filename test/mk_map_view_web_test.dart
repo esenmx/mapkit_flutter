@@ -17,7 +17,7 @@ void main() {
 
     check(exception)
         .isA<MapKitUnsupportedPlatformException>()
-        .has((e) => e.toString(), 'toString')
+        .has('toString', (e) => e.toString())
         .contains('the web');
   }, variant: const TargetPlatformVariant({.iOS, .macOS}));
 
@@ -34,7 +34,7 @@ void main() {
 
     check(exception)
         .isA<MapKitUnsupportedPlatformException>()
-        .has((e) => e.feature, 'feature')
-        .isNull();
+        .has('feature', (e) => e.feature)
+        .isNull;
   }, variant: TargetPlatformVariant.only(.macOS));
 }

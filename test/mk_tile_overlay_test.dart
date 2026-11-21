@@ -26,7 +26,7 @@ void main() {
       check(platform.minimumZ).equals(3);
       check(platform.maximumZ).equals(17);
       check(platform.tileSize).equals(512);
-      check(platform.canReplaceMapContent).isTrue();
+      check(platform.canReplaceMapContent).isTrue;
       check(platform.alpha).equals(0.5);
       check(platform.level).equals(.aboveLabels);
     });
@@ -36,7 +36,7 @@ void main() {
       check(platform.minimumZ).equals(0);
       check(platform.maximumZ).equals(21);
       check(platform.tileSize).equals(256);
-      check(platform.canReplaceMapContent).isFalse();
+      check(platform.canReplaceMapContent).isFalse;
       check(platform.alpha).equals(1);
     });
 
@@ -110,7 +110,7 @@ void main() {
               id: const .new('other'),
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             ),
-      ).isFalse();
+      ).isFalse;
     });
   });
 }

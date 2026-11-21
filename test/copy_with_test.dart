@@ -97,7 +97,7 @@ void main() {
       test('${c.name}: omitted keeps, null clears, a value sets', () {
         check(c.read(full)).isNotNull();
         check(c.read(full.copyWith())).equals(c.read(full));
-        check(c.read(c.clear(full))).isNull();
+        check(c.read(c.clear(full))).isNull;
         check(c.read(c.set(full))).equals(c.next);
       });
     }
@@ -116,7 +116,7 @@ void main() {
       check(
         full.copyWith(onCalloutTap: null, calloutConsumesTapEvents: false) ==
             full,
-      ).isFalse();
+      ).isFalse;
     });
   });
 
@@ -131,7 +131,7 @@ void main() {
 
     test('lineDashPattern: omitted keeps, null clears, a value sets', () {
       check(full.copyWith().lineDashPattern).isNotNull().deepEquals([6, 3]);
-      check(full.copyWith(lineDashPattern: null).lineDashPattern).isNull();
+      check(full.copyWith(lineDashPattern: null).lineDashPattern).isNull;
       check(full.copyWith(lineDashPattern: [2, 4]).lineDashPattern)
           .isNotNull()
           .deepEquals([2, 4]);
@@ -149,7 +149,7 @@ void main() {
       test('${c.name}: omitted keeps, null clears, a value sets', () {
         check(c.read(full)).isNotNull();
         check(c.read(full.copyWith())).equals(c.read(full));
-        check(c.read(c.clear(full))).isNull();
+        check(c.read(c.clear(full))).isNull;
         check(c.read(c.set(full))).equals(c.next);
       });
     }
@@ -157,10 +157,10 @@ void main() {
     test('an empty dash pattern is stored, not rejected', () {
       check(full.copyWith(lineDashPattern: []).lineDashPattern)
           .isNotNull()
-          .isEmpty();
+          .isEmpty;
       check(full.copyWith(lineDashPattern: const []).lineDashPattern)
           .isNotNull()
-          .isEmpty();
+          .isEmpty;
     });
 
     test('int literals become a double dash pattern', () {
@@ -174,7 +174,7 @@ void main() {
       check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
       check(full.copyWith(onTap: null)).equals(full);
       check(full.copyWith(onTap: null, consumeTapEvents: false) == full)
-          .isFalse();
+          .isFalse;
     });
   });
 
@@ -199,7 +199,7 @@ void main() {
       test('${c.name}: omitted keeps, null clears, a value sets', () {
         check(c.read(full)).isNotNull();
         check(c.read(full.copyWith())).equals(c.read(full));
-        check(c.read(c.clear(full))).isNull();
+        check(c.read(c.clear(full))).isNull;
         check(c.read(c.set(full))).equals(c.next);
       });
     }
@@ -209,7 +209,7 @@ void main() {
       check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
       check(full.copyWith(onTap: null)).equals(full);
       check(full.copyWith(onTap: null, consumeTapEvents: false) == full)
-          .isFalse();
+          .isFalse;
     });
   });
 
@@ -228,7 +228,7 @@ void main() {
       test('${c.name}: omitted keeps, null clears, a value sets', () {
         check(c.read(full)).isNotNull();
         check(c.read(full.copyWith())).equals(c.read(full));
-        check(c.read(c.clear(full))).isNull();
+        check(c.read(c.clear(full))).isNull;
         check(c.read(c.set(full))).equals(c.next);
       });
     }
@@ -238,7 +238,7 @@ void main() {
       check(full.copyWith(onTap: nextTap).hashCode).equals(full.hashCode);
       check(full.copyWith(onTap: null)).equals(full);
       check(full.copyWith(onTap: null, consumeTapEvents: false) == full)
-          .isFalse();
+          .isFalse;
     });
   });
 }

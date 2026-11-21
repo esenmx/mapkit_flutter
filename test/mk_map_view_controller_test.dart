@@ -20,13 +20,13 @@ void main() {
       await harness.controller.setCamera(sampleCamera, animated: false);
       final (camera, animated) = harness.expectSetCamera();
       check(camera.distance).equals(1200);
-      check(animated).isFalse();
+      check(animated).isFalse;
     });
 
     test('setCamera animates by default', () async {
       final harness = buildHarness();
       await harness.controller.setCamera(sampleCamera);
-      check(harness.expectSetCamera().$2).isTrue();
+      check(harness.expectSetCamera().$2).isTrue;
     });
 
     test('setRegion forwards center and span', () async {
@@ -42,7 +42,7 @@ void main() {
       await harness.controller.setCenter(applePark);
       final (coordinate, animated) = harness.expectSetCenter();
       check(coordinate.longitude).equals(applePark.longitude);
-      check(animated).isTrue();
+      check(animated).isTrue;
     });
 
     test('camera getter parses the host camera', () async {
@@ -56,16 +56,16 @@ void main() {
       );
       final target = CLLocationCoordinate2D(latitude: 10, longitude: 20);
       check(await harness.controller.camera).isNotNull()
-        ..has((c) => c.centerCoordinate, 'centerCoordinate').equals(target)
-        ..has((c) => c.distance, 'distance').equals(4321)
-        ..has((c) => c.heading, 'heading').equals(90)
-        ..has((c) => c.pitch, 'pitch').equals(15);
+        ..has('centerCoordinate', (c) => c.centerCoordinate).equals(target)
+        ..has('distance', (c) => c.distance).equals(4321)
+        ..has('heading', (c) => c.heading).equals(90)
+        ..has('pitch', (c) => c.pitch).equals(15);
     });
 
     test('camera is null before the first layout', () async {
       final harness = buildHarness();
       harness.host.camera = null;
-      check(await harness.controller.camera).isNull();
+      check(await harness.controller.camera).isNull;
     });
 
     test('region getter parses center + span', () async {
@@ -79,14 +79,14 @@ void main() {
       final center = CLLocationCoordinate2D(latitude: 10, longitude: 20);
       final span = MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 2);
       check(await harness.controller.region).isNotNull()
-        ..has((r) => r.center, 'center').equals(center)
-        ..has((r) => r.span, 'span').equals(span);
+        ..has('center', (r) => r.center).equals(center)
+        ..has('span', (r) => r.span).equals(span);
     });
 
     test('region is null before the first layout', () async {
       final harness = buildHarness();
       harness.host.region = null;
-      check(await harness.controller.region).isNull();
+      check(await harness.controller.region).isNull;
     });
   });
 
@@ -96,14 +96,14 @@ void main() {
       harness.host.point = platformPoint(100, 200);
       final p = await harness.controller.convertToPoint(applePark);
       check(p).isNotNull()
-        ..has((o) => o.dx, 'dx').equals(100)
-        ..has((o) => o.dy, 'dy').equals(200);
+        ..has('dx', (o) => o.dx).equals(100)
+        ..has('dy', (o) => o.dy).equals(200);
     });
 
     test('convertToPoint returns null without layout', () async {
       final harness = buildHarness();
       harness.host.point = null;
-      check(await harness.controller.convertToPoint(applePark)).isNull();
+      check(await harness.controller.convertToPoint(applePark)).isNull;
     });
 
     test('convertToCoordinate returns the coordinate under a point', () async {
@@ -118,26 +118,24 @@ void main() {
     test('convertToCoordinate returns null without layout', () async {
       final harness = buildHarness();
       harness.host.coordinate = null;
-      check(await harness.controller.convertToCoordinate(.zero)).isNull();
+      check(await harness.controller.convertToCoordinate(.zero)).isNull;
     });
   });
 
   group('outbound — selection', () {
     test('selectAnnotation forwards the id and reports the outcome', () async {
       final harness = buildHarness();
-      check(await harness.controller.selectAnnotation(const .new('a')))
-          .isTrue();
+      check(await harness.controller.selectAnnotation(const .new('a'))).isTrue;
       check(harness.expectLast<String>('selectAnnotation')).equals('a');
       harness.host.selectResult = false;
-      check(await harness.controller.selectAnnotation(const .new('x')))
-          .isFalse();
+      check(await harness.controller.selectAnnotation(const .new('x'))).isFalse;
     });
 
     test('deselectAnnotation reports an id that is not on the map', () async {
       final harness = buildHarness();
       harness.host.deselectResult = false;
       check(await harness.controller.deselectAnnotation(const .new('a')))
-          .isFalse();
+          .isFalse;
       harness.expectLastCall('deselectAnnotation');
     });
 
@@ -145,8 +143,7 @@ void main() {
       final harness = buildHarness();
       harness.host.annotationSelected = true;
       const annotationId = MKAnnotationId('a');
-      check(await harness.controller.isAnnotationSelected(annotationId))
-          .isTrue();
+      check(await harness.controller.isAnnotationSelected(annotationId)).isTrue;
     });
   });
 
@@ -157,9 +154,9 @@ void main() {
       final options = harness.expectLast<PlatformSnapshotOptions>(
         'takeSnapshot',
       );
-      check(options.showsPointsOfInterest).isTrue();
-      check(options.showsAnnotations).isTrue();
-      check(options.showsOverlays).isFalse();
+      check(options.showsPointsOfInterest).isTrue;
+      check(options.showsAnnotations).isTrue;
+      check(options.showsOverlays).isFalse;
     });
 
     test(
@@ -170,7 +167,7 @@ void main() {
         final ok = await harness.controller.openLookAround(
           .new(latitude: 37, longitude: -122),
         );
-        check(ok).isTrue();
+        check(ok).isTrue;
         final sent = harness.expectLast<PlatformCoordinate>('openLookAround');
         check(sent.latitude).equals(37);
       },
@@ -190,7 +187,7 @@ void main() {
       final o = harness.expectLast<PlatformTileOverlay>('addTileOverlay');
       check(o.id).equals('osm');
       check(o.minimumZ).equals(3);
-      check(o.canReplaceMapContent).isTrue();
+      check(o.canReplaceMapContent).isTrue;
     });
 
     test(
@@ -198,11 +195,11 @@ void main() {
       () async {
         final harness = buildHarness();
         check(await harness.controller.removeTileOverlay(const .new('osm')))
-            .isTrue();
+            .isTrue;
         check(harness.expectLast<String>('removeTileOverlay')).equals('osm');
         harness.host.removeTileOverlayResult = false;
         check(await harness.controller.removeTileOverlay(const .new('gone')))
-            .isFalse();
+            .isFalse;
       },
     );
   });
@@ -318,7 +315,7 @@ void main() {
           await catchMapKit<MapKitPlatformException>(
             () => harness.controller.openLookAround(applePark),
           ),
-        ).has((e) => e.code, 'code').equals(code);
+        ).has('code', (e) => e.code).equals(code);
       });
     }
 
@@ -331,7 +328,7 @@ void main() {
             .new(id: const .new('osm'), urlTemplate: 'u'),
           ),
         ),
-      ).has((e) => e.code, 'code').equals('duplicate-id');
+      ).has('code', (e) => e.code).equals('duplicate-id');
     });
 
     test('snapshot failure surfaces its stable code', () async {
@@ -344,7 +341,7 @@ void main() {
         await catchMapKit<MapKitPlatformException>(
           harness.controller.takeSnapshot,
         ),
-      ).has((e) => e.code, 'code').equals('snapshot-failed');
+      ).has('code', (e) => e.code).equals('snapshot-failed');
     });
 
     test('generic platform error maps to MapKitPlatformException', () async {
@@ -357,7 +354,7 @@ void main() {
         await catchMapKit<MapKitPlatformException>(
           () => harness.controller.setCamera(sampleCamera),
         ),
-      ).has((e) => e.code, 'code').equals('boom');
+      ).has('code', (e) => e.code).equals('boom');
     });
 
     test('non-platform error propagates unwrapped', () async {

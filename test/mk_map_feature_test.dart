@@ -36,7 +36,7 @@ void main() {
             featureType: .territory,
             coordinate: .new(latitude: 37.3346, longitude: -122.009),
           ),
-    ).isFalse();
+    ).isFalse;
     check(feature.toString()).equals(
       'MKMapFeature(featureType: pointOfInterest, '
       'coordinate: CLLocationCoordinate2D(37.3346, -122.009), '

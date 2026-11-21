@@ -5,7 +5,7 @@ import 'package:mapkit_flutter/mapkit_flutter.dart';
 void main() {
   group('MKCoordinateRegion.containing', () {
     test('returns null for no coordinates', () {
-      check(MKCoordinateRegion.containing(const [])).isNull();
+      check(MKCoordinateRegion.containing(const [])).isNull;
     });
 
     test('single coordinate yields a zero span centered on it', () {
@@ -13,8 +13,8 @@ void main() {
       final region = MKCoordinateRegion.containing([point]);
       final zeroSpan = MKCoordinateSpan(latitudeDelta: 0, longitudeDelta: 0);
       check(region).isNotNull()
-        ..has((r) => r.center, 'center').equals(point)
-        ..has((r) => r.span, 'span').equals(zeroSpan);
+        ..has('center', (r) => r.center).equals(point)
+        ..has('span', (r) => r.span).equals(zeroSpan);
     });
 
     test('spans the extremes with the midpoint as center', () {
@@ -25,10 +25,10 @@ void main() {
       ]);
       final mid = CLLocationCoordinate2D(latitude: 20, longitude: 30);
       check(region).isNotNull()
-        ..has((r) => r.center, 'center').equals(mid)
+        ..has('center', (r) => r.center).equals(mid)
         ..has(
-          (r) => r.span,
           'span',
+          (r) => r.span,
         ).equals(.new(latitudeDelta: 20, longitudeDelta: 20));
     });
   });
@@ -40,13 +40,13 @@ void main() {
     );
 
     test('accepts the center and edge coordinates', () {
-      check(region.contains(.new(latitude: 10, longitude: 20))).isTrue();
-      check(region.contains(.new(latitude: 12, longitude: 23))).isTrue();
+      check(region.contains(.new(latitude: 10, longitude: 20))).isTrue;
+      check(region.contains(.new(latitude: 12, longitude: 23))).isTrue;
     });
 
     test('rejects coordinates past either delta', () {
-      check(region.contains(.new(latitude: 12.1, longitude: 20))).isFalse();
-      check(region.contains(.new(latitude: 10, longitude: 23.1))).isFalse();
+      check(region.contains(.new(latitude: 12.1, longitude: 20))).isFalse;
+      check(region.contains(.new(latitude: 10, longitude: 23.1))).isFalse;
     });
 
     test('handles regions spanning the antimeridian', () {
@@ -54,8 +54,8 @@ void main() {
         center: .new(latitude: 0, longitude: 179.5),
         span: .new(latitudeDelta: 10, longitudeDelta: 2),
       );
-      check(wrapped.contains(.new(latitude: 0, longitude: -179.8))).isTrue();
-      check(wrapped.contains(.new(latitude: 0, longitude: 178))).isFalse();
+      check(wrapped.contains(.new(latitude: 0, longitude: -179.8))).isTrue;
+      check(wrapped.contains(.new(latitude: 0, longitude: 178))).isFalse;
     });
   });
 

@@ -6,7 +6,7 @@ void main() {
   group('PinStyle in-place transitions', () {
     test('withNextTint advances the palette and wraps to the null default', () {
       var style = const PinStyle();
-      check(style.tint).isNull();
+      check(style.tint).isNull;
 
       style = style.withNextTint();
       check(style.tint).equals(tintPalette[1]);
@@ -16,7 +16,7 @@ void main() {
         style = style.withNextTint();
       }
       check(style.tint).equals(tintPalette.last);
-      check(style.withNextTint().tint).isNull();
+      check(style.withNextTint().tint).isNull;
     });
 
     test('withNextGlyph advances while preserving tint and subtitle', () {
@@ -33,7 +33,7 @@ void main() {
       for (var i = 0; i < subtitlePalette.length; i++) {
         style = style.withNextSubtitle();
       }
-      check(style.subtitle).isNull();
+      check(style.subtitle).isNull;
     });
 
     test('reset clears every field to the defaults', () {
@@ -48,7 +48,7 @@ void main() {
     test('value equality distinguishes a restyle from the original', () {
       const a = PinStyle(tint: .new(0xFF3F51B5));
       check(a).equals(const .new(tint: .new(0xFF3F51B5)));
-      check(a == a.withNextTint()).isFalse();
+      check(a == a.withNextTint()).isFalse;
     });
   });
 }

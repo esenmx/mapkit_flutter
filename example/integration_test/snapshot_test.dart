@@ -263,7 +263,7 @@ void main() {
       because: 'single-coordinate polyline drew pixels',
     ).isLessThan(400);
 
-    check(tester.takeException()).isNull();
+    check(tester.takeException()).isNull;
   }, skip: !Platform.isIOS);
 }
 

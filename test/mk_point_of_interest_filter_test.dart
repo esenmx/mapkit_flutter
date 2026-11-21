@@ -7,13 +7,13 @@ void main() {
     test('includingAll maps to the all mode with no categories', () {
       final platform = MKPointOfInterestFilter.includingAll.toPlatform();
       check(platform.mode).equals(.all);
-      check(platform.categories).isEmpty();
+      check(platform.categories).isEmpty;
     });
 
     test('excludingAll maps to the none mode', () {
       final platform = MKPointOfInterestFilter.excludingAll.toPlatform();
       check(platform.mode).equals(.none);
-      check(platform.categories).isEmpty();
+      check(platform.categories).isEmpty;
     });
 
     test('including carries its categories', () {
@@ -57,7 +57,7 @@ void main() {
         final categories = [MKPointOfInterestCategory.cafe];
         final before = make(categories);
         categories.add(.museum);
-        check(before == make(categories)).isFalse();
+        check(before == make(categories)).isFalse;
         check(before.toPlatform().categories)
             .deepEquals([MKPointOfInterestCategory.cafe]);
       });
@@ -82,7 +82,7 @@ void main() {
       check(
         MKPointOfInterestFilter.including(const [.cafe]) ==
             .excluding(const [.cafe]),
-      ).isFalse();
+      ).isFalse;
     });
 
     test('toString describes each filter variant', () {

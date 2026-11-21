@@ -24,7 +24,7 @@ void main() {
       check(platform.strokeColorArgb).equals(0xFF112233);
       check(platform.lineWidth).equals(2);
       check(platform.zIndex).equals(1);
-      check(platform.isHidden).isFalse();
+      check(platform.isHidden).isFalse;
     });
 
     test('rejects negative or non-finite radius and lineWidth', () {
@@ -48,17 +48,17 @@ void main() {
     test('compares by value, ignoring onTap', () {
       check(circle('c')).equals(circle('c'));
       check(circle('c').hashCode).equals(circle('c').hashCode);
-      check(circle('c') == circle('c', radius: 1)).isFalse();
+      check(circle('c') == circle('c', radius: 1)).isFalse;
     });
   });
 
   group('tap consumption', () {
     test('consumeTapEvents is explicit on the wire', () {
-      check(circle('x').toPlatform().consumeTapEvents).isFalse();
+      check(circle('x').toPlatform().consumeTapEvents).isFalse;
       final capturing = circle('x').copyWith(consumeTapEvents: true);
-      check(capturing.toPlatform().consumeTapEvents).isTrue();
+      check(capturing.toPlatform().consumeTapEvents).isTrue;
       check(capturing.copyWith(onTap: () {}).toPlatform().consumeTapEvents)
-          .isTrue();
+          .isTrue;
     });
 
     test('onTap without consumeTapEvents throws instead of never firing', () {

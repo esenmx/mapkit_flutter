@@ -132,7 +132,7 @@ void main() {
 
       check(tester.takeException())
           .isA<StateError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .equals('boom:$method');
     }, variant: TargetPlatformVariant.only(.iOS));
   }

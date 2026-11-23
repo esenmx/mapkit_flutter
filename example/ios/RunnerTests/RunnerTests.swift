@@ -87,6 +87,34 @@ final class RunnerTests: XCTestCase {
         }
         XCTAssertEqual((view.gestureRecognizers ?? []).filter { $0 is InfoWindowTapGestureRecognizer }.count, 0)
     }
+
+    func testLayoutMarginsAppliesAndRestoresDefaultWhenCleared() throws {
+        let mapView = FlutterMapView()
+        let initialMargins = mapView.layoutMargins
+
+        func config(layoutMargins: PlatformEdgeInsets? = nil) -> PlatformMapConfiguration {
+            PlatformMapConfiguration(
+                kind: .standard, emphasisStyle: .standard, elevationStyle: .flat, showsTraffic: false,
+                showsCompass: true, showsScale: false, showsUserLocation: false, showsUserTrackingButton: false,
+                userTrackingMode: .none, insetsLayoutMarginsFromSafeArea: true, isRotateEnabled: true,
+                isScrollEnabled: true, isZoomEnabled: true, isPitchEnabled: true, selectableMapFeatures: [],
+                layoutMargins: layoutMargins)
+        }
+
+        try mapView.apply(configuration: config())
+        XCTAssertEqual(mapView.layoutMargins, initialMargins)
+
+        try mapView.apply(configuration: config(
+            layoutMargins: PlatformEdgeInsets(top: 10, left: 20, bottom: 240, right: 30)))
+        XCTAssertEqual(mapView.layoutMargins, UIEdgeInsets(top: 10, left: 20, bottom: 240, right: 30))
+
+        try mapView.apply(configuration: config(
+            layoutMargins: PlatformEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)))
+        XCTAssertEqual(mapView.layoutMargins, .zero)
+
+        try mapView.apply(configuration: config())
+        XCTAssertEqual(mapView.layoutMargins, initialMargins)
+    }
 }
 
 /// A tap recognizer pinned to one location, so tap routing runs without touches.

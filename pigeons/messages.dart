@@ -299,6 +299,21 @@ class PlatformPoint {
   final double y;
 }
 
+/// Edge insets in logical points (`UIEdgeInsets`).
+class PlatformEdgeInsets {
+  PlatformEdgeInsets({
+    required this.top,
+    required this.left,
+    required this.bottom,
+    required this.right,
+  });
+
+  final double top;
+  final double left;
+  final double bottom;
+  final double right;
+}
+
 /// Discriminated union of the `MKAnnotationIcon` variants. Only the fields
 /// relevant to [type] are non-null.
 class PlatformAnnotationIcon {
@@ -517,6 +532,7 @@ class PlatformMapConfiguration {
     this.pointOfInterestFilter,
     this.cameraZoomRange,
     this.cameraBoundary,
+    this.layoutMargins,
   });
 
   final PlatformMapKind kind;
@@ -537,6 +553,7 @@ class PlatformMapConfiguration {
   final PlatformPointOfInterestFilter? pointOfInterestFilter;
   final PlatformCameraZoomRange? cameraZoomRange;
   final PlatformCoordinateRegion? cameraBoundary;
+  final PlatformEdgeInsets? layoutMargins;
 }
 
 /// Mirrors `MKMapSnapshotter.Options` plus plugin-drawn annotation/overlay

@@ -5823,6 +5823,142 @@ extension PlatformCoordinateSpanBridge$Methods on PlatformCoordinateSpanBridge {
   }
 }
 
+/// Edge insets in logical points (<code>UIEdgeInsets</code>).
+/// Generated bridge class from Pigeon that moves data from Swift to Objective-C.
+extension type PlatformEdgeInsetsBridge._(objc.ObjCObject object$)
+    implements objc.ObjCObject, objc.NSObject {
+  /// Constructs a [PlatformEdgeInsetsBridge] that points to the same underlying object as [other].
+  PlatformEdgeInsetsBridge.as(objc.ObjCObject other) : object$ = other {
+    assert(isA(object$));
+  }
+
+  /// Constructs a [PlatformEdgeInsetsBridge] that wraps the given raw object pointer.
+  PlatformEdgeInsetsBridge.fromPointer(
+    ffi.Pointer<objc.ObjCObjectImpl> other, {
+    bool retain = false,
+    bool release = false,
+  }) : object$ = objc.ObjCObject(other, retain: retain, release: release) {
+    assert(isA(object$));
+  }
+
+  /// Returns whether [obj] is an instance of [PlatformEdgeInsetsBridge].
+  static bool isA(objc.ObjCObject? obj) => obj == null
+      ? false
+      : _objc_msgSend_19nvye5(
+          obj.ref.pointer,
+          _sel_isKindOfClass_,
+          _class_PlatformEdgeInsetsBridge,
+        );
+
+  /// alloc
+  static PlatformEdgeInsetsBridge alloc() {
+    final $ret = _objc_msgSend_151sglz(
+      _class_PlatformEdgeInsetsBridge,
+      _sel_alloc,
+    );
+    return PlatformEdgeInsetsBridge.fromPointer(
+      $ret,
+      retain: false,
+      release: true,
+    );
+  }
+
+  /// allocWithZone:
+  static PlatformEdgeInsetsBridge allocWithZone(ffi.Pointer<objc.NSZone> zone) {
+    final $ret = _objc_msgSend_1cwp428(
+      _class_PlatformEdgeInsetsBridge,
+      _sel_allocWithZone_,
+      zone,
+    );
+    return PlatformEdgeInsetsBridge.fromPointer(
+      $ret,
+      retain: false,
+      release: true,
+    );
+  }
+}
+
+extension PlatformEdgeInsetsBridge$Methods on PlatformEdgeInsetsBridge {
+  /// bottom
+  double get bottom {
+    final _$$ref = object$.ref;
+    return objc.useMsgSendVariants
+        ? _objc_msgSend_1ukqyt8Fpret(_$$ref.pointer, _sel_bottom)
+        : _objc_msgSend_1ukqyt8(_$$ref.pointer, _sel_bottom);
+  }
+
+  /// initWithTop:left:bottom:right:
+  PlatformEdgeInsetsBridge initWithTop(
+    double top, {
+    required double left,
+    required double bottom,
+    required double right,
+  }) {
+    final _$$ref = object$.ref;
+    final $ret = _objc_msgSend_q2wq4h(
+      _$$ref.retainAndReturnPointer(),
+      _sel_initWithTop_left_bottom_right_,
+      top,
+      left,
+      bottom,
+      right,
+    );
+    return PlatformEdgeInsetsBridge.fromPointer(
+      $ret,
+      retain: false,
+      release: true,
+    );
+  }
+
+  /// left
+  double get left {
+    final _$$ref = object$.ref;
+    return objc.useMsgSendVariants
+        ? _objc_msgSend_1ukqyt8Fpret(_$$ref.pointer, _sel_left)
+        : _objc_msgSend_1ukqyt8(_$$ref.pointer, _sel_left);
+  }
+
+  /// right
+  double get right {
+    final _$$ref = object$.ref;
+    return objc.useMsgSendVariants
+        ? _objc_msgSend_1ukqyt8Fpret(_$$ref.pointer, _sel_right)
+        : _objc_msgSend_1ukqyt8(_$$ref.pointer, _sel_right);
+  }
+
+  /// setBottom:
+  set bottom(double value) {
+    final _$$ref = object$.ref;
+    _objc_msgSend_hwm8nu(_$$ref.pointer, _sel_setBottom_, value);
+  }
+
+  /// setLeft:
+  set left(double value) {
+    final _$$ref = object$.ref;
+    _objc_msgSend_hwm8nu(_$$ref.pointer, _sel_setLeft_, value);
+  }
+
+  /// setRight:
+  set right(double value) {
+    final _$$ref = object$.ref;
+    _objc_msgSend_hwm8nu(_$$ref.pointer, _sel_setRight_, value);
+  }
+
+  /// setTop:
+  set top(double value) {
+    final _$$ref = object$.ref;
+    _objc_msgSend_hwm8nu(_$$ref.pointer, _sel_setTop_, value);
+  }
+
+  /// top
+  double get top {
+    final _$$ref = object$.ref;
+    return objc.useMsgSendVariants
+        ? _objc_msgSend_1ukqyt8Fpret(_$$ref.pointer, _sel_top)
+        : _objc_msgSend_1ukqyt8(_$$ref.pointer, _sel_top);
+  }
+}
+
 /// Stroke end-cap style for an <code>MKPolyline</code> (<code>CGLineCap</code>).
 /// See: https://developer.apple.com/documentation/coregraphics/cglinecap
 enum PlatformLineCap {
@@ -6102,7 +6238,7 @@ extension PlatformMapConfigurationBridge$Methods
     return PlatformMapEmphasisStyle.fromValue($ret);
   }
 
-  /// initWithKind:emphasisStyle:elevationStyle:showsTraffic:showsCompass:showsScale:showsUserLocation:showsUserTrackingButton:userTrackingMode:insetsLayoutMarginsFromSafeArea:isRotateEnabled:isScrollEnabled:isZoomEnabled:isPitchEnabled:selectableMapFeatures:pointOfInterestFilter:cameraZoomRange:cameraBoundary:
+  /// initWithKind:emphasisStyle:elevationStyle:showsTraffic:showsCompass:showsScale:showsUserLocation:showsUserTrackingButton:userTrackingMode:insetsLayoutMarginsFromSafeArea:isRotateEnabled:isScrollEnabled:isZoomEnabled:isPitchEnabled:selectableMapFeatures:pointOfInterestFilter:cameraZoomRange:cameraBoundary:layoutMargins:
   PlatformMapConfigurationBridge initWithKind(
     PlatformMapKind kind, {
     required PlatformMapEmphasisStyle emphasisStyle,
@@ -6122,15 +6258,17 @@ extension PlatformMapConfigurationBridge$Methods
     PlatformPointOfInterestFilterBridge? pointOfInterestFilter,
     PlatformCameraZoomRangeBridge? cameraZoomRange,
     PlatformCoordinateRegionBridge? cameraBoundary,
+    PlatformEdgeInsetsBridge? layoutMargins,
   }) {
     final _$$ref = object$.ref;
     final _$$ref$1 = selectableMapFeatures.ref;
     final _$$ref$2 = pointOfInterestFilter?.ref;
     final _$$ref$3 = cameraZoomRange?.ref;
     final _$$ref$4 = cameraBoundary?.ref;
-    final $ret = _objc_msgSend_1lenqgt(
+    final _$$ref$5 = layoutMargins?.ref;
+    final $ret = _objc_msgSend_zzyapv(
       _$$ref.retainAndReturnPointer(),
-      _sel_initWithKind_emphasisStyle_elevationStyle_showsTraffic_showsCompass_showsScale_showsUserLocation_showsUserTrackingButton_userTrackingMode_insetsLayoutMarginsFromSafeArea_isRotateEnabled_isScrollEnabled_isZoomEnabled_isPitchEnabled_selectableMapFeatures_pointOfInterestFilter_cameraZoomRange_cameraBoundary_,
+      _sel_initWithKind_emphasisStyle_elevationStyle_showsTraffic_showsCompass_showsScale_showsUserLocation_showsUserTrackingButton_userTrackingMode_insetsLayoutMarginsFromSafeArea_isRotateEnabled_isScrollEnabled_isZoomEnabled_isPitchEnabled_selectableMapFeatures_pointOfInterestFilter_cameraZoomRange_cameraBoundary_layoutMargins_,
       kind.value,
       emphasisStyle.value,
       elevationStyle.value,
@@ -6149,6 +6287,7 @@ extension PlatformMapConfigurationBridge$Methods
       _$$ref$2?.pointer ?? ffi.nullptr,
       _$$ref$3?.pointer ?? ffi.nullptr,
       _$$ref$4?.pointer ?? ffi.nullptr,
+      _$$ref$5?.pointer ?? ffi.nullptr,
     );
     return PlatformMapConfigurationBridge.fromPointer(
       $ret,
@@ -6195,6 +6334,19 @@ extension PlatformMapConfigurationBridge$Methods
     final _$$ref = object$.ref;
     final $ret = _objc_msgSend_1j8k6f6(_$$ref.pointer, _sel_kind);
     return PlatformMapKind.fromValue($ret);
+  }
+
+  /// layoutMargins
+  PlatformEdgeInsetsBridge? get layoutMargins {
+    final _$$ref = object$.ref;
+    final $ret = _objc_msgSend_151sglz(_$$ref.pointer, _sel_layoutMargins);
+    return $ret.address == 0
+        ? null
+        : PlatformEdgeInsetsBridge.fromPointer(
+            $ret,
+            retain: true,
+            release: true,
+          );
   }
 
   /// pointOfInterestFilter
@@ -6295,6 +6447,17 @@ extension PlatformMapConfigurationBridge$Methods
   set kind(PlatformMapKind value) {
     final _$$ref = object$.ref;
     _objc_msgSend_1168nik(_$$ref.pointer, _sel_setKind_, value.value);
+  }
+
+  /// setLayoutMargins:
+  set layoutMargins(PlatformEdgeInsetsBridge? value) {
+    final _$$ref = object$.ref;
+    final _$$ref$1 = value?.ref;
+    _objc_msgSend_xtuoz7(
+      _$$ref.pointer,
+      _sel_setLayoutMargins_,
+      _$$ref$1?.pointer ?? ffi.nullptr,
+    );
   }
 
   /// setPointOfInterestFilter:
@@ -8601,6 +8764,16 @@ final _class_PlatformCoordinateSpanBridge = objc.getClass(
   ).cast(),
 );
 @ffi.Native<ffi.Pointer<objc.ObjCObjectImpl>>(
+  symbol: 'OBJC_CLASS_\$__TtC14mapkit_flutter24PlatformEdgeInsetsBridge',
+)
+external ffi.Pointer<objc.ObjCObjectImpl> _class_PlatformEdgeInsetsBridge_raw;
+final _class_PlatformEdgeInsetsBridge = objc.getClass(
+  "mapkit_flutter.PlatformEdgeInsetsBridge",
+  () => ffi.Native.addressOf<ffi.Pointer<objc.ObjCObjectImpl>>(
+    _class_PlatformEdgeInsetsBridge_raw,
+  ).cast(),
+);
+@ffi.Native<ffi.Pointer<objc.ObjCObjectImpl>>(
   symbol: 'OBJC_CLASS_\$__TtC14mapkit_flutter23PlatformMapCameraBridge',
 )
 external ffi.Pointer<objc.ObjCObjectImpl> _class_PlatformMapCameraBridge_raw;
@@ -9111,57 +9284,6 @@ final _objc_msgSend_1kiw17o = objc.msgSendPointer
         ffi.Pointer<objc.ObjCObjectImpl>,
         ffi.Pointer<objc.ObjCSelector>,
         int,
-      )
-    >();
-final _objc_msgSend_1lenqgt = objc.msgSendPointer
-    .cast<
-      ffi.NativeFunction<
-        ffi.Pointer<objc.ObjCObjectImpl> Function(
-          ffi.Pointer<objc.ObjCObjectImpl>,
-          ffi.Pointer<objc.ObjCSelector>,
-          ffi.Long,
-          ffi.Long,
-          ffi.Long,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Long,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Bool,
-          ffi.Pointer<objc.ObjCObjectImpl>,
-          ffi.Pointer<objc.ObjCObjectImpl>,
-          ffi.Pointer<objc.ObjCObjectImpl>,
-          ffi.Pointer<objc.ObjCObjectImpl>,
-        )
-      >
-    >()
-    .asFunction<
-      ffi.Pointer<objc.ObjCObjectImpl> Function(
-        ffi.Pointer<objc.ObjCObjectImpl>,
-        ffi.Pointer<objc.ObjCSelector>,
-        int,
-        int,
-        int,
-        bool,
-        bool,
-        bool,
-        bool,
-        bool,
-        int,
-        bool,
-        bool,
-        bool,
-        bool,
-        bool,
-        ffi.Pointer<objc.ObjCObjectImpl>,
-        ffi.Pointer<objc.ObjCObjectImpl>,
-        ffi.Pointer<objc.ObjCObjectImpl>,
-        ffi.Pointer<objc.ObjCObjectImpl>,
       )
     >();
 final _objc_msgSend_1lhzuqc = objc.msgSendPointer
@@ -9802,6 +9924,29 @@ final _objc_msgSend_pysgoz = objc.msgSendPointer
         ffi.Pointer<objc.ObjCSelector>,
       )
     >();
+final _objc_msgSend_q2wq4h = objc.msgSendPointer
+    .cast<
+      ffi.NativeFunction<
+        ffi.Pointer<objc.ObjCObjectImpl> Function(
+          ffi.Pointer<objc.ObjCObjectImpl>,
+          ffi.Pointer<objc.ObjCSelector>,
+          ffi.Double,
+          ffi.Double,
+          ffi.Double,
+          ffi.Double,
+        )
+      >
+    >()
+    .asFunction<
+      ffi.Pointer<objc.ObjCObjectImpl> Function(
+        ffi.Pointer<objc.ObjCObjectImpl>,
+        ffi.Pointer<objc.ObjCSelector>,
+        double,
+        double,
+        double,
+        double,
+      )
+    >();
 final _objc_msgSend_r8gdi7 = objc.msgSendPointer
     .cast<
       ffi.NativeFunction<
@@ -9985,6 +10130,59 @@ final _objc_msgSend_xw2lbc = objc.msgSendPointer
         ffi.Pointer<objc.ObjCSelector>,
       )
     >();
+final _objc_msgSend_zzyapv = objc.msgSendPointer
+    .cast<
+      ffi.NativeFunction<
+        ffi.Pointer<objc.ObjCObjectImpl> Function(
+          ffi.Pointer<objc.ObjCObjectImpl>,
+          ffi.Pointer<objc.ObjCSelector>,
+          ffi.Long,
+          ffi.Long,
+          ffi.Long,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Long,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Bool,
+          ffi.Pointer<objc.ObjCObjectImpl>,
+          ffi.Pointer<objc.ObjCObjectImpl>,
+          ffi.Pointer<objc.ObjCObjectImpl>,
+          ffi.Pointer<objc.ObjCObjectImpl>,
+          ffi.Pointer<objc.ObjCObjectImpl>,
+        )
+      >
+    >()
+    .asFunction<
+      ffi.Pointer<objc.ObjCObjectImpl> Function(
+        ffi.Pointer<objc.ObjCObjectImpl>,
+        ffi.Pointer<objc.ObjCSelector>,
+        int,
+        int,
+        int,
+        bool,
+        bool,
+        bool,
+        bool,
+        bool,
+        int,
+        bool,
+        bool,
+        bool,
+        bool,
+        bool,
+        ffi.Pointer<objc.ObjCObjectImpl>,
+        ffi.Pointer<objc.ObjCObjectImpl>,
+        ffi.Pointer<objc.ObjCObjectImpl>,
+        ffi.Pointer<objc.ObjCObjectImpl>,
+        ffi.Pointer<objc.ObjCObjectImpl>,
+      )
+    >();
 @ffi.Native<ffi.Pointer<objc.ObjCProtocolImpl> Function()>(
   symbol: '_19nu2e9_MapKitFlutterApiBridge',
 )
@@ -10006,6 +10204,7 @@ late final _sel_arg0 = objc.registerName("arg0");
 late final _sel_arg1 = objc.registerName("arg1");
 late final _sel_arg2 = objc.registerName("arg2");
 late final _sel_arg3 = objc.registerName("arg3");
+late final _sel_bottom = objc.registerName("bottom");
 late final _sel_calloutConsumesTapEvents = objc.registerName(
   "calloutConsumesTapEvents",
 );
@@ -10098,9 +10297,9 @@ late final _sel_initWithInitialCamera_configuration_annotations_polylines_polygo
     objc.registerName(
       "initWithInitialCamera:configuration:annotations:polylines:polygons:circles:",
     );
-late final _sel_initWithKind_emphasisStyle_elevationStyle_showsTraffic_showsCompass_showsScale_showsUserLocation_showsUserTrackingButton_userTrackingMode_insetsLayoutMarginsFromSafeArea_isRotateEnabled_isScrollEnabled_isZoomEnabled_isPitchEnabled_selectableMapFeatures_pointOfInterestFilter_cameraZoomRange_cameraBoundary_ =
+late final _sel_initWithKind_emphasisStyle_elevationStyle_showsTraffic_showsCompass_showsScale_showsUserLocation_showsUserTrackingButton_userTrackingMode_insetsLayoutMarginsFromSafeArea_isRotateEnabled_isScrollEnabled_isZoomEnabled_isPitchEnabled_selectableMapFeatures_pointOfInterestFilter_cameraZoomRange_cameraBoundary_layoutMargins_ =
     objc.registerName(
-      "initWithKind:emphasisStyle:elevationStyle:showsTraffic:showsCompass:showsScale:showsUserLocation:showsUserTrackingButton:userTrackingMode:insetsLayoutMarginsFromSafeArea:isRotateEnabled:isScrollEnabled:isZoomEnabled:isPitchEnabled:selectableMapFeatures:pointOfInterestFilter:cameraZoomRange:cameraBoundary:",
+      "initWithKind:emphasisStyle:elevationStyle:showsTraffic:showsCompass:showsScale:showsUserLocation:showsUserTrackingButton:userTrackingMode:insetsLayoutMarginsFromSafeArea:isRotateEnabled:isScrollEnabled:isZoomEnabled:isPitchEnabled:selectableMapFeatures:pointOfInterestFilter:cameraZoomRange:cameraBoundary:layoutMargins:",
     );
 late final _sel_initWithLatitudeDelta_longitudeDelta_ = objc.registerName(
   "initWithLatitudeDelta:longitudeDelta:",
@@ -10122,6 +10321,9 @@ late final _sel_initWithShowsPointsOfInterest_showsAnnotations_showsOverlays_ =
     objc.registerName(
       "initWithShowsPointsOfInterest:showsAnnotations:showsOverlays:",
     );
+late final _sel_initWithTop_left_bottom_right_ = objc.registerName(
+  "initWithTop:left:bottom:right:",
+);
 late final _sel_initWithType_markerTintArgb_glyphText_glyphSystemImage_glyphTintArgb_imageBytes_imagePixelRatio_ =
     objc.registerName(
       "initWithType:markerTintArgb:glyphText:glyphSystemImage:glyphTintArgb:imageBytes:imagePixelRatio:",
@@ -10149,6 +10351,8 @@ late final _sel_isZoomEnabled = objc.registerName("isZoomEnabled");
 late final _sel_kind = objc.registerName("kind");
 late final _sel_latitude = objc.registerName("latitude");
 late final _sel_latitudeDelta = objc.registerName("latitudeDelta");
+late final _sel_layoutMargins = objc.registerName("layoutMargins");
+late final _sel_left = objc.registerName("left");
 late final _sel_level = objc.registerName("level");
 late final _sel_lineCap = objc.registerName("lineCap");
 late final _sel_lineDashPattern = objc.registerName("lineDashPattern");
@@ -10240,6 +10444,7 @@ late final _sel_registerInstanceWithApi_engineId_affinityKey_name_ = objc
     .registerName("registerInstanceWithApi:engineId:affinityKey:name:");
 late final _sel_removeTileOverlayWithTileOverlayId_wrappedError_ = objc
     .registerName("removeTileOverlayWithTileOverlayId:wrappedError:");
+late final _sel_right = objc.registerName("right");
 late final _sel_selectAnnotationWithAnnotationId_wrappedError_ = objc
     .registerName("selectAnnotationWithAnnotationId:wrappedError:");
 late final _sel_selectableMapFeatures = objc.registerName(
@@ -10249,6 +10454,7 @@ late final _sel_setAlpha_ = objc.registerName("setAlpha:");
 late final _sel_setAnchorPointX_ = objc.registerName("setAnchorPointX:");
 late final _sel_setAnchorPointY_ = objc.registerName("setAnchorPointY:");
 late final _sel_setAnnotations_ = objc.registerName("setAnnotations:");
+late final _sel_setBottom_ = objc.registerName("setBottom:");
 late final _sel_setCalloutConsumesTapEvents_ = objc.registerName(
   "setCalloutConsumesTapEvents:",
 );
@@ -10313,6 +10519,8 @@ late final _sel_setIsZoomEnabled_ = objc.registerName("setIsZoomEnabled:");
 late final _sel_setKind_ = objc.registerName("setKind:");
 late final _sel_setLatitudeDelta_ = objc.registerName("setLatitudeDelta:");
 late final _sel_setLatitude_ = objc.registerName("setLatitude:");
+late final _sel_setLayoutMargins_ = objc.registerName("setLayoutMargins:");
+late final _sel_setLeft_ = objc.registerName("setLeft:");
 late final _sel_setLevel_ = objc.registerName("setLevel:");
 late final _sel_setLineCap_ = objc.registerName("setLineCap:");
 late final _sel_setLineDashPattern_ = objc.registerName("setLineDashPattern:");
@@ -10344,6 +10552,7 @@ late final _sel_setPolylines_ = objc.registerName("setPolylines:");
 late final _sel_setRadius_ = objc.registerName("setRadius:");
 late final _sel_setRegionWithAnimated_pigeonVar_args_wrappedError_ = objc
     .registerName("setRegionWithAnimated:pigeonVar_args:wrappedError:");
+late final _sel_setRight_ = objc.registerName("setRight:");
 late final _sel_setSelectableMapFeatures_ = objc.registerName(
   "setSelectableMapFeatures:",
 );
@@ -10368,6 +10577,7 @@ late final _sel_setStrokeColorArgb_ = objc.registerName("setStrokeColorArgb:");
 late final _sel_setSubtitle_ = objc.registerName("setSubtitle:");
 late final _sel_setTileSize_ = objc.registerName("setTileSize:");
 late final _sel_setTitle_ = objc.registerName("setTitle:");
+late final _sel_setTop_ = objc.registerName("setTop:");
 late final _sel_setType_ = objc.registerName("setType:");
 late final _sel_setUrlTemplate_ = objc.registerName("setUrlTemplate:");
 late final _sel_setUserTrackingMode_ = objc.registerName(
@@ -10398,6 +10608,7 @@ late final _sel_takeSnapshotWithPigeonVar_args_wrappedError_completionHandler_ =
     );
 late final _sel_tileSize = objc.registerName("tileSize");
 late final _sel_title = objc.registerName("title");
+late final _sel_top = objc.registerName("top");
 late final _sel_type = objc.registerName("type");
 late final _sel_unregisterInstanceWithApi_name_ = objc.registerName(
   "unregisterInstanceWithApi:name:",

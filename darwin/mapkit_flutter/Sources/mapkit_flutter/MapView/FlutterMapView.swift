@@ -23,13 +23,25 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
     /// The last configuration Dart pushed.
     private(set) var appliedConfiguration: PlatformMapConfiguration?
 
+    #if os(iOS)
+    /// UIKit's initial `layoutMargins`, captured before any Dart override so
+    /// clearing `layoutMargins` back to `nil` restores it.
+    private var defaultLayoutMargins: UIEdgeInsets = .zero
+    #endif
+
     override init(frame frameRect: CGRect) {
         super.init(frame: frameRect)
+        #if os(iOS)
+        defaultLayoutMargins = self.layoutMargins
+        #endif
         registerDefaultAnnotationViews()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        #if os(iOS)
+        defaultLayoutMargins = self.layoutMargins
+        #endif
         registerDefaultAnnotationViews()
     }
 
@@ -137,6 +149,9 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
         }
 
         let previousTrackingMode = appliedConfiguration?.userTrackingMode
+        #if os(iOS)
+        let previousLayoutMargins = appliedConfiguration?.layoutMargins
+        #endif
         appliedConfiguration = config
         self.preferredConfiguration = mapConfiguration
 
@@ -167,6 +182,16 @@ class FlutterMapView: MKMapView, PlatformGestureRecognizerDelegate {
 
         #if os(iOS)
         self.insetsLayoutMarginsFromSafeArea = config.insetsLayoutMarginsFromSafeArea
+        if let margins = config.layoutMargins {
+            self.layoutMargins = UIEdgeInsets(
+                top: margins.top,
+                left: margins.left,
+                bottom: margins.bottom,
+                right: margins.right
+            )
+        } else if previousLayoutMargins != nil {
+            self.layoutMargins = defaultLayoutMargins
+        }
         // `selectableMapFeatures` / `MKMapFeatureOptions` are iOS-only.
         self.selectableMapFeatures = Self.mapFeatureOptions(config.selectableMapFeatures)
         #endif

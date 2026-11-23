@@ -991,6 +991,100 @@ struct PlatformPoint: Hashable, CustomStringConvertible {
   }
 }
 
+/// Edge insets in logical points (`UIEdgeInsets`).
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PlatformEdgeInsets: Hashable, CustomStringConvertible {
+  var top: Double
+  var left: Double
+  var bottom: Double
+  var right: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PlatformEdgeInsets? {
+    let top = pigeonVar_list[0] as! Double
+    let left = pigeonVar_list[1] as! Double
+    let bottom = pigeonVar_list[2] as! Double
+    let right = pigeonVar_list[3] as! Double
+
+    return PlatformEdgeInsets(
+      top: top,
+      left: left,
+      bottom: bottom,
+      right: right
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      top,
+      left,
+      bottom,
+      right,
+    ]
+  }
+  static func == (lhs: PlatformEdgeInsets, rhs: PlatformEdgeInsets) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.top, rhs.top) && MessagesPigeonInternal.deepEquals(lhs.left, rhs.left) && MessagesPigeonInternal.deepEquals(lhs.bottom, rhs.bottom) && MessagesPigeonInternal.deepEquals(lhs.right, rhs.right)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PlatformEdgeInsets")
+    MessagesPigeonInternal.deepHash(value: top, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: left, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bottom, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: right, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PlatformEdgeInsets(top: \(String(describing: top)), left: \(String(describing: left)), bottom: \(String(describing: bottom)), right: \(String(describing: right)))"
+  }
+}
+
+/// Edge insets in logical points (`UIEdgeInsets`).
+///
+/// Generated bridge class from Pigeon that moves data from Swift to Objective-C.
+@objc class PlatformEdgeInsetsBridge: NSObject {
+  @objc init(
+    top: Double,
+    left: Double,
+    bottom: Double,
+    right: Double
+  ) {
+    self.top = top
+    self.left = left
+    self.bottom = bottom
+    self.right = right
+  }
+  @objc var top: Double
+  @objc var left: Double
+  @objc var bottom: Double
+  @objc var right: Double
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromSwift(_ pigeonVar_Class: PlatformEdgeInsets?) -> PlatformEdgeInsetsBridge? {
+    if (MessagesPigeonInternal.isNullish(pigeonVar_Class)) {
+      return nil
+    }
+    return PlatformEdgeInsetsBridge(
+      top: pigeonVar_Class!.top,
+      left: pigeonVar_Class!.left,
+      bottom: pigeonVar_Class!.bottom,
+      right: pigeonVar_Class!.right,
+    )
+  }
+  func toSwift() -> PlatformEdgeInsets {
+    return PlatformEdgeInsets (
+      top: top,
+      left: left,
+      bottom: bottom,
+      right: right,
+    )
+  }
+}
+
 /// Discriminated union of the `MKAnnotationIcon` variants. Only the fields
 /// relevant to [type] are non-null.
 ///
@@ -2093,6 +2187,7 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
   var pointOfInterestFilter: PlatformPointOfInterestFilter? = nil
   var cameraZoomRange: PlatformCameraZoomRange? = nil
   var cameraBoundary: PlatformCoordinateRegion? = nil
+  var layoutMargins: PlatformEdgeInsets? = nil
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
@@ -2115,6 +2210,7 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
     let pointOfInterestFilter: PlatformPointOfInterestFilter? = nilOrValue(pigeonVar_list[15])
     let cameraZoomRange: PlatformCameraZoomRange? = nilOrValue(pigeonVar_list[16])
     let cameraBoundary: PlatformCoordinateRegion? = nilOrValue(pigeonVar_list[17])
+    let layoutMargins: PlatformEdgeInsets? = nilOrValue(pigeonVar_list[18])
 
     return PlatformMapConfiguration(
       kind: kind,
@@ -2134,7 +2230,8 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
       selectableMapFeatures: selectableMapFeatures,
       pointOfInterestFilter: pointOfInterestFilter,
       cameraZoomRange: cameraZoomRange,
-      cameraBoundary: cameraBoundary
+      cameraBoundary: cameraBoundary,
+      layoutMargins: layoutMargins
     )
   }
   func toList() -> [Any?] {
@@ -2157,13 +2254,14 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
       pointOfInterestFilter,
       cameraZoomRange,
       cameraBoundary,
+      layoutMargins,
     ]
   }
   static func == (lhs: PlatformMapConfiguration, rhs: PlatformMapConfiguration) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return MessagesPigeonInternal.deepEquals(lhs.kind, rhs.kind) && MessagesPigeonInternal.deepEquals(lhs.emphasisStyle, rhs.emphasisStyle) && MessagesPigeonInternal.deepEquals(lhs.elevationStyle, rhs.elevationStyle) && MessagesPigeonInternal.deepEquals(lhs.showsTraffic, rhs.showsTraffic) && MessagesPigeonInternal.deepEquals(lhs.showsCompass, rhs.showsCompass) && MessagesPigeonInternal.deepEquals(lhs.showsScale, rhs.showsScale) && MessagesPigeonInternal.deepEquals(lhs.showsUserLocation, rhs.showsUserLocation) && MessagesPigeonInternal.deepEquals(lhs.showsUserTrackingButton, rhs.showsUserTrackingButton) && MessagesPigeonInternal.deepEquals(lhs.userTrackingMode, rhs.userTrackingMode) && MessagesPigeonInternal.deepEquals(lhs.insetsLayoutMarginsFromSafeArea, rhs.insetsLayoutMarginsFromSafeArea) && MessagesPigeonInternal.deepEquals(lhs.isRotateEnabled, rhs.isRotateEnabled) && MessagesPigeonInternal.deepEquals(lhs.isScrollEnabled, rhs.isScrollEnabled) && MessagesPigeonInternal.deepEquals(lhs.isZoomEnabled, rhs.isZoomEnabled) && MessagesPigeonInternal.deepEquals(lhs.isPitchEnabled, rhs.isPitchEnabled) && MessagesPigeonInternal.deepEquals(lhs.selectableMapFeatures, rhs.selectableMapFeatures) && MessagesPigeonInternal.deepEquals(lhs.pointOfInterestFilter, rhs.pointOfInterestFilter) && MessagesPigeonInternal.deepEquals(lhs.cameraZoomRange, rhs.cameraZoomRange) && MessagesPigeonInternal.deepEquals(lhs.cameraBoundary, rhs.cameraBoundary)
+    return MessagesPigeonInternal.deepEquals(lhs.kind, rhs.kind) && MessagesPigeonInternal.deepEquals(lhs.emphasisStyle, rhs.emphasisStyle) && MessagesPigeonInternal.deepEquals(lhs.elevationStyle, rhs.elevationStyle) && MessagesPigeonInternal.deepEquals(lhs.showsTraffic, rhs.showsTraffic) && MessagesPigeonInternal.deepEquals(lhs.showsCompass, rhs.showsCompass) && MessagesPigeonInternal.deepEquals(lhs.showsScale, rhs.showsScale) && MessagesPigeonInternal.deepEquals(lhs.showsUserLocation, rhs.showsUserLocation) && MessagesPigeonInternal.deepEquals(lhs.showsUserTrackingButton, rhs.showsUserTrackingButton) && MessagesPigeonInternal.deepEquals(lhs.userTrackingMode, rhs.userTrackingMode) && MessagesPigeonInternal.deepEquals(lhs.insetsLayoutMarginsFromSafeArea, rhs.insetsLayoutMarginsFromSafeArea) && MessagesPigeonInternal.deepEquals(lhs.isRotateEnabled, rhs.isRotateEnabled) && MessagesPigeonInternal.deepEquals(lhs.isScrollEnabled, rhs.isScrollEnabled) && MessagesPigeonInternal.deepEquals(lhs.isZoomEnabled, rhs.isZoomEnabled) && MessagesPigeonInternal.deepEquals(lhs.isPitchEnabled, rhs.isPitchEnabled) && MessagesPigeonInternal.deepEquals(lhs.selectableMapFeatures, rhs.selectableMapFeatures) && MessagesPigeonInternal.deepEquals(lhs.pointOfInterestFilter, rhs.pointOfInterestFilter) && MessagesPigeonInternal.deepEquals(lhs.cameraZoomRange, rhs.cameraZoomRange) && MessagesPigeonInternal.deepEquals(lhs.cameraBoundary, rhs.cameraBoundary) && MessagesPigeonInternal.deepEquals(lhs.layoutMargins, rhs.layoutMargins)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -2186,10 +2284,11 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
     MessagesPigeonInternal.deepHash(value: pointOfInterestFilter, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: cameraZoomRange, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: cameraBoundary, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: layoutMargins, hasher: &hasher)
   }
 
   public var description: String {
-    return "PlatformMapConfiguration(kind: \(String(describing: kind)), emphasisStyle: \(String(describing: emphasisStyle)), elevationStyle: \(String(describing: elevationStyle)), showsTraffic: \(String(describing: showsTraffic)), showsCompass: \(String(describing: showsCompass)), showsScale: \(String(describing: showsScale)), showsUserLocation: \(String(describing: showsUserLocation)), showsUserTrackingButton: \(String(describing: showsUserTrackingButton)), userTrackingMode: \(String(describing: userTrackingMode)), insetsLayoutMarginsFromSafeArea: \(String(describing: insetsLayoutMarginsFromSafeArea)), isRotateEnabled: \(String(describing: isRotateEnabled)), isScrollEnabled: \(String(describing: isScrollEnabled)), isZoomEnabled: \(String(describing: isZoomEnabled)), isPitchEnabled: \(String(describing: isPitchEnabled)), selectableMapFeatures: \(String(describing: selectableMapFeatures)), pointOfInterestFilter: \(String(describing: pointOfInterestFilter)), cameraZoomRange: \(String(describing: cameraZoomRange)), cameraBoundary: \(String(describing: cameraBoundary)))"
+    return "PlatformMapConfiguration(kind: \(String(describing: kind)), emphasisStyle: \(String(describing: emphasisStyle)), elevationStyle: \(String(describing: elevationStyle)), showsTraffic: \(String(describing: showsTraffic)), showsCompass: \(String(describing: showsCompass)), showsScale: \(String(describing: showsScale)), showsUserLocation: \(String(describing: showsUserLocation)), showsUserTrackingButton: \(String(describing: showsUserTrackingButton)), userTrackingMode: \(String(describing: userTrackingMode)), insetsLayoutMarginsFromSafeArea: \(String(describing: insetsLayoutMarginsFromSafeArea)), isRotateEnabled: \(String(describing: isRotateEnabled)), isScrollEnabled: \(String(describing: isScrollEnabled)), isZoomEnabled: \(String(describing: isZoomEnabled)), isPitchEnabled: \(String(describing: isPitchEnabled)), selectableMapFeatures: \(String(describing: selectableMapFeatures)), pointOfInterestFilter: \(String(describing: pointOfInterestFilter)), cameraZoomRange: \(String(describing: cameraZoomRange)), cameraBoundary: \(String(describing: cameraBoundary)), layoutMargins: \(String(describing: layoutMargins)))"
   }
 }
 
@@ -2213,7 +2312,8 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
     selectableMapFeatures: [NSObject],
     pointOfInterestFilter: PlatformPointOfInterestFilterBridge? = nil,
     cameraZoomRange: PlatformCameraZoomRangeBridge? = nil,
-    cameraBoundary: PlatformCoordinateRegionBridge? = nil
+    cameraBoundary: PlatformCoordinateRegionBridge? = nil,
+    layoutMargins: PlatformEdgeInsetsBridge? = nil
   ) {
     self.kind = kind
     self.emphasisStyle = emphasisStyle
@@ -2233,6 +2333,7 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
     self.pointOfInterestFilter = pointOfInterestFilter
     self.cameraZoomRange = cameraZoomRange
     self.cameraBoundary = cameraBoundary
+    self.layoutMargins = layoutMargins
   }
   @objc var kind: PlatformMapKind
   @objc var emphasisStyle: PlatformMapEmphasisStyle
@@ -2252,6 +2353,7 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
   @objc var pointOfInterestFilter: PlatformPointOfInterestFilterBridge? = nil
   @objc var cameraZoomRange: PlatformCameraZoomRangeBridge? = nil
   @objc var cameraBoundary: PlatformCoordinateRegionBridge? = nil
+  @objc var layoutMargins: PlatformEdgeInsetsBridge? = nil
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromSwift(_ pigeonVar_Class: PlatformMapConfiguration?) -> PlatformMapConfigurationBridge? {
@@ -2277,6 +2379,7 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
       pointOfInterestFilter: PlatformPointOfInterestFilterBridge.fromSwift(pigeonVar_Class!.pointOfInterestFilter),
       cameraZoomRange: PlatformCameraZoomRangeBridge.fromSwift(pigeonVar_Class!.cameraZoomRange),
       cameraBoundary: PlatformCoordinateRegionBridge.fromSwift(pigeonVar_Class!.cameraBoundary),
+      layoutMargins: PlatformEdgeInsetsBridge.fromSwift(pigeonVar_Class!.layoutMargins),
     )
   }
   func toSwift() -> PlatformMapConfiguration {
@@ -2299,6 +2402,7 @@ struct PlatformMapConfiguration: Hashable, CustomStringConvertible {
       pointOfInterestFilter: MessagesPigeonInternal.isNullish(pointOfInterestFilter) ? nil : pointOfInterestFilter!.toSwift(),
       cameraZoomRange: MessagesPigeonInternal.isNullish(cameraZoomRange) ? nil : cameraZoomRange!.toSwift(),
       cameraBoundary: MessagesPigeonInternal.isNullish(cameraBoundary) ? nil : cameraBoundary!.toSwift(),
+      layoutMargins: MessagesPigeonInternal.isNullish(layoutMargins) ? nil : layoutMargins!.toSwift(),
     )
   }
 }
@@ -2686,6 +2790,8 @@ private class _PigeonFfiCodec {
         return (value! as! PlatformMapCameraBridge).toSwift();
               } else if (value is PlatformPointBridge) {
         return (value! as! PlatformPointBridge).toSwift();
+              } else if (value is PlatformEdgeInsetsBridge) {
+        return (value! as! PlatformEdgeInsetsBridge).toSwift();
               } else if (value is PlatformAnnotationIconBridge) {
         return (value! as! PlatformAnnotationIconBridge).toSwift();
               } else if (value is PlatformAnnotationBridge) {
@@ -2799,6 +2905,8 @@ private class _PigeonFfiCodec {
         return PlatformMapCameraBridge.fromSwift(value as? PlatformMapCamera);
               } else if (value is PlatformPoint) {
         return PlatformPointBridge.fromSwift(value as? PlatformPoint);
+              } else if (value is PlatformEdgeInsets) {
+        return PlatformEdgeInsetsBridge.fromSwift(value as? PlatformEdgeInsets);
               } else if (value is PlatformAnnotationIcon) {
         return PlatformAnnotationIconBridge.fromSwift(value as? PlatformAnnotationIcon);
               } else if (value is PlatformAnnotation) {
@@ -3175,6 +3283,15 @@ private struct MessagesPigeonInteropWriter {
     writeValue(value.y)
   }
 
+  mutating func writePlatformEdgeInsets(_ value: PlatformEdgeInsets) {
+    writeByte(MessagesPigeonInteropCodec.typeList)
+    writeSize(4)
+    writeValue(value.top)
+    writeValue(value.left)
+    writeValue(value.bottom)
+    writeValue(value.right)
+  }
+
   mutating func writePlatformAnnotationIcon(_ value: PlatformAnnotationIcon) {
     writeByte(MessagesPigeonInteropCodec.typeList)
     writeSize(7)
@@ -3282,7 +3399,7 @@ private struct MessagesPigeonInteropWriter {
 
   mutating func writePlatformMapConfiguration(_ value: PlatformMapConfiguration) {
     writeByte(MessagesPigeonInteropCodec.typeList)
-    writeSize(18)
+    writeSize(19)
     writeValue(value.kind)
     writeValue(value.emphasisStyle)
     writeValue(value.elevationStyle)
@@ -3301,6 +3418,7 @@ private struct MessagesPigeonInteropWriter {
     writeValue(value.pointOfInterestFilter)
     writeValue(value.cameraZoomRange)
     writeValue(value.cameraBoundary)
+    writeValue(value.layoutMargins)
   }
 
   mutating func writePlatformSnapshotOptions(_ value: PlatformSnapshotOptions) {
@@ -3417,63 +3535,68 @@ private struct MessagesPigeonInteropWriter {
       writePlatformPoint((value as! PlatformPoint))
       return true
     }
-    if valueType == PlatformAnnotationIcon.self {
+    if valueType == PlatformEdgeInsets.self {
       writeByte(146)
+      writePlatformEdgeInsets((value as! PlatformEdgeInsets))
+      return true
+    }
+    if valueType == PlatformAnnotationIcon.self {
+      writeByte(147)
       writePlatformAnnotationIcon((value as! PlatformAnnotationIcon))
       return true
     }
     if valueType == PlatformAnnotation.self {
-      writeByte(147)
+      writeByte(148)
       writePlatformAnnotation((value as! PlatformAnnotation))
       return true
     }
     if valueType == PlatformPolyline.self {
-      writeByte(148)
+      writeByte(149)
       writePlatformPolyline((value as! PlatformPolyline))
       return true
     }
     if valueType == PlatformPolygon.self {
-      writeByte(149)
+      writeByte(150)
       writePlatformPolygon((value as! PlatformPolygon))
       return true
     }
     if valueType == PlatformCircle.self {
-      writeByte(150)
+      writeByte(151)
       writePlatformCircle((value as! PlatformCircle))
       return true
     }
     if valueType == PlatformTileOverlay.self {
-      writeByte(151)
+      writeByte(152)
       writePlatformTileOverlay((value as! PlatformTileOverlay))
       return true
     }
     if valueType == PlatformPointOfInterestFilter.self {
-      writeByte(152)
+      writeByte(153)
       writePlatformPointOfInterestFilter((value as! PlatformPointOfInterestFilter))
       return true
     }
     if valueType == PlatformCameraZoomRange.self {
-      writeByte(153)
+      writeByte(154)
       writePlatformCameraZoomRange((value as! PlatformCameraZoomRange))
       return true
     }
     if valueType == PlatformMapConfiguration.self {
-      writeByte(154)
+      writeByte(155)
       writePlatformMapConfiguration((value as! PlatformMapConfiguration))
       return true
     }
     if valueType == PlatformSnapshotOptions.self {
-      writeByte(155)
+      writeByte(156)
       writePlatformSnapshotOptions((value as! PlatformSnapshotOptions))
       return true
     }
     if valueType == PlatformMapViewCreationParams.self {
-      writeByte(156)
+      writeByte(157)
       writePlatformMapViewCreationParams((value as! PlatformMapViewCreationParams))
       return true
     }
     if valueType == PlatformMapFeature.self {
-      writeByte(157)
+      writeByte(158)
       writePlatformMapFeature((value as! PlatformMapFeature))
       return true
     }
@@ -3566,63 +3689,68 @@ private struct MessagesPigeonInteropWriter {
       writePlatformPoint(value)
       return true
     }
-    if let value = value as? PlatformAnnotationIcon {
+    if let value = value as? PlatformEdgeInsets {
       writeByte(146)
+      writePlatformEdgeInsets(value)
+      return true
+    }
+    if let value = value as? PlatformAnnotationIcon {
+      writeByte(147)
       writePlatformAnnotationIcon(value)
       return true
     }
     if let value = value as? PlatformAnnotation {
-      writeByte(147)
+      writeByte(148)
       writePlatformAnnotation(value)
       return true
     }
     if let value = value as? PlatformPolyline {
-      writeByte(148)
+      writeByte(149)
       writePlatformPolyline(value)
       return true
     }
     if let value = value as? PlatformPolygon {
-      writeByte(149)
+      writeByte(150)
       writePlatformPolygon(value)
       return true
     }
     if let value = value as? PlatformCircle {
-      writeByte(150)
+      writeByte(151)
       writePlatformCircle(value)
       return true
     }
     if let value = value as? PlatformTileOverlay {
-      writeByte(151)
+      writeByte(152)
       writePlatformTileOverlay(value)
       return true
     }
     if let value = value as? PlatformPointOfInterestFilter {
-      writeByte(152)
+      writeByte(153)
       writePlatformPointOfInterestFilter(value)
       return true
     }
     if let value = value as? PlatformCameraZoomRange {
-      writeByte(153)
+      writeByte(154)
       writePlatformCameraZoomRange(value)
       return true
     }
     if let value = value as? PlatformMapConfiguration {
-      writeByte(154)
+      writeByte(155)
       writePlatformMapConfiguration(value)
       return true
     }
     if let value = value as? PlatformSnapshotOptions {
-      writeByte(155)
+      writeByte(156)
       writePlatformSnapshotOptions(value)
       return true
     }
     if let value = value as? PlatformMapViewCreationParams {
-      writeByte(156)
+      writeByte(157)
       writePlatformMapViewCreationParams(value)
       return true
     }
     if let value = value as? PlatformMapFeature {
-      writeByte(157)
+      writeByte(158)
       writePlatformMapFeature(value)
       return true
     }
@@ -3890,6 +4018,16 @@ private struct MessagesPigeonInteropReader {
     )
   }
 
+  mutating func readPlatformEdgeInsets() -> PlatformEdgeInsets {
+    readListHeader()
+    return PlatformEdgeInsets(
+      top: read(Double.self),
+      left: read(Double.self),
+      bottom: read(Double.self),
+      right: read(Double.self)
+    )
+  }
+
   mutating func readPlatformAnnotationIcon() -> PlatformAnnotationIcon {
     readListHeader()
     return PlatformAnnotationIcon(
@@ -4023,7 +4161,8 @@ private struct MessagesPigeonInteropReader {
       selectableMapFeatures: read([PlatformMapFeatureOptions].self),
       pointOfInterestFilter: read(PlatformPointOfInterestFilter?.self),
       cameraZoomRange: read(PlatformCameraZoomRange?.self),
-      cameraBoundary: read(PlatformCoordinateRegion?.self)
+      cameraBoundary: read(PlatformCoordinateRegion?.self),
+      layoutMargins: read(PlatformEdgeInsets?.self)
     )
   }
 
@@ -4107,28 +4246,30 @@ private struct MessagesPigeonInteropReader {
     case 145:
       return readPlatformPoint()
     case 146:
-      return readPlatformAnnotationIcon()
+      return readPlatformEdgeInsets()
     case 147:
-      return readPlatformAnnotation()
+      return readPlatformAnnotationIcon()
     case 148:
-      return readPlatformPolyline()
+      return readPlatformAnnotation()
     case 149:
-      return readPlatformPolygon()
+      return readPlatformPolyline()
     case 150:
-      return readPlatformCircle()
+      return readPlatformPolygon()
     case 151:
-      return readPlatformTileOverlay()
+      return readPlatformCircle()
     case 152:
-      return readPlatformPointOfInterestFilter()
+      return readPlatformTileOverlay()
     case 153:
-      return readPlatformCameraZoomRange()
+      return readPlatformPointOfInterestFilter()
     case 154:
-      return readPlatformMapConfiguration()
+      return readPlatformCameraZoomRange()
     case 155:
-      return readPlatformSnapshotOptions()
+      return readPlatformMapConfiguration()
     case 156:
-      return readPlatformMapViewCreationParams()
+      return readPlatformSnapshotOptions()
     case 157:
+      return readPlatformMapViewCreationParams()
+    case 158:
       return readPlatformMapFeature()
     default:
       preconditionFailure("Unsupported type: \(type)")

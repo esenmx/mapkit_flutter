@@ -47,6 +47,7 @@ void main() {
     bool showsUserLocation = false,
     MKCameraZoomRange cameraZoomRange = .unbounded,
     Set<MKMapFeatureOptions> selectableMapFeatures = const {},
+    EdgeInsets? layoutMargins,
     void Function(MKMapViewController)? onMapCreated,
     VoidCallback? onCameraMoveStarted,
     ValueChanged<MKMapCamera>? onCameraMove,
@@ -68,6 +69,7 @@ void main() {
       showsUserLocation: showsUserLocation,
       cameraZoomRange: cameraZoomRange,
       selectableMapFeatures: selectableMapFeatures,
+      layoutMargins: layoutMargins,
       onMapCreated: onMapCreated,
       onCameraMoveStarted: onCameraMoveStarted,
       onCameraMove: onCameraMove,
@@ -142,6 +144,21 @@ void main() {
           )
           .isNull;
       check(config.cameraBoundary).isNull;
+      check(config.layoutMargins).isNull;
+    });
+
+    testWidgets('sends layoutMargins when provided', (tester) async {
+      await tester.pumpWidget(
+        map(layoutMargins: const .fromLTRB(8, 16, 12, 240)),
+      );
+      await tester.pump();
+
+      final config = host.initializeParams().configuration;
+      check(config.layoutMargins).isNotNull()
+        ..has('top', (m) => m.top).equals(16)
+        ..has('left', (m) => m.left).equals(8)
+        ..has('bottom', (m) => m.bottom).equals(240)
+        ..has('right', (m) => m.right).equals(12);
     });
 
     testWidgets('flattens hybrid and imagery configurations', (tester) async {
@@ -380,6 +397,42 @@ void main() {
       await tester.pump();
 
       check(host.callNames).deepEquals(['initialize']);
+    });
+
+    testWidgets('updates and clears layoutMargins on rebuild', (tester) async {
+      await tester.pumpWidget(map());
+      await tester.pump();
+
+      await tester.pumpWidget(map(layoutMargins: const .only(bottom: 240)));
+      await tester.pump();
+
+      host.expectCalls(['initialize', 'updateMapConfiguration']);
+      final setConfig = host.calls.expectLastArgs<PlatformMapConfiguration>(
+        'updateMapConfiguration',
+      );
+      check(setConfig.layoutMargins).isNotNull()
+        ..has('top', (m) => m.top).equals(0)
+        ..has('left', (m) => m.left).equals(0)
+        ..has('bottom', (m) => m.bottom).equals(240)
+        ..has('right', (m) => m.right).equals(0);
+
+      // Identical layoutMargins skips native update.
+      await tester.pumpWidget(map(layoutMargins: const .only(bottom: 240)));
+      await tester.pump();
+      host.expectCalls(['initialize', 'updateMapConfiguration']);
+
+      // Clearing back to null sends null so native restores UIKit defaults.
+      await tester.pumpWidget(map());
+      await tester.pump();
+      host.expectCalls([
+        'initialize',
+        'updateMapConfiguration',
+        'updateMapConfiguration',
+      ]);
+      final clearedConfig = host.calls.expectLastArgs<PlatformMapConfiguration>(
+        'updateMapConfiguration',
+      );
+      check(clearedConfig.layoutMargins).isNull;
     });
   });
 
@@ -1082,6 +1135,11 @@ void main() {
         insetsLayoutMarginsFromSafeArea: false,
         debugControllerFactory: f,
       ),
+      'layoutMargins': (f) => .new(
+        initialCamera: sampleCamera,
+        layoutMargins: const .only(bottom: 240),
+        debugControllerFactory: f,
+      ),
       'calloutConsumesTapEvents': (f) => .new(
         initialCamera: sampleCamera,
         annotations: {
@@ -1133,6 +1191,57 @@ void main() {
       );
       check(tester.takeException()).isA<MapKitUnsupportedPlatformException>();
     }, variant: TargetPlatformVariant.only(.macOS));
+
+    testWidgets('EdgeInsets.zero layoutMargins also throws on macOS', (
+      tester,
+    ) async {
+      await tester.pumpWidget(map(layoutMargins: .zero));
+      check(tester.takeException())
+          .isA<MapKitUnsupportedPlatformException>()
+          .has('feature', (e) => e.feature)
+          .isNotNull()
+          .contains('layoutMargins');
+      check(host.callNames).isEmpty;
+    }, variant: TargetPlatformVariant.only(.macOS));
+  });
+
+  group('layoutMargins validation', () {
+    final invalid = <String, EdgeInsets>{
+      'negative top': const .only(top: -1),
+      'negative left': const .only(left: -0.5),
+      'negative bottom': const .only(bottom: -1),
+      'negative right': const .only(right: -1),
+      'NaN': const .only(top: .nan),
+      'infinity': const .only(bottom: .infinity),
+    };
+
+    for (final MapEntry(:key, :value) in invalid.entries) {
+      testWidgets('rejects $key on build', (tester) async {
+        await tester.pumpWidget(map(layoutMargins: value));
+        check(tester.takeException()).isA<ArgumentError>();
+        check(host.callNames).isEmpty;
+      });
+    }
+
+    testWidgets('rejects invalid layoutMargins on update', (tester) async {
+      await tester.pumpWidget(map(layoutMargins: .zero));
+      check(tester.takeException()).isNull;
+
+      await tester.pumpWidget(map(layoutMargins: const .only(bottom: -1)));
+      check(tester.takeException()).isA<ArgumentError>();
+    });
+
+    testWidgets('accepts EdgeInsets.zero', (tester) async {
+      await tester.pumpWidget(map(layoutMargins: .zero));
+      await tester.pump();
+      check(tester.takeException()).isNull;
+      final config = host.initializeParams().configuration;
+      check(config.layoutMargins).isNotNull()
+        ..has('top', (m) => m.top).equals(0)
+        ..has('left', (m) => m.left).equals(0)
+        ..has('bottom', (m) => m.bottom).equals(0)
+        ..has('right', (m) => m.right).equals(0);
+    });
   });
 }
 

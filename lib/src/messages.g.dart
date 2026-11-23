@@ -555,6 +555,66 @@ class PlatformPoint {
   }
 }
 
+/// Edge insets in logical points (`UIEdgeInsets`).
+class PlatformEdgeInsets {
+  PlatformEdgeInsets({
+    required this.top,
+    required this.left,
+    required this.bottom,
+    required this.right,
+  });
+
+  double top;
+
+  double left;
+
+  double bottom;
+
+  double right;
+
+  List<Object?> _toList() {
+    return <Object?>[top, left, bottom, right];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PlatformEdgeInsets decode(Object result) {
+    result as List<Object?>;
+    return PlatformEdgeInsets(
+      top: result[0]! as double,
+      left: result[1]! as double,
+      bottom: result[2]! as double,
+      right: result[3]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PlatformEdgeInsets || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(top, other.top) &&
+        _deepEquals(left, other.left) &&
+        _deepEquals(bottom, other.bottom) &&
+        _deepEquals(right, other.right);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PlatformEdgeInsets(top: $top, left: $left, bottom: $bottom, right: $right)';
+  }
+}
+
 /// Discriminated union of the `MKAnnotationIcon` variants. Only the fields
 /// relevant to [type] are non-null.
 class PlatformAnnotationIcon {
@@ -1299,6 +1359,7 @@ class PlatformMapConfiguration {
     this.pointOfInterestFilter,
     this.cameraZoomRange,
     this.cameraBoundary,
+    this.layoutMargins,
   });
 
   PlatformMapKind kind;
@@ -1337,6 +1398,8 @@ class PlatformMapConfiguration {
 
   PlatformCoordinateRegion? cameraBoundary;
 
+  PlatformEdgeInsets? layoutMargins;
+
   List<Object?> _toList() {
     return <Object?>[
       kind,
@@ -1357,6 +1420,7 @@ class PlatformMapConfiguration {
       pointOfInterestFilter,
       cameraZoomRange,
       cameraBoundary,
+      layoutMargins,
     ];
   }
 
@@ -1386,6 +1450,7 @@ class PlatformMapConfiguration {
       pointOfInterestFilter: result[15] as PlatformPointOfInterestFilter?,
       cameraZoomRange: result[16] as PlatformCameraZoomRange?,
       cameraBoundary: result[17] as PlatformCoordinateRegion?,
+      layoutMargins: result[18] as PlatformEdgeInsets?,
     );
   }
 
@@ -1419,7 +1484,8 @@ class PlatformMapConfiguration {
         _deepEquals(selectableMapFeatures, other.selectableMapFeatures) &&
         _deepEquals(pointOfInterestFilter, other.pointOfInterestFilter) &&
         _deepEquals(cameraZoomRange, other.cameraZoomRange) &&
-        _deepEquals(cameraBoundary, other.cameraBoundary);
+        _deepEquals(cameraBoundary, other.cameraBoundary) &&
+        _deepEquals(layoutMargins, other.layoutMargins);
   }
 
   @override
@@ -1428,7 +1494,7 @@ class PlatformMapConfiguration {
 
   @override
   String toString() {
-    return 'PlatformMapConfiguration(kind: $kind, emphasisStyle: $emphasisStyle, elevationStyle: $elevationStyle, showsTraffic: $showsTraffic, showsCompass: $showsCompass, showsScale: $showsScale, showsUserLocation: $showsUserLocation, showsUserTrackingButton: $showsUserTrackingButton, userTrackingMode: $userTrackingMode, insetsLayoutMarginsFromSafeArea: $insetsLayoutMarginsFromSafeArea, isRotateEnabled: $isRotateEnabled, isScrollEnabled: $isScrollEnabled, isZoomEnabled: $isZoomEnabled, isPitchEnabled: $isPitchEnabled, selectableMapFeatures: $selectableMapFeatures, pointOfInterestFilter: $pointOfInterestFilter, cameraZoomRange: $cameraZoomRange, cameraBoundary: $cameraBoundary)';
+    return 'PlatformMapConfiguration(kind: $kind, emphasisStyle: $emphasisStyle, elevationStyle: $elevationStyle, showsTraffic: $showsTraffic, showsCompass: $showsCompass, showsScale: $showsScale, showsUserLocation: $showsUserLocation, showsUserTrackingButton: $showsUserTrackingButton, userTrackingMode: $userTrackingMode, insetsLayoutMarginsFromSafeArea: $insetsLayoutMarginsFromSafeArea, isRotateEnabled: $isRotateEnabled, isScrollEnabled: $isScrollEnabled, isZoomEnabled: $isZoomEnabled, isPitchEnabled: $isPitchEnabled, selectableMapFeatures: $selectableMapFeatures, pointOfInterestFilter: $pointOfInterestFilter, cameraZoomRange: $cameraZoomRange, cameraBoundary: $cameraBoundary, layoutMargins: $layoutMargins)';
   }
 }
 
@@ -1685,41 +1751,44 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PlatformPoint) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformAnnotationIcon) {
+    } else if (value is PlatformEdgeInsets) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformAnnotation) {
+    } else if (value is PlatformAnnotationIcon) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolyline) {
+    } else if (value is PlatformAnnotation) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPolygon) {
+    } else if (value is PlatformPolyline) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCircle) {
+    } else if (value is PlatformPolygon) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformTileOverlay) {
+    } else if (value is PlatformCircle) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPointOfInterestFilter) {
+    } else if (value is PlatformTileOverlay) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformCameraZoomRange) {
+    } else if (value is PlatformPointOfInterestFilter) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapConfiguration) {
+    } else if (value is PlatformCameraZoomRange) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformSnapshotOptions) {
+    } else if (value is PlatformMapConfiguration) {
       buffer.putUint8(155);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapViewCreationParams) {
+    } else if (value is PlatformSnapshotOptions) {
       buffer.putUint8(156);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformMapFeature) {
+    } else if (value is PlatformMapViewCreationParams) {
       buffer.putUint8(157);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformMapFeature) {
+      buffer.putUint8(158);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1778,28 +1847,30 @@ class _PigeonCodec extends StandardMessageCodec {
       case 145:
         return PlatformPoint.decode(readValue(buffer)!);
       case 146:
-        return PlatformAnnotationIcon.decode(readValue(buffer)!);
+        return PlatformEdgeInsets.decode(readValue(buffer)!);
       case 147:
-        return PlatformAnnotation.decode(readValue(buffer)!);
+        return PlatformAnnotationIcon.decode(readValue(buffer)!);
       case 148:
-        return PlatformPolyline.decode(readValue(buffer)!);
+        return PlatformAnnotation.decode(readValue(buffer)!);
       case 149:
-        return PlatformPolygon.decode(readValue(buffer)!);
+        return PlatformPolyline.decode(readValue(buffer)!);
       case 150:
-        return PlatformCircle.decode(readValue(buffer)!);
+        return PlatformPolygon.decode(readValue(buffer)!);
       case 151:
-        return PlatformTileOverlay.decode(readValue(buffer)!);
+        return PlatformCircle.decode(readValue(buffer)!);
       case 152:
-        return PlatformPointOfInterestFilter.decode(readValue(buffer)!);
+        return PlatformTileOverlay.decode(readValue(buffer)!);
       case 153:
-        return PlatformCameraZoomRange.decode(readValue(buffer)!);
+        return PlatformPointOfInterestFilter.decode(readValue(buffer)!);
       case 154:
-        return PlatformMapConfiguration.decode(readValue(buffer)!);
+        return PlatformCameraZoomRange.decode(readValue(buffer)!);
       case 155:
-        return PlatformSnapshotOptions.decode(readValue(buffer)!);
+        return PlatformMapConfiguration.decode(readValue(buffer)!);
       case 156:
-        return PlatformMapViewCreationParams.decode(readValue(buffer)!);
+        return PlatformSnapshotOptions.decode(readValue(buffer)!);
       case 157:
+        return PlatformMapViewCreationParams.decode(readValue(buffer)!);
+      case 158:
         return PlatformMapFeature.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);

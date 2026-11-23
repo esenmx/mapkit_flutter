@@ -43,6 +43,7 @@ Future<void> main(List<String> args) async {
     'PlatformCoordinateRegionBridge',
     'PlatformMapCameraBridge',
     'PlatformPointBridge',
+    'PlatformEdgeInsetsBridge',
     'PlatformAnnotationIconBridge',
     'PlatformAnnotationBridge',
     'PlatformPolylineBridge',

@@ -140,7 +140,7 @@ package:mapkit_flutter/mapkit_flutter.dart:
     toPlatform (method: PlatformSnapshotOptions Function(), internal)
     toString (method: String Function())
   MKMapView (class extends StatefulWidget, final):
-    new (const constructor: MKMapView Function({Set<MKPointAnnotation> annotations, MKCoordinateRegion? cameraBoundary, MKCameraZoomRange cameraZoomRange, Set<MKCircle> circles, MKMapViewControllerImpl Function(MKMapViewEventSink)? debugControllerFactory, Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers, required MKMapCamera initialCamera, bool insetsLayoutMarginsFromSafeArea, bool isPitchEnabled, bool isRotateEnabled, bool isScrollEnabled, bool isZoomEnabled, Key? key, void Function()? onCameraIdle, void Function(MKMapCamera)? onCameraMove, void Function()? onCameraMoveStarted, void Function(String)? onDidFailLoadingMap, void Function(String)? onDidFailToLocateUser, void Function(CLLocationCoordinate2D)? onLongPress, void Function(MKMapViewController)? onMapCreated, void Function(MKMapFeature)? onMapFeatureSelected, void Function(CLLocationCoordinate2D)? onTap, void Function(PlatformUserTrackingMode)? onUserTrackingModeChanged, Set<MKPolygon> polygons, Set<MKPolyline> polylines, MKMapConfiguration preferredConfiguration, Set<PlatformMapFeatureOptions> selectableMapFeatures, bool showsCompass, bool showsScale, bool showsUserLocation, bool showsUserTrackingButton, PlatformUserTrackingMode userTrackingMode}))
+    new (const constructor: MKMapView Function({Set<MKPointAnnotation> annotations, MKCoordinateRegion? cameraBoundary, MKCameraZoomRange cameraZoomRange, Set<MKCircle> circles, MKMapViewControllerImpl Function(MKMapViewEventSink)? debugControllerFactory, Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers, required MKMapCamera initialCamera, bool insetsLayoutMarginsFromSafeArea, bool isPitchEnabled, bool isRotateEnabled, bool isScrollEnabled, bool isZoomEnabled, Key? key, EdgeInsets? layoutMargins, void Function()? onCameraIdle, void Function(MKMapCamera)? onCameraMove, void Function()? onCameraMoveStarted, void Function(String)? onDidFailLoadingMap, void Function(String)? onDidFailToLocateUser, void Function(CLLocationCoordinate2D)? onLongPress, void Function(MKMapViewController)? onMapCreated, void Function(MKMapFeature)? onMapFeatureSelected, void Function(CLLocationCoordinate2D)? onTap, void Function(PlatformUserTrackingMode)? onUserTrackingModeChanged, Set<MKPolygon> polygons, Set<MKPolyline> polylines, MKMapConfiguration preferredConfiguration, Set<PlatformMapFeatureOptions> selectableMapFeatures, bool showsCompass, bool showsScale, bool showsUserLocation, bool showsUserTrackingButton, PlatformUserTrackingMode userTrackingMode}))
     annotations (getter: Set<MKPointAnnotation>)
     cameraBoundary (getter: MKCoordinateRegion?)
     cameraZoomRange (getter: MKCameraZoomRange)
@@ -153,6 +153,7 @@ package:mapkit_flutter/mapkit_flutter.dart:
     isRotateEnabled (getter: bool)
     isScrollEnabled (getter: bool)
     isZoomEnabled (getter: bool)
+    layoutMargins (getter: EdgeInsets?)
     onCameraIdle (getter: void Function()?)
     onCameraMove (getter: void Function(MKMapCamera)?)
     onCameraMoveStarted (getter: void Function()?)
@@ -378,6 +379,8 @@ package:flutter/src/foundation/platform.dart:
   TargetPlatform (referenced)
 package:flutter/src/gestures/recognizer.dart:
   OneSequenceGestureRecognizer (referenced)
+package:flutter/src/painting/edge_insets.dart:
+  EdgeInsets (referenced)
 package:flutter/src/services/asset_bundle.dart:
   AssetBundle (referenced)
 package:flutter/src/services/message_codec.dart:

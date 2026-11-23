@@ -133,6 +133,10 @@ class _PigeonFfiCodec {
       return PigeonInternalPlatformPointNativeInterop.fromFfi(
         ffi_bridge.PlatformPointBridge.as(value),
       );
+    } else if (ffi_bridge.PlatformEdgeInsetsBridge.isA(value)) {
+      return PigeonInternalPlatformEdgeInsetsNativeInterop.fromFfi(
+        ffi_bridge.PlatformEdgeInsetsBridge.as(value),
+      );
     } else if (ffi_bridge.PlatformAnnotationIconBridge.isA(value)) {
       return PigeonInternalPlatformAnnotationIconNativeInterop.fromFfi(
         ffi_bridge.PlatformAnnotationIconBridge.as(value),
@@ -336,6 +340,8 @@ class _PigeonFfiCodec {
     } else if (value is PlatformMapCamera) {
       return value.toFfi() as T;
     } else if (value is PlatformPoint) {
+      return value.toFfi() as T;
+    } else if (value is PlatformEdgeInsets) {
       return value.toFfi() as T;
     } else if (value is PlatformAnnotationIcon) {
       return value.toFfi() as T;
@@ -921,6 +927,30 @@ extension PigeonInternalPlatformPointNativeInterop on PlatformPoint {
   }
 }
 
+extension PigeonInternalPlatformEdgeInsetsNativeInterop on PlatformEdgeInsets {
+  ffi_bridge.PlatformEdgeInsetsBridge toFfi() {
+    return ffi_bridge.PlatformEdgeInsetsBridge.alloc().initWithTop(
+      top,
+      left: left,
+      bottom: bottom,
+      right: right,
+    );
+  }
+
+  static PlatformEdgeInsets? fromFfi(
+    ffi_bridge.PlatformEdgeInsetsBridge? ffiClass,
+  ) {
+    return ffiClass == null
+        ? null
+        : PlatformEdgeInsets(
+            top: ffiClass.top,
+            left: ffiClass.left,
+            bottom: ffiClass.bottom,
+            right: ffiClass.right,
+          );
+  }
+}
+
 extension PigeonInternalPlatformAnnotationIconNativeInterop
     on PlatformAnnotationIcon {
   ffi_bridge.PlatformAnnotationIconBridge toFfi() {
@@ -1251,6 +1281,7 @@ extension PigeonInternalPlatformMapConfigurationNativeInterop
       pointOfInterestFilter: pointOfInterestFilter?.toFfi(),
       cameraZoomRange: cameraZoomRange?.toFfi(),
       cameraBoundary: cameraBoundary?.toFfi(),
+      layoutMargins: layoutMargins?.toFfi(),
     );
   }
 
@@ -1296,6 +1327,10 @@ extension PigeonInternalPlatformMapConfigurationNativeInterop
             cameraBoundary:
                 PigeonInternalPlatformCoordinateRegionNativeInterop.fromFfi(
                   ffiClass.cameraBoundary,
+                ),
+            layoutMargins:
+                PigeonInternalPlatformEdgeInsetsNativeInterop.fromFfi(
+                  ffiClass.layoutMargins,
                 ),
           );
   }

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`MKMapView.layoutMargins`** (`EdgeInsets?`, iOS only) — mirrors
+  `UIView.layoutMargins` so MapKit keeps its controls, legal attribution and
+  camera center clear of sheets or floating chrome. Combines with safe area
+  insets unless `insetsLayoutMarginsFromSafeArea: false`; clearing back to
+  `null` restores UIKit's default margins. Throws `ArgumentError` on negative or
+  non-finite edges, and `MapKitUnsupportedPlatformException` on macOS.
+
 ## 0.6.0 - 2026-11-19
 
 ### Breaking

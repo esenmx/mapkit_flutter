@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:mapkit_flutter/src/_internal/validate.dart';
 import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart';
 import 'package:mapkit_flutter/src/exceptions.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
@@ -29,7 +30,7 @@ import 'package:mapkit_flutter/src/mk_polyline.dart';
 /// included, throws a [MapKitUnsupportedPlatformException] rather than
 /// degrading silently; so does an iOS-only setting on macOS
 /// (`followWithHeading`, [selectableMapFeatures], [onMapFeatureSelected],
-/// `insetsLayoutMarginsFromSafeArea: false`, an annotation's
+/// `insetsLayoutMarginsFromSafeArea: false`, [layoutMargins], an annotation's
 /// `calloutConsumesTapEvents`).
 ///
 /// Ids must be unique per kind: two annotations (or two polylines, …)
@@ -105,6 +106,19 @@ final class const MKMapView({
   /// (`UIView.insetsLayoutMarginsFromSafeArea`). iOS only — must stay `true`
   /// on macOS.
   final bool insetsLayoutMarginsFromSafeArea = true,
+
+  /// Margins from the map's edges in logical points (`UIView.layoutMargins`).
+  ///
+  /// MapKit keeps its controls, legal attribution and camera center inside
+  /// these margins — useful when a sheet or floating chrome covers part of
+  /// the map. Combined with safe area insets unless
+  /// [insetsLayoutMarginsFromSafeArea] is `false`. When `null` (the default),
+  /// UIKit's default margins are used.
+  ///
+  /// iOS only — must stay `null` on macOS. Every edge must be finite and
+  /// `>= 0`; otherwise building or updating the widget throws an
+  /// [ArgumentError].
+  final EdgeInsets? layoutMargins,
 
   /// Point annotations displayed on the map, diffed by [MKAnnotationId].
   final Set<MKPointAnnotation> annotations = const {},
@@ -207,8 +221,17 @@ final class _MKMapViewState extends State<MKMapView>
     _checkUniqueIds('polylines', w.polylines, (p) => p.id.value);
     _checkUniqueIds('polygons', w.polygons, (p) => p.id.value);
     _checkUniqueIds('circles', w.circles, (c) => c.id.value);
+    _checkLayoutMargins(w.layoutMargins);
     if (!kIsWeb && defaultTargetPlatform == .macOS) _checkMacOSSupport(w);
     _checkCallbacksCanFire(w);
+  }
+
+  static void _checkLayoutMargins(EdgeInsets? margins) {
+    if (margins == null) return;
+    checkNonNegative(margins.top, 'layoutMargins.top');
+    checkNonNegative(margins.left, 'layoutMargins.left');
+    checkNonNegative(margins.bottom, 'layoutMargins.bottom');
+    checkNonNegative(margins.right, 'layoutMargins.right');
   }
 
   static void _checkCallbacksCanFire(MKMapView w) {
@@ -251,6 +274,9 @@ final class _MKMapViewState extends State<MKMapView>
     }
     if (!w.insetsLayoutMarginsFromSafeArea) {
       unsupported('MKMapView.insetsLayoutMarginsFromSafeArea: false');
+    }
+    if (w.layoutMargins != null) {
+      unsupported('MKMapView.layoutMargins');
     }
     for (final a in w.annotations) {
       if (a.calloutConsumesTapEvents) {
@@ -339,6 +365,15 @@ final class _MKMapViewState extends State<MKMapView>
       pointOfInterestFilter: pointOfInterestFilter,
       cameraZoomRange: widget.cameraZoomRange.toPlatform(),
       cameraBoundary: widget.cameraBoundary?.toPlatform(),
+      layoutMargins: switch (widget.layoutMargins) {
+        final EdgeInsets m => .new(
+          top: m.top,
+          left: m.left,
+          bottom: m.bottom,
+          right: m.right,
+        ),
+        null => null,
+      },
     );
   }
 
@@ -360,7 +395,8 @@ final class _MKMapViewState extends State<MKMapView>
       widget.cameraBoundary != old.cameraBoundary ||
       !setEquals(widget.selectableMapFeatures, sentSelectableMapFeatures) ||
       widget.insetsLayoutMarginsFromSafeArea !=
-          old.insetsLayoutMarginsFromSafeArea;
+          old.insetsLayoutMarginsFromSafeArea ||
+      widget.layoutMargins != old.layoutMargins;
 
   @override
   void didUpdateWidget(covariant MKMapView oldWidget) {

@@ -622,6 +622,19 @@ SWIFT_CLASS("_TtC14mapkit_flutter28PlatformCoordinateSpanBridge")
 + (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end
 
+/// Edge insets in logical points (<code>UIEdgeInsets</code>).
+/// Generated bridge class from Pigeon that moves data from Swift to Objective-C.
+SWIFT_CLASS("_TtC14mapkit_flutter24PlatformEdgeInsetsBridge")
+@interface PlatformEdgeInsetsBridge : NSObject
+- (nonnull instancetype)initWithTop:(double)top left:(double)left bottom:(double)bottom right:(double)right OBJC_DESIGNATED_INITIALIZER;
+@property (nonatomic) double top;
+@property (nonatomic) double left;
+@property (nonatomic) double bottom;
+@property (nonatomic) double right;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
 /// Stroke end-cap style for an <code>MKPolyline</code> (<code>CGLineCap</code>).
 /// See: https://developer.apple.com/documentation/coregraphics/cglinecap
 typedef SWIFT_ENUM(NSInteger, PlatformLineCap, closed) {
@@ -659,7 +672,7 @@ SWIFT_ENUM_FWD_DECL(NSInteger, PlatformUserTrackingMode)
 /// Generated bridge class from Pigeon that moves data from Swift to Objective-C.
 SWIFT_CLASS("_TtC14mapkit_flutter30PlatformMapConfigurationBridge")
 @interface PlatformMapConfigurationBridge : NSObject
-- (nonnull instancetype)initWithKind:(enum PlatformMapKind)kind emphasisStyle:(enum PlatformMapEmphasisStyle)emphasisStyle elevationStyle:(enum PlatformMapElevationStyle)elevationStyle showsTraffic:(BOOL)showsTraffic showsCompass:(BOOL)showsCompass showsScale:(BOOL)showsScale showsUserLocation:(BOOL)showsUserLocation showsUserTrackingButton:(BOOL)showsUserTrackingButton userTrackingMode:(enum PlatformUserTrackingMode)userTrackingMode insetsLayoutMarginsFromSafeArea:(BOOL)insetsLayoutMarginsFromSafeArea isRotateEnabled:(BOOL)isRotateEnabled isScrollEnabled:(BOOL)isScrollEnabled isZoomEnabled:(BOOL)isZoomEnabled isPitchEnabled:(BOOL)isPitchEnabled selectableMapFeatures:(NSArray<NSObject *> * _Nonnull)selectableMapFeatures pointOfInterestFilter:(PlatformPointOfInterestFilterBridge * _Nullable)pointOfInterestFilter cameraZoomRange:(PlatformCameraZoomRangeBridge * _Nullable)cameraZoomRange cameraBoundary:(PlatformCoordinateRegionBridge * _Nullable)cameraBoundary OBJC_DESIGNATED_INITIALIZER;
+- (nonnull instancetype)initWithKind:(enum PlatformMapKind)kind emphasisStyle:(enum PlatformMapEmphasisStyle)emphasisStyle elevationStyle:(enum PlatformMapElevationStyle)elevationStyle showsTraffic:(BOOL)showsTraffic showsCompass:(BOOL)showsCompass showsScale:(BOOL)showsScale showsUserLocation:(BOOL)showsUserLocation showsUserTrackingButton:(BOOL)showsUserTrackingButton userTrackingMode:(enum PlatformUserTrackingMode)userTrackingMode insetsLayoutMarginsFromSafeArea:(BOOL)insetsLayoutMarginsFromSafeArea isRotateEnabled:(BOOL)isRotateEnabled isScrollEnabled:(BOOL)isScrollEnabled isZoomEnabled:(BOOL)isZoomEnabled isPitchEnabled:(BOOL)isPitchEnabled selectableMapFeatures:(NSArray<NSObject *> * _Nonnull)selectableMapFeatures pointOfInterestFilter:(PlatformPointOfInterestFilterBridge * _Nullable)pointOfInterestFilter cameraZoomRange:(PlatformCameraZoomRangeBridge * _Nullable)cameraZoomRange cameraBoundary:(PlatformCoordinateRegionBridge * _Nullable)cameraBoundary layoutMargins:(PlatformEdgeInsetsBridge * _Nullable)layoutMargins OBJC_DESIGNATED_INITIALIZER;
 @property (nonatomic) enum PlatformMapKind kind;
 @property (nonatomic) enum PlatformMapEmphasisStyle emphasisStyle;
 @property (nonatomic) enum PlatformMapElevationStyle elevationStyle;
@@ -678,6 +691,7 @@ SWIFT_CLASS("_TtC14mapkit_flutter30PlatformMapConfigurationBridge")
 @property (nonatomic, strong) PlatformPointOfInterestFilterBridge * _Nullable pointOfInterestFilter;
 @property (nonatomic, strong) PlatformCameraZoomRangeBridge * _Nullable cameraZoomRange;
 @property (nonatomic, strong) PlatformCoordinateRegionBridge * _Nullable cameraBoundary;
+@property (nonatomic, strong) PlatformEdgeInsetsBridge * _Nullable layoutMargins;
 - (nonnull instancetype)init SWIFT_UNAVAILABLE;
 + (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end

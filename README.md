@@ -217,9 +217,10 @@ MKMapView campusMap({
       maxCenterCoordinateDistance: 100000,
     ),
     cameraBoundary: campus, // keeps the camera center inside
-    // iOS only: both throw on macOS.
+    // iOS only: throws on macOS.
     selectableMapFeatures: const {MKMapFeatureOptions.pointsOfInterest},
     onMapFeatureSelected: (feature) => debugPrint('Selected ${feature.title}'),
+    layoutMargins: const EdgeInsets.only(bottom: 240),
   );
 }
 ```
@@ -543,6 +544,7 @@ allows (180° latitude, 360° longitude).
 | Snapshot annotation/overlay compositing | ✓ | ✓ |
 | `selectableMapFeatures` + `onMapFeatureSelected` | ✓ | throws |
 | `insetsLayoutMarginsFromSafeArea: false` | ✓ | throws |
+| `layoutMargins` | ✓ | throws |
 | `openLookAround` | ✓ | throws `unsupported-platform` |
 | `showsUserTrackingButton` | ✓ | ✓ |
 | `onCameraMove` | continuous | continuous |
@@ -557,7 +559,8 @@ call instead: on macOS it fails with a `MapKitPlatformException` whose code is
 Misuse fails loudly, in debug and release alike, close to its cause:
 
 - **Invalid values** throw an `ArgumentError` from the constructor (see
-  [Values, ids and updates](#values-ids-and-updates)).
+  [Values, ids and updates](#values-ids-and-updates)), or when `MKMapView`
+  builds or updates with negative or non-finite `layoutMargins`.
 - **Callbacks that could never fire** throw an `ArgumentError`: `onTap` without
   `consumeTapEvents`; `onDragStart` / `onDragEnd` without `isDraggable`;
   `onCalloutTap` without `calloutConsumesTapEvents` or without a `title` or

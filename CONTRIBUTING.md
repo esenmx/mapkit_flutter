@@ -17,7 +17,7 @@
    ```
 
    The last command analyzes every `dart` code block in `README.md` and
-   `skills/*/SKILL.md` with the package's lints; a block preceded by
+   `skills/**/*.md` with the package's lints; a block preceded by
    `<!-- no-compile -->` is skipped.
 
 ## Native interop bindings

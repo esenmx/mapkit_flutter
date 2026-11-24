@@ -11,6 +11,12 @@
   `null` restores UIKit's default margins. Throws `ArgumentError` on negative or
   non-finite edges, and `MapKitUnsupportedPlatformException` on macOS.
 
+### Changed
+
+- The agent skill (`skills/mapkit-flutter-scaffold/SKILL.md`) is about a fifth
+  smaller, covers `layoutMargins` and lists every iOS-only setting, including an
+  annotation's `calloutConsumesTapEvents`.
+
 ## 0.6.0 - 2026-11-19
 
 ### Breaking

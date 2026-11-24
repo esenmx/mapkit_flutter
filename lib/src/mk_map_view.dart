@@ -365,15 +365,7 @@ final class _MKMapViewState extends State<MKMapView>
       pointOfInterestFilter: pointOfInterestFilter,
       cameraZoomRange: widget.cameraZoomRange.toPlatform(),
       cameraBoundary: widget.cameraBoundary?.toPlatform(),
-      layoutMargins: switch (widget.layoutMargins) {
-        final EdgeInsets m => .new(
-          top: m.top,
-          left: m.left,
-          bottom: m.bottom,
-          right: m.right,
-        ),
-        null => null,
-      },
+      layoutMargins: widget.layoutMargins?.toPlatform(),
     );
   }
 
@@ -495,6 +487,11 @@ final class _MKMapViewState extends State<MKMapView>
   @override
   void onDidFailToLocateUser(String error) =>
       widget.onDidFailToLocateUser?.call(error);
+}
+
+extension on EdgeInsets {
+  PlatformEdgeInsets toPlatform() =>
+      .new(top: top, left: left, bottom: bottom, right: right);
 }
 
 extension on MKMapConfiguration {

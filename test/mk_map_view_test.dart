@@ -403,7 +403,9 @@ void main() {
       await tester.pumpWidget(map());
       await tester.pump();
 
-      await tester.pumpWidget(map(layoutMargins: const .only(bottom: 240)));
+      await tester.pumpWidget(
+        map(layoutMargins: const .fromLTRB(1, 2, 3, 240)),
+      );
       await tester.pump();
 
       host.expectCalls(['initialize', 'updateMapConfiguration']);
@@ -411,13 +413,14 @@ void main() {
         'updateMapConfiguration',
       );
       check(setConfig.layoutMargins).isNotNull()
-        ..has('top', (m) => m.top).equals(0)
-        ..has('left', (m) => m.left).equals(0)
+        ..has('top', (m) => m.top).equals(2)
+        ..has('left', (m) => m.left).equals(1)
         ..has('bottom', (m) => m.bottom).equals(240)
-        ..has('right', (m) => m.right).equals(0);
+        ..has('right', (m) => m.right).equals(3);
 
-      // Identical layoutMargins skips native update.
-      await tester.pumpWidget(map(layoutMargins: const .only(bottom: 240)));
+      await tester.pumpWidget(
+        map(layoutMargins: const .fromLTRB(1, 2, 3, 240)),
+      );
       await tester.pump();
       host.expectCalls(['initialize', 'updateMapConfiguration']);
 
@@ -1206,19 +1209,22 @@ void main() {
   });
 
   group('layoutMargins validation', () {
-    final invalid = <String, EdgeInsets>{
-      'negative top': const .only(top: -1),
-      'negative left': const .only(left: -0.5),
-      'negative bottom': const .only(bottom: -1),
-      'negative right': const .only(right: -1),
-      'NaN': const .only(top: .nan),
-      'infinity': const .only(bottom: .infinity),
+    final invalid = <String, (String, EdgeInsets)>{
+      'negative top': ('layoutMargins.top', const .only(top: -1)),
+      'negative left': ('layoutMargins.left', const .only(left: -0.5)),
+      'negative bottom': ('layoutMargins.bottom', const .only(bottom: -1)),
+      'negative right': ('layoutMargins.right', const .only(right: -1)),
+      'NaN right': ('layoutMargins.right', const .only(right: .nan)),
+      'infinite left': ('layoutMargins.left', const .only(left: .infinity)),
     };
 
-    for (final MapEntry(:key, :value) in invalid.entries) {
+    for (final MapEntry(:key, value: (name, margins)) in invalid.entries) {
       testWidgets('rejects $key on build', (tester) async {
-        await tester.pumpWidget(map(layoutMargins: value));
-        check(tester.takeException()).isA<ArgumentError>();
+        await tester.pumpWidget(map(layoutMargins: margins));
+        check(tester.takeException())
+            .isA<ArgumentError>()
+            .has('name', (e) => e.name)
+            .equals(name);
         check(host.callNames).isEmpty;
       });
     }
@@ -1228,7 +1234,10 @@ void main() {
       check(tester.takeException()).isNull;
 
       await tester.pumpWidget(map(layoutMargins: const .only(bottom: -1)));
-      check(tester.takeException()).isA<ArgumentError>();
+      check(tester.takeException())
+          .isA<ArgumentError>()
+          .has('name', (e) => e.name)
+          .equals('layoutMargins.bottom');
     });
 
     testWidgets('accepts EdgeInsets.zero', (tester) async {

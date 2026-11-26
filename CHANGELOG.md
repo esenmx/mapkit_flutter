@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 - 2026-11-26
 
 ### Added
 
@@ -10,9 +10,18 @@
   insets unless `insetsLayoutMarginsFromSafeArea: false`; clearing back to
   `null` restores UIKit's default margins. Throws `ArgumentError` on negative or
   non-finite edges, and `MapKitUnsupportedPlatformException` on macOS.
+- The nine generated enums are exported under their `Platform` names
+  (`PlatformOverlayLevel`, `PlatformLineCap`, `PlatformUserTrackingMode`…)
+  beside the Apple-named aliases (`MKOverlayLevel`, `CGLineCap`,
+  `MKUserTrackingMode`…), so every type in a public signature can be named and
+  has an API documentation page. Keep writing the aliases.
 
 ### Changed
 
+- Internal members are gone from the public classes: the `@internal`
+  `toPlatform()` and `fromPlatform` wire converters on the model types, and
+  `MKMapView.debugControllerFactory` (`@visibleForTesting`, typed with
+  unexported classes). Behaviour is unchanged.
 - The agent skill (`skills/mapkit-flutter-scaffold/SKILL.md`) is about a fifth
   smaller, covers `layoutMargins` and lists every iOS-only setting, including an
   annotation's `calloutConsumesTapEvents`.

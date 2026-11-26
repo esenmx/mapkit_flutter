@@ -1,6 +1,8 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_point_of_interest_filter.dart'
+    show MKPointOfInterestFilterWire;
 
 void main() {
   group('MKPointOfInterestFilter wire mapping', () {

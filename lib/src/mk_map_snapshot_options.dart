@@ -23,14 +23,6 @@ final class const MKMapSnapshotOptions({
   /// Creates options controlling what a map snapshot includes.
   this;
 
-  /// Converts these snapshot options to their Pigeon wire representation.
-  @internal
-  PlatformSnapshotOptions toPlatform() => .new(
-    showsPointsOfInterest: showsPointsOfInterest,
-    showsAnnotations: showsAnnotations,
-    showsOverlays: showsOverlays,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKMapSnapshotOptions &&
@@ -47,4 +39,14 @@ final class const MKMapSnapshotOptions({
       'MKMapSnapshotOptions('
       'showsPointsOfInterest: $showsPointsOfInterest, '
       'showsAnnotations: $showsAnnotations, showsOverlays: $showsOverlays)';
+}
+
+/// Pigeon wire conversion for [MKMapSnapshotOptions]; hidden from the barrel.
+extension MKMapSnapshotOptionsWire on MKMapSnapshotOptions {
+  /// Converts these snapshot options to their Pigeon wire representation.
+  PlatformSnapshotOptions toPlatform() => .new(
+    showsPointsOfInterest: showsPointsOfInterest,
+    showsAnnotations: showsAnnotations,
+    showsOverlays: showsOverlays,
+  );
 }

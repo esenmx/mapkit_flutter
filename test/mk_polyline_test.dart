@@ -3,6 +3,7 @@ import 'dart:ui' show Color;
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_polyline.dart' show MKPolylineWire;
 
 import '_helpers/fixtures.dart';
 

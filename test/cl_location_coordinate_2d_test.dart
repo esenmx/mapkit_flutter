@@ -1,6 +1,8 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/cl_location_coordinate_2d.dart'
+    show CLLocationCoordinate2DWire;
 
 void main() {
   group('CLLocationCoordinate2D', () {
@@ -55,7 +57,7 @@ void main() {
       final platform = original.toPlatform();
       check(platform.latitude).equals(37.5);
       check(platform.longitude).equals(-122);
-      check(CLLocationCoordinate2D.fromPlatform(platform)).equals(original);
+      check(CLLocationCoordinate2DWire.fromPlatform(platform)).equals(original);
     });
 
     test('Coordinate is an alias for the full Apple symbol', () {

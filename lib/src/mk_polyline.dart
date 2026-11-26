@@ -190,26 +190,6 @@ final class MKPolyline {
     onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
-  /// Converts this polyline to its Pigeon wire representation.
-  @internal
-  PlatformPolyline toPlatform() => .new(
-    id: id.value,
-    coordinates: coordinates.map((c) => c.toPlatform()).toList(),
-    strokeColorArgb: strokeColor.toARGB32(),
-    lineWidth: lineWidth,
-    lineCap: lineCap,
-    lineJoin: lineJoin,
-    isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents,
-    isGeodesic: isGeodesic,
-    level: level,
-    zIndex: zIndex,
-    lineDashPattern: lineDashPattern,
-    gradientColorsArgb: gradientColors.isEmpty
-        ? null
-        : gradientColors.map((c) => c.toARGB32()).toList(),
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKPolyline &&
@@ -256,4 +236,26 @@ final class MKPolyline {
       ..write('onTap: ${onTap != null ? 'set' : 'null'}');
     return (b..write(')')).toString();
   }
+}
+
+/// Pigeon wire conversion for [MKPolyline]; hidden from the barrel.
+extension MKPolylineWire on MKPolyline {
+  /// Converts this polyline to its Pigeon wire representation.
+  PlatformPolyline toPlatform() => .new(
+    id: id.value,
+    coordinates: coordinates.map((c) => c.toPlatform()).toList(),
+    strokeColorArgb: strokeColor.toARGB32(),
+    lineWidth: lineWidth,
+    lineCap: lineCap,
+    lineJoin: lineJoin,
+    isHidden: isHidden,
+    consumeTapEvents: consumeTapEvents,
+    isGeodesic: isGeodesic,
+    level: level,
+    zIndex: zIndex,
+    lineDashPattern: lineDashPattern,
+    gradientColorsArgb: gradientColors.isEmpty
+        ? null
+        : gradientColors.map((c) => c.toARGB32()).toList(),
+  );
 }

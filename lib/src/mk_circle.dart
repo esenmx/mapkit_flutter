@@ -91,21 +91,6 @@ final class MKCircle({
     onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
-  /// Converts this circle to its Pigeon wire representation.
-  @internal
-  PlatformCircle toPlatform() => .new(
-    id: id.value,
-    center: center.toPlatform(),
-    radius: radius,
-    fillColorArgb: fillColor.toARGB32(),
-    strokeColorArgb: strokeColor.toARGB32(),
-    lineWidth: lineWidth,
-    zIndex: zIndex,
-    isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents,
-    level: level,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKCircle &&
@@ -146,4 +131,21 @@ final class MKCircle({
       ..write('onTap: ${onTap != null ? 'set' : 'null'}');
     return (b..write(')')).toString();
   }
+}
+
+/// Pigeon wire conversion for [MKCircle]; hidden from the barrel.
+extension MKCircleWire on MKCircle {
+  /// Converts this circle to its Pigeon wire representation.
+  PlatformCircle toPlatform() => .new(
+    id: id.value,
+    center: center.toPlatform(),
+    radius: radius,
+    fillColorArgb: fillColor.toARGB32(),
+    strokeColorArgb: strokeColor.toARGB32(),
+    lineWidth: lineWidth,
+    zIndex: zIndex,
+    isHidden: isHidden,
+    consumeTapEvents: consumeTapEvents,
+    level: level,
+  );
 }

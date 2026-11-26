@@ -1,6 +1,8 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_coordinate_span.dart'
+    show MKCoordinateSpanWire;
 
 void main() {
   group('MKCoordinateSpan', () {
@@ -30,7 +32,7 @@ void main() {
       final platform = original.toPlatform();
       check(platform.latitudeDelta).equals(1.5);
       check(platform.longitudeDelta).equals(2.5);
-      check(MKCoordinateSpan.fromPlatform(platform)).equals(original);
+      check(MKCoordinateSpanWire.fromPlatform(platform)).equals(original);
     });
 
     test('toString representation', () {

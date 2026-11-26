@@ -18,11 +18,6 @@ final class const MKCoordinateRegion({
   /// Creates a coordinate region centered at [center] with [span].
   this;
 
-  /// Constructs a coordinate region from its Pigeon wire representation.
-  @internal
-  factory fromPlatform(PlatformCoordinateRegion p) =>
-      .new(center: .fromPlatform(p.center), span: .fromPlatform(p.span));
-
   /// Smallest region that contains all given [coordinates].
   /// Returns null when [coordinates] is empty.
   ///
@@ -65,11 +60,6 @@ final class const MKCoordinateRegion({
     return latOk && lngDistance.abs() <= span.longitudeDelta / 2;
   }
 
-  /// Converts this coordinate region to its Pigeon wire representation.
-  @internal
-  PlatformCoordinateRegion toPlatform() =>
-      .new(center: center.toPlatform(), span: span.toPlatform());
-
   @override
   bool operator ==(Object other) =>
       other is MKCoordinateRegion &&
@@ -81,4 +71,17 @@ final class const MKCoordinateRegion({
 
   @override
   String toString() => 'MKCoordinateRegion(center: $center, span: $span)';
+}
+
+/// Pigeon wire conversion for [MKCoordinateRegion]; hidden from the barrel.
+extension MKCoordinateRegionWire on MKCoordinateRegion {
+  /// Constructs a coordinate region from its Pigeon wire representation.
+  static MKCoordinateRegion fromPlatform(PlatformCoordinateRegion p) => .new(
+    center: CLLocationCoordinate2DWire.fromPlatform(p.center),
+    span: MKCoordinateSpanWire.fromPlatform(p.span),
+  );
+
+  /// Converts this coordinate region to its Pigeon wire representation.
+  PlatformCoordinateRegion toPlatform() =>
+      .new(center: center.toPlatform(), span: span.toPlatform());
 }

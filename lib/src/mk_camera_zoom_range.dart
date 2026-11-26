@@ -48,13 +48,6 @@ final class MKCameraZoomRange {
   /// unbounded.
   final double? maxCenterCoordinateDistance;
 
-  /// Converts this zoom range to its Pigeon wire representation.
-  @internal
-  PlatformCameraZoomRange toPlatform() => .new(
-    minCenterCoordinateDistance: minCenterCoordinateDistance,
-    maxCenterCoordinateDistance: maxCenterCoordinateDistance,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKCameraZoomRange &&
@@ -69,4 +62,13 @@ final class MKCameraZoomRange {
   String toString() =>
       'MKCameraZoomRange(min: $minCenterCoordinateDistance, '
       'max: $maxCenterCoordinateDistance)';
+}
+
+/// Pigeon wire conversion for [MKCameraZoomRange]; hidden from the barrel.
+extension MKCameraZoomRangeWire on MKCameraZoomRange {
+  /// Converts this zoom range to its Pigeon wire representation.
+  PlatformCameraZoomRange toPlatform() => .new(
+    minCenterCoordinateDistance: minCenterCoordinateDistance,
+    maxCenterCoordinateDistance: maxCenterCoordinateDistance,
+  );
 }

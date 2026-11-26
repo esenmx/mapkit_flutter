@@ -25,10 +25,6 @@ sealed class MKPointOfInterestFilter {
   /// Hides all points of interest.
   static const MKPointOfInterestFilter excludingAll =
       ExcludingAllPointsOfInterest();
-
-  /// Converts this filter to its Pigeon wire representation.
-  @internal
-  PlatformPointOfInterestFilter toPlatform();
 }
 
 /// Shows every point-of-interest category
@@ -36,10 +32,6 @@ sealed class MKPointOfInterestFilter {
 final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
   /// Creates a filter that includes every point-of-interest category.
   const new();
-
-  @override
-  PlatformPointOfInterestFilter toPlatform() =>
-      .new(mode: .all, categories: const []);
 
   @override
   bool operator ==(Object other) => other is IncludingAllPointsOfInterest;
@@ -55,10 +47,6 @@ final class IncludingAllPointsOfInterest extends MKPointOfInterestFilter {
 final class ExcludingAllPointsOfInterest extends MKPointOfInterestFilter {
   /// Creates a filter that excludes every point-of-interest category.
   const new();
-
-  @override
-  PlatformPointOfInterestFilter toPlatform() =>
-      .new(mode: .none, categories: const []);
 
   @override
   bool operator ==(Object other) => other is ExcludingAllPointsOfInterest;
@@ -78,10 +66,6 @@ final class IncludingPointsOfInterest extends MKPointOfInterestFilter {
 
   /// Categories included by this filter.
   final List<MKPointOfInterestCategory> categories;
-
-  @override
-  PlatformPointOfInterestFilter toPlatform() =>
-      .new(mode: .including, categories: categories);
 
   @override
   bool operator ==(Object other) =>
@@ -105,10 +89,6 @@ final class ExcludingPointsOfInterest extends MKPointOfInterestFilter {
   final List<MKPointOfInterestCategory> categories;
 
   @override
-  PlatformPointOfInterestFilter toPlatform() =>
-      .new(mode: .excluding, categories: categories);
-
-  @override
   bool operator ==(Object other) =>
       other is ExcludingPointsOfInterest &&
       listEquals(other.categories, categories);
@@ -118,4 +98,22 @@ final class ExcludingPointsOfInterest extends MKPointOfInterestFilter {
 
   @override
   String toString() => 'MKPointOfInterestFilter.excluding($categories)';
+}
+
+/// Pigeon wire conversion for [MKPointOfInterestFilter]; hidden from the
+/// barrel.
+extension MKPointOfInterestFilterWire on MKPointOfInterestFilter {
+  /// Converts this filter to its Pigeon wire representation.
+  PlatformPointOfInterestFilter toPlatform() => switch (this) {
+    IncludingAllPointsOfInterest() => .new(mode: .all, categories: const []),
+    ExcludingAllPointsOfInterest() => .new(mode: .none, categories: const []),
+    IncludingPointsOfInterest(:final categories) => .new(
+      mode: .including,
+      categories: categories,
+    ),
+    ExcludingPointsOfInterest(:final categories) => .new(
+      mode: .excluding,
+      categories: categories,
+    ),
+  };
 }

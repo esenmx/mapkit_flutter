@@ -262,7 +262,7 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   Future<MKMapCamera?> get camera => _enqueue(
     () async => switch (await _host.getCamera()) {
       null => null,
-      final camera => .fromPlatform(camera),
+      final camera => MKMapCameraWire.fromPlatform(camera),
     },
   );
 
@@ -270,7 +270,7 @@ final class MKMapViewControllerImpl implements MKMapViewController {
   Future<MKCoordinateRegion?> get region => _enqueue(
     () async => switch (await _host.getRegion()) {
       null => null,
-      final region => .fromPlatform(region),
+      final region => MKCoordinateRegionWire.fromPlatform(region),
     },
   );
 
@@ -311,7 +311,7 @@ final class MKMapViewControllerImpl implements MKMapViewController {
       .new(x: point.dx, y: point.dy),
     )) {
       null => null,
-      final coordinate => .fromPlatform(coordinate),
+      final coordinate => CLLocationCoordinate2DWire.fromPlatform(coordinate),
     },
   );
 
@@ -574,8 +574,10 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
       _deliver('onCameraMoveStarted', _sink.onCameraMoveStarted);
 
   @override
-  void onCameraMove(PlatformMapCamera camera) =>
-      _deliver('onCameraMove', () => _sink.onCameraMove(.fromPlatform(camera)));
+  void onCameraMove(PlatformMapCamera camera) => _deliver(
+    'onCameraMove',
+    () => _sink.onCameraMove(MKMapCameraWire.fromPlatform(camera)),
+  );
 
   @override
   void onCameraIdle() => _deliver('onCameraIdle', _sink.onCameraIdle);
@@ -601,7 +603,7 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
   @override
   void onMapFeatureSelected(PlatformMapFeature feature) => _deliver(
     'onMapFeatureSelected',
-    () => _sink.onMapFeatureSelected(.fromPlatform(feature)),
+    () => _sink.onMapFeatureSelected(MKMapFeatureWire.fromPlatform(feature)),
   );
 
   @override
@@ -612,7 +614,7 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
     'onAnnotationDragStart',
     () => _sink.onAnnotationDragStart(
       .new(annotationId),
-      .fromPlatform(coordinate),
+      CLLocationCoordinate2DWire.fromPlatform(coordinate),
     ),
   );
 
@@ -624,7 +626,7 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
     'onAnnotationDragEnd',
     () => _sink.onAnnotationDragEnd(
       .new(annotationId),
-      .fromPlatform(coordinate),
+      CLLocationCoordinate2DWire.fromPlatform(coordinate),
     ),
   );
 
@@ -645,13 +647,17 @@ final class _MKMapViewFlutterApi(final MKMapViewEventSink _sink)
       _deliver('onCircleTap', () => _sink.onCircleTap(.new(circleId)));
 
   @override
-  void onMapTap(PlatformCoordinate coordinate) =>
-      _deliver('onMapTap', () => _sink.onMapTap(.fromPlatform(coordinate)));
+  void onMapTap(PlatformCoordinate coordinate) => _deliver(
+    'onMapTap',
+    () => _sink.onMapTap(CLLocationCoordinate2DWire.fromPlatform(coordinate)),
+  );
 
   @override
   void onMapLongPress(PlatformCoordinate coordinate) => _deliver(
     'onMapLongPress',
-    () => _sink.onMapLongPress(.fromPlatform(coordinate)),
+    () => _sink.onMapLongPress(
+      CLLocationCoordinate2DWire.fromPlatform(coordinate),
+    ),
   );
 
   @override

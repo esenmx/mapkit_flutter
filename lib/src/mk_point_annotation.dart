@@ -181,24 +181,6 @@ final class MKPointAnnotation({
         : onDeselect,
   );
 
-  /// Converts this annotation to its Pigeon wire representation.
-  @internal
-  PlatformAnnotation toPlatform() => .new(
-    id: id.value,
-    coordinate: coordinate.toPlatform(),
-    icon: icon.toPlatform(),
-    title: title,
-    subtitle: subtitle,
-    calloutConsumesTapEvents: calloutConsumesTapEvents,
-    alpha: alpha,
-    anchorPointX: anchorPoint.dx,
-    anchorPointY: anchorPoint.dy,
-    isDraggable: isDraggable,
-    isHidden: isHidden,
-    zPriority: zPriority,
-    clusteringIdentifier: clusteringIdentifier,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKPointAnnotation &&
@@ -249,3 +231,23 @@ final _onlyNewlines = RegExp(r'^[\r\n\u000B\u000C\u0085\u2028\u2029]*$');
 bool _hasCalloutText(String? title, String? subtitle) =>
     (title != null && title.isNotEmpty) ||
     (subtitle != null && !_onlyNewlines.hasMatch(subtitle));
+
+/// Pigeon wire conversion for [MKPointAnnotation]; hidden from the barrel.
+extension MKPointAnnotationWire on MKPointAnnotation {
+  /// Converts this annotation to its Pigeon wire representation.
+  PlatformAnnotation toPlatform() => .new(
+    id: id.value,
+    coordinate: coordinate.toPlatform(),
+    icon: icon.toPlatform(),
+    title: title,
+    subtitle: subtitle,
+    calloutConsumesTapEvents: calloutConsumesTapEvents,
+    alpha: alpha,
+    anchorPointX: anchorPoint.dx,
+    anchorPointY: anchorPoint.dy,
+    isDraggable: isDraggable,
+    isHidden: isHidden,
+    zPriority: zPriority,
+    clusteringIdentifier: clusteringIdentifier,
+  );
+}

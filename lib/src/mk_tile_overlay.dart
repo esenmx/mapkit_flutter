@@ -65,19 +65,6 @@ final class MKTileOverlay({
     }
   }
 
-  /// Converts this tile overlay to its Pigeon wire representation.
-  @internal
-  PlatformTileOverlay toPlatform() => .new(
-    id: id.value,
-    urlTemplate: urlTemplate,
-    minimumZ: minimumZ,
-    maximumZ: maximumZ,
-    tileSize: tileSize,
-    canReplaceMapContent: canReplaceMapContent,
-    alpha: alpha,
-    level: level,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKTileOverlay &&
@@ -112,4 +99,19 @@ final class MKTileOverlay({
       ..write('level: ${level.name}');
     return (b..write(')')).toString();
   }
+}
+
+/// Pigeon wire conversion for [MKTileOverlay]; hidden from the barrel.
+extension MKTileOverlayWire on MKTileOverlay {
+  /// Converts this tile overlay to its Pigeon wire representation.
+  PlatformTileOverlay toPlatform() => .new(
+    id: id.value,
+    urlTemplate: urlTemplate,
+    minimumZ: minimumZ,
+    maximumZ: maximumZ,
+    tileSize: tileSize,
+    canReplaceMapContent: canReplaceMapContent,
+    alpha: alpha,
+    level: level,
+  );
 }

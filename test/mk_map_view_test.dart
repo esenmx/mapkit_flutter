@@ -6,6 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
+import 'package:mapkit_flutter/src/mk_map_view.dart'
+    show MKMapViewControllerOverride;
 import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 
 import '_helpers/fake_host_api.dart';
@@ -36,6 +38,9 @@ void main() {
   MKMapViewControllerImpl controllerFactory(MKMapViewEventSink sink) =>
       createdController = .new(viewId: nextViewId, sink: sink, hostApi: host);
 
+  Widget overridden(MKMapView map) =>
+      MKMapViewControllerOverride(create: controllerFactory, child: map);
+
   Widget map({
     Set<MKPointAnnotation> annotations = const {},
     Set<MKPolyline> polylines = const {},
@@ -58,28 +63,29 @@ void main() {
     ValueChanged<String>? onDidFailToLocateUser,
     ValueChanged<MKMapFeature>? onMapFeatureSelected,
   }) {
-    return MKMapView(
-      initialCamera: sampleCamera,
-      annotations: annotations,
-      polylines: polylines,
-      polygons: polygons,
-      circles: circles,
-      preferredConfiguration: preferredConfiguration,
-      isZoomEnabled: isZoomEnabled,
-      showsUserLocation: showsUserLocation,
-      cameraZoomRange: cameraZoomRange,
-      selectableMapFeatures: selectableMapFeatures,
-      layoutMargins: layoutMargins,
-      onMapCreated: onMapCreated,
-      onCameraMoveStarted: onCameraMoveStarted,
-      onCameraMove: onCameraMove,
-      onCameraIdle: onCameraIdle,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      onDidFailLoadingMap: onDidFailLoadingMap,
-      onDidFailToLocateUser: onDidFailToLocateUser,
-      onMapFeatureSelected: onMapFeatureSelected,
-      debugControllerFactory: controllerFactory,
+    return overridden(
+      MKMapView(
+        initialCamera: sampleCamera,
+        annotations: annotations,
+        polylines: polylines,
+        polygons: polygons,
+        circles: circles,
+        preferredConfiguration: preferredConfiguration,
+        isZoomEnabled: isZoomEnabled,
+        showsUserLocation: showsUserLocation,
+        cameraZoomRange: cameraZoomRange,
+        selectableMapFeatures: selectableMapFeatures,
+        layoutMargins: layoutMargins,
+        onMapCreated: onMapCreated,
+        onCameraMoveStarted: onCameraMoveStarted,
+        onCameraMove: onCameraMove,
+        onCameraIdle: onCameraIdle,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        onDidFailLoadingMap: onDidFailLoadingMap,
+        onDidFailToLocateUser: onDidFailToLocateUser,
+        onMapFeatureSelected: onMapFeatureSelected,
+      ),
     );
   }
 
@@ -724,11 +730,12 @@ void main() {
         Widget tiltedMap(
           String title, {
           void Function(MKMapViewController)? onMapCreated,
-        }) => MKMapView(
-          initialCamera: tilted,
-          annotations: {badThenGood(title)},
-          onMapCreated: onMapCreated,
-          debugControllerFactory: controllerFactory,
+        }) => overridden(
+          MKMapView(
+            initialCamera: tilted,
+            annotations: {badThenGood(title)},
+            onMapCreated: onMapCreated,
+          ),
         );
         await pumpRejected(
           tester,
@@ -1028,11 +1035,12 @@ void main() {
     ) async {
       final modes = <MKUserTrackingMode>[];
       await tester.pumpWidget(
-        MKMapView(
-          initialCamera: sampleCamera,
-          userTrackingMode: .follow,
-          onUserTrackingModeChanged: modes.add,
-          debugControllerFactory: controllerFactory,
+        overridden(
+          MKMapView(
+            initialCamera: sampleCamera,
+            userTrackingMode: .follow,
+            onUserTrackingModeChanged: modes.add,
+          ),
         ),
       );
       await tester.pump();
@@ -1099,12 +1107,13 @@ void main() {
 
     testWidgets('onDidFailToLocateUser stays valid when a gesture drops the '
         'tracking mode', (tester) async {
-      Widget tracking(MKUserTrackingMode mode) => MKMapView(
-        initialCamera: sampleCamera,
-        userTrackingMode: mode,
-        onUserTrackingModeChanged: (_) {},
-        onDidFailToLocateUser: (_) {},
-        debugControllerFactory: controllerFactory,
+      Widget tracking(MKUserTrackingMode mode) => overridden(
+        MKMapView(
+          initialCamera: sampleCamera,
+          userTrackingMode: mode,
+          onUserTrackingModeChanged: (_) {},
+          onDidFailToLocateUser: (_) {},
+        ),
       );
       await tester.pumpWidget(tracking(.follow));
       await tester.pump();
@@ -1116,34 +1125,29 @@ void main() {
   });
 
   group('iOS-only settings on macOS', () {
-    final cases = <String, MKMapView Function(MKMapViewEventSinkFactory)>{
-      'followWithHeading': (f) => .new(
+    final cases = <String, MKMapView Function()>{
+      'followWithHeading': () => .new(
         initialCamera: sampleCamera,
         userTrackingMode: .followWithHeading,
-        debugControllerFactory: f,
       ),
-      'selectableMapFeatures': (f) => .new(
+      'selectableMapFeatures': () => .new(
         initialCamera: sampleCamera,
         selectableMapFeatures: const {.pointsOfInterest},
-        debugControllerFactory: f,
       ),
-      'onMapFeatureSelected': (f) => .new(
+      'onMapFeatureSelected': () => .new(
         initialCamera: sampleCamera,
         selectableMapFeatures: const {.pointsOfInterest},
         onMapFeatureSelected: (_) {},
-        debugControllerFactory: f,
       ),
-      'insetsLayoutMarginsFromSafeArea': (f) => .new(
+      'insetsLayoutMarginsFromSafeArea': () => .new(
         initialCamera: sampleCamera,
         insetsLayoutMarginsFromSafeArea: false,
-        debugControllerFactory: f,
       ),
-      'layoutMargins': (f) => .new(
+      'layoutMargins': () => .new(
         initialCamera: sampleCamera,
         layoutMargins: const .only(bottom: 240),
-        debugControllerFactory: f,
       ),
-      'calloutConsumesTapEvents': (f) => .new(
+      'calloutConsumesTapEvents': () => .new(
         initialCamera: sampleCamera,
         annotations: {
           .new(
@@ -1152,7 +1156,6 @@ void main() {
             calloutConsumesTapEvents: true,
           ),
         },
-        debugControllerFactory: f,
       ),
     };
 
@@ -1160,7 +1163,7 @@ void main() {
       testWidgets('$name throws on macOS instead of being ignored', (
         tester,
       ) async {
-        await tester.pumpWidget(build(controllerFactory));
+        await tester.pumpWidget(overridden(build()));
         check(tester.takeException())
             .isA<MapKitUnsupportedPlatformException>()
             .has('feature', (e) => e.feature)
@@ -1170,7 +1173,7 @@ void main() {
       }, variant: TargetPlatformVariant.only(.macOS));
 
       testWidgets('$name is accepted on iOS', (tester) async {
-        await tester.pumpWidget(build(controllerFactory));
+        await tester.pumpWidget(overridden(build()));
         check(tester.takeException()).isNull;
       }, variant: TargetPlatformVariant.only(.iOS));
     }
@@ -1179,17 +1182,15 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MKMapView(
-          initialCamera: sampleCamera,
-          debugControllerFactory: controllerFactory,
-        ),
+        overridden(MKMapView(initialCamera: sampleCamera)),
       );
       await tester.pump();
       await tester.pumpWidget(
-        MKMapView(
-          initialCamera: sampleCamera,
-          userTrackingMode: .followWithHeading,
-          debugControllerFactory: controllerFactory,
+        overridden(
+          MKMapView(
+            initialCamera: sampleCamera,
+            userTrackingMode: .followWithHeading,
+          ),
         ),
       );
       check(tester.takeException()).isA<MapKitUnsupportedPlatformException>();
@@ -1264,7 +1265,3 @@ void main() {
         (toAdd, toChange, idsToRemove),
       _ => fail('expected an overlay update, got $args'),
     };
-
-typedef MKMapViewEventSinkFactory = MKMapViewControllerImpl Function(
-  MKMapViewEventSink sink,
-);

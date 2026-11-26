@@ -15,6 +15,7 @@ import 'package:mapkit_flutter/src/mk_map_configuration.dart';
 import 'package:mapkit_flutter/src/mk_map_feature.dart';
 import 'package:mapkit_flutter/src/mk_map_view_controller.dart';
 import 'package:mapkit_flutter/src/mk_point_annotation.dart';
+import 'package:mapkit_flutter/src/mk_point_of_interest_filter.dart';
 import 'package:mapkit_flutter/src/mk_polygon.dart';
 import 'package:mapkit_flutter/src/mk_polyline.dart';
 
@@ -174,14 +175,6 @@ final class const MKMapView({
   /// (must be `null` on macOS). Needs [selectableMapFeatures]: with none it
   /// could never fire, so this throws an [ArgumentError].
   final ValueChanged<MKMapFeature>? onMapFeatureSelected,
-
-  /// Replaces the platform view with an injected controller so widget tests
-  /// can drive the full diff pipeline against a fake host API. When set,
-  /// `build` renders a plain box instead of a `UiKitView`/`AppKitView` and
-  /// skips the platform check.
-  @visibleForTesting
-  final MKMapViewControllerImpl Function(MKMapViewEventSink sink)?
-  debugControllerFactory,
 }) extends StatefulWidget {
   /// Creates an Apple MapKit view widget.
   this;
@@ -190,9 +183,28 @@ final class const MKMapView({
   State<MKMapView> createState() => _MKMapViewState();
 }
 
+/// Test seam, hidden from the barrel: an [MKMapView] below it gets its
+/// controller from [create] instead of a platform view, so widget tests can
+/// drive the full diff pipeline against a fake host API. Such a map renders a
+/// plain box instead of a `UiKitView`/`AppKitView`.
+final class const MKMapViewControllerOverride({
+  /// Builds the controller for the map's event sink.
+  required final MKMapViewControllerImpl Function(MKMapViewEventSink sink)
+  create,
+  required super.child,
+  super.key,
+}) extends InheritedWidget {
+  /// Creates a controller override for the maps below it.
+  this;
+
+  @override
+  bool updateShouldNotify(MKMapViewControllerOverride oldWidget) => false;
+}
+
 final class _MKMapViewState extends State<MKMapView>
     implements MKMapViewEventSink {
   MKMapViewControllerImpl? _controller;
+  bool _overridden = false;
 
   Map<MKAnnotationId, MKPointAnnotation> _annotations = const {};
   Map<MKPolylineId, MKPolyline> _polylines = const {};
@@ -205,9 +217,12 @@ final class _MKMapViewState extends State<MKMapView>
     super.initState();
     _checkWidget();
     _refreshDispatchMaps();
-    if (widget.debugControllerFactory case final factory?) {
+    final override = context
+        .getInheritedWidgetOfExactType<MKMapViewControllerOverride>();
+    if (override != null) {
+      _overridden = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _wireController(factory(this));
+        if (mounted) _wireController(override.create(this));
       });
     }
   }
@@ -295,7 +310,7 @@ final class _MKMapViewState extends State<MKMapView>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.debugControllerFactory != null) return const SizedBox.expand();
+    if (_overridden) return const SizedBox.expand();
     if (kIsWeb) throw MapKitUnsupportedPlatformException(defaultTargetPlatform);
 
     const viewType = 'dev.mapkit.flutter/map_view';

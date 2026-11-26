@@ -24,11 +24,6 @@ final class CLLocationCoordinate2D {
     : latitude = _checkLatitude(latitude),
       longitude = _wrapLongitude(longitude);
 
-  /// Constructs a coordinate from its Pigeon wire representation.
-  @internal
-  factory fromPlatform(PlatformCoordinate p) =>
-      .new(latitude: p.latitude, longitude: p.longitude);
-
   static double _checkLatitude(double latitude) {
     checkInRange(latitude, -90, 90, 'latitude');
     return latitude;
@@ -47,11 +42,6 @@ final class CLLocationCoordinate2D {
   /// Longitude in degrees in `[-180, 180)`.
   final double longitude;
 
-  /// Converts this coordinate to its Pigeon wire representation.
-  @internal
-  PlatformCoordinate toPlatform() =>
-      .new(latitude: latitude, longitude: longitude);
-
   @override
   bool operator ==(Object other) =>
       other is CLLocationCoordinate2D &&
@@ -63,4 +53,15 @@ final class CLLocationCoordinate2D {
 
   @override
   String toString() => 'CLLocationCoordinate2D($latitude, $longitude)';
+}
+
+/// Pigeon wire conversion for [CLLocationCoordinate2D]; hidden from the barrel.
+extension CLLocationCoordinate2DWire on CLLocationCoordinate2D {
+  /// Constructs a coordinate from its Pigeon wire representation.
+  static CLLocationCoordinate2D fromPlatform(PlatformCoordinate p) =>
+      .new(latitude: p.latitude, longitude: p.longitude);
+
+  /// Converts this coordinate to its Pigeon wire representation.
+  PlatformCoordinate toPlatform() =>
+      .new(latitude: latitude, longitude: longitude);
 }

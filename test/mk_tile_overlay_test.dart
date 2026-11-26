@@ -1,6 +1,7 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_tile_overlay.dart' show MKTileOverlayWire;
 
 void main() {
   final osm = MKTileOverlay(

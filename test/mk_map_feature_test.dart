@@ -2,6 +2,7 @@ import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
 import 'package:mapkit_flutter/src/messages.g.dart';
+import 'package:mapkit_flutter/src/mk_map_feature.dart' show MKMapFeatureWire;
 
 void main() {
   test('MKMapFeature.fromPlatform maps fields and supports equality', () {
@@ -12,7 +13,7 @@ void main() {
       pointOfInterestCategory: .park,
     );
 
-    final feature = MKMapFeature.fromPlatform(wire);
+    final feature = MKMapFeatureWire.fromPlatform(wire);
 
     check(feature).equals(
       .new(

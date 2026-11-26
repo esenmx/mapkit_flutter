@@ -97,23 +97,6 @@ final class MKPolygon({
     onTap: identical(onTap, keepCallback) ? this.onTap : onTap,
   );
 
-  /// Converts this polygon to its Pigeon wire representation.
-  @internal
-  PlatformPolygon toPlatform() => .new(
-    id: id.value,
-    coordinates: coordinates.map((c) => c.toPlatform()).toList(),
-    interiorPolygons: interiorPolygons
-        .map((ring) => ring.map((c) => c.toPlatform()).toList())
-        .toList(),
-    fillColorArgb: fillColor.toARGB32(),
-    strokeColorArgb: strokeColor.toARGB32(),
-    lineWidth: lineWidth,
-    zIndex: zIndex,
-    isHidden: isHidden,
-    consumeTapEvents: consumeTapEvents,
-    level: level,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKPolygon &&
@@ -165,4 +148,23 @@ final class MKPolygon({
       ..write('onTap: ${onTap != null ? 'set' : 'null'}');
     return (b..write(')')).toString();
   }
+}
+
+/// Pigeon wire conversion for [MKPolygon]; hidden from the barrel.
+extension MKPolygonWire on MKPolygon {
+  /// Converts this polygon to its Pigeon wire representation.
+  PlatformPolygon toPlatform() => .new(
+    id: id.value,
+    coordinates: coordinates.map((c) => c.toPlatform()).toList(),
+    interiorPolygons: interiorPolygons
+        .map((ring) => ring.map((c) => c.toPlatform()).toList())
+        .toList(),
+    fillColorArgb: fillColor.toARGB32(),
+    strokeColorArgb: strokeColor.toARGB32(),
+    lineWidth: lineWidth,
+    zIndex: zIndex,
+    isHidden: isHidden,
+    consumeTapEvents: consumeTapEvents,
+    level: level,
+  );
 }

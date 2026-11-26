@@ -84,21 +84,6 @@ final class MKAnnotationIcon {
   final Uint8List? _imageBytes;
   final double? _imagePixelRatio;
 
-  /// Converts this icon to its Pigeon wire representation.
-  @internal
-  PlatformAnnotationIcon toPlatform() => .new(
-    type: _type,
-    markerTintArgb: _markerTintColor?.toARGB32(),
-    glyphText: _glyphText,
-    glyphSystemImage: _glyphSystemImage,
-    glyphTintArgb: _glyphTintColor?.toARGB32(),
-    imageBytes: _imageBytes,
-    imagePixelRatio: _imageBytes == null
-        ? null
-        : _imagePixelRatio ??
-              PlatformDispatcher.instance.implicitView?.devicePixelRatio,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKAnnotationIcon &&
@@ -132,4 +117,21 @@ final class MKAnnotationIcon {
     if (_imagePixelRatio case final r?) b.write(', imagePixelRatio: $r');
     return (b..write(')')).toString();
   }
+}
+
+/// Pigeon wire conversion for [MKAnnotationIcon]; hidden from the barrel.
+extension MKAnnotationIconWire on MKAnnotationIcon {
+  /// Converts this icon to its Pigeon wire representation.
+  PlatformAnnotationIcon toPlatform() => .new(
+    type: _type,
+    markerTintArgb: _markerTintColor?.toARGB32(),
+    glyphText: _glyphText,
+    glyphSystemImage: _glyphSystemImage,
+    glyphTintArgb: _glyphTintColor?.toARGB32(),
+    imageBytes: _imageBytes,
+    imagePixelRatio: _imageBytes == null
+        ? null
+        : _imagePixelRatio ??
+              PlatformDispatcher.instance.implicitView?.devicePixelRatio,
+  );
 }

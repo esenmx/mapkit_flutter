@@ -21,16 +21,6 @@ final class MKCoordinateSpan({
     checkInRange(longitudeDelta, 0, 360, 'longitudeDelta');
   }
 
-  /// Constructs a coordinate span from its Pigeon wire representation.
-  @internal
-  factory fromPlatform(PlatformCoordinateSpan p) =>
-      .new(latitudeDelta: p.latitudeDelta, longitudeDelta: p.longitudeDelta);
-
-  /// Converts this coordinate span to its Pigeon wire representation.
-  @internal
-  PlatformCoordinateSpan toPlatform() =>
-      .new(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta);
-
   @override
   bool operator ==(Object other) =>
       other is MKCoordinateSpan &&
@@ -42,4 +32,15 @@ final class MKCoordinateSpan({
 
   @override
   String toString() => 'MKCoordinateSpan($latitudeDelta, $longitudeDelta)';
+}
+
+/// Pigeon wire conversion for [MKCoordinateSpan]; hidden from the barrel.
+extension MKCoordinateSpanWire on MKCoordinateSpan {
+  /// Constructs a coordinate span from its Pigeon wire representation.
+  static MKCoordinateSpan fromPlatform(PlatformCoordinateSpan p) =>
+      .new(latitudeDelta: p.latitudeDelta, longitudeDelta: p.longitudeDelta);
+
+  /// Converts this coordinate span to its Pigeon wire representation.
+  PlatformCoordinateSpan toPlatform() =>
+      .new(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta);
 }

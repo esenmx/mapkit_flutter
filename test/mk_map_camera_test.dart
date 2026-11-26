@@ -1,6 +1,7 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_map_camera.dart' show MKMapCameraWire;
 
 import '_helpers/fixtures.dart';
 
@@ -94,7 +95,7 @@ void main() {
       final platform = camera.toPlatform();
       check(platform.distance).equals(1200);
       check(platform.heading).equals(90);
-      check(MKMapCamera.fromPlatform(platform)).equals(camera);
+      check(MKMapCameraWire.fromPlatform(platform)).equals(camera);
     });
   });
 

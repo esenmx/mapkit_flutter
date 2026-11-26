@@ -2,6 +2,8 @@ import 'package:checks/checks.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_map_view.dart'
+    show MKMapViewControllerOverride;
 
 import '_helpers/fake_host_api.dart';
 import '_helpers/fixtures.dart';
@@ -20,11 +22,9 @@ void main() {
 
   testWidgets('a rebuild introducing a duplicate id throws', (tester) async {
     final host = FakeHostApi();
-    Widget map(Set<MKPolyline> polylines) => MKMapView(
-      initialCamera: sampleCamera,
-      polylines: polylines,
-      debugControllerFactory: (sink) =>
-          .new(viewId: 901, sink: sink, hostApi: host),
+    Widget map(Set<MKPolyline> polylines) => MKMapViewControllerOverride(
+      create: (sink) => .new(viewId: 901, sink: sink, hostApi: host),
+      child: MKMapView(initialCamera: sampleCamera, polylines: polylines),
     );
     await tester.pumpWidget(map({red}));
     await tester.pump();
@@ -35,11 +35,9 @@ void main() {
   testWidgets('two objects of one kind sharing an id throw', (tester) async {
     final host = FakeHostApi();
     await tester.pumpWidget(
-      MKMapView(
-        initialCamera: sampleCamera,
-        polylines: {red, blue},
-        debugControllerFactory: (sink) =>
-            .new(viewId: 900, sink: sink, hostApi: host),
+      MKMapViewControllerOverride(
+        create: (sink) => .new(viewId: 900, sink: sink, hostApi: host),
+        child: MKMapView(initialCamera: sampleCamera, polylines: {red, blue}),
       ),
     );
     check(tester.takeException())

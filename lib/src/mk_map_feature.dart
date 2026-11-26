@@ -25,15 +25,6 @@ final class const MKMapFeature({
   /// Creates a selected map feature description.
   this;
 
-  /// Constructs a map feature from its Pigeon wire representation.
-  @internal
-  factory fromPlatform(PlatformMapFeature p) => .new(
-    featureType: p.featureType,
-    coordinate: .fromPlatform(p.coordinate),
-    title: p.title,
-    pointOfInterestCategory: p.pointOfInterestCategory,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKMapFeature &&
@@ -51,4 +42,15 @@ final class const MKMapFeature({
       'MKMapFeature(featureType: ${featureType.name}, '
       'coordinate: $coordinate, title: $title, '
       'pointOfInterestCategory: ${pointOfInterestCategory?.name})';
+}
+
+/// Pigeon wire conversion for [MKMapFeature]; hidden from the barrel.
+extension MKMapFeatureWire on MKMapFeature {
+  /// Constructs a map feature from its Pigeon wire representation.
+  static MKMapFeature fromPlatform(PlatformMapFeature p) => .new(
+    featureType: p.featureType,
+    coordinate: CLLocationCoordinate2DWire.fromPlatform(p.coordinate),
+    title: p.title,
+    pointOfInterestCategory: p.pointOfInterestCategory,
+  );
 }

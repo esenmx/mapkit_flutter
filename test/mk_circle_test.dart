@@ -1,6 +1,7 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_circle.dart' show MKCircleWire;
 
 import '_helpers/fixtures.dart';
 

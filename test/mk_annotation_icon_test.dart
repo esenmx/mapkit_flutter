@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_annotation_icon.dart'
+    show MKAnnotationIconWire;
 
 void main() {
   group('MKAnnotationIcon.marker', () {

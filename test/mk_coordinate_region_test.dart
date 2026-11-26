@@ -1,6 +1,8 @@
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mapkit_flutter/mapkit_flutter.dart';
+import 'package:mapkit_flutter/src/mk_coordinate_region.dart'
+    show MKCoordinateRegionWire;
 
 void main() {
   group('MKCoordinateRegion.containing', () {
@@ -68,7 +70,7 @@ void main() {
       final platform = region.toPlatform();
       check(platform.center.latitude).equals(10);
       check(platform.span.longitudeDelta).equals(2);
-      check(MKCoordinateRegion.fromPlatform(platform)).equals(region);
+      check(MKCoordinateRegionWire.fromPlatform(platform)).equals(region);
     });
   });
 }

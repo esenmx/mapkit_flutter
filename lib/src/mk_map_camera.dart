@@ -47,15 +47,6 @@ final class MKMapCamera({
     }
   }
 
-  /// Constructs a camera from its Pigeon wire representation.
-  @internal
-  factory fromPlatform(PlatformMapCamera p) => .new(
-    centerCoordinate: .fromPlatform(p.centerCoordinate),
-    distance: p.distance,
-    heading: p.heading,
-    pitch: p.pitch,
-  );
-
   /// Camera at the Web-Mercator [zoomLevel] familiar from tile-based SDKs.
   ///
   /// The conversion `distance = 591657550.5 / 2^(zoomLevel - 1)` is the
@@ -94,15 +85,6 @@ final class MKMapCamera({
     pitch: pitch ?? this.pitch,
   );
 
-  /// Converts this camera to its Pigeon wire representation.
-  @internal
-  PlatformMapCamera toPlatform() => .new(
-    centerCoordinate: centerCoordinate.toPlatform(),
-    distance: distance,
-    heading: heading,
-    pitch: pitch,
-  );
-
   @override
   bool operator ==(Object other) =>
       other is MKMapCamera &&
@@ -118,4 +100,25 @@ final class MKMapCamera({
   String toString() =>
       'MKMapCamera(centerCoordinate: $centerCoordinate, distance: $distance, '
       'heading: $heading, pitch: $pitch)';
+}
+
+/// Pigeon wire conversion for [MKMapCamera]; hidden from the barrel.
+extension MKMapCameraWire on MKMapCamera {
+  /// Constructs a camera from its Pigeon wire representation.
+  static MKMapCamera fromPlatform(PlatformMapCamera p) => .new(
+    centerCoordinate: CLLocationCoordinate2DWire.fromPlatform(
+      p.centerCoordinate,
+    ),
+    distance: p.distance,
+    heading: p.heading,
+    pitch: p.pitch,
+  );
+
+  /// Converts this camera to its Pigeon wire representation.
+  PlatformMapCamera toPlatform() => .new(
+    centerCoordinate: centerCoordinate.toPlatform(),
+    distance: distance,
+    heading: heading,
+    pitch: pitch,
+  );
 }

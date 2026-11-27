@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2 - 2026-11-27
+
+### Changed
+
+- Shortened the README, moved detailed guides into `doc/`, and added an
+  animated Apple Maps demo (`doc/demo.webp`).
+
 ## 0.6.1 - 2026-11-26
 
 ### Added

@@ -12,8 +12,7 @@ permissions:
 jobs:
   integration:
     runs-on: macos-15
-    # 60 min funds ~1 cold hang cycle (900s bound + recycle) plus bounded retries per file — not the absolute 3-attempt x 3-file worst case (~90 min); deliberate truncation.
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - run: sudo xcode-select -s /Applications/Xcode_26.3.app
@@ -26,104 +25,213 @@ jobs:
         working-directory: example
       - name: Boot iOS simulator
         run: |
-          xcrun simctl boot 'iPhone 16' || true
-          xcrun simctl bootstatus 'iPhone 16'
-      # Run each integration file as its own `flutter test` invocation. The
-      # directory form (`flutter test integration_test/`) pipelines every file
-      # through a single simulator session; the per-app teardown then races the
-      # next launch and the run intermittently reports a spurious non-zero exit
-      # ("N-1 tests passed" + exit 1) or hangs. One invocation per file gives
-      # each test a clean app lifecycle.
-      #
-      # Even per-file, `flutter test` can fail in teardown with the test itself
-      # green: the device-kill shutdown hook deletes the `flutter_tools.XXX`
-      # temp tree, then host finalization throws `PathNotFoundException` deleting
-      # the now-gone `flutter_test_listener` child, which corrupts the reporter
-      # (surfaces as "No tests were found" / exit 79). The on-device result is
-      # always printed first — a passing test prints "✅ <name>", a failing one
-      # "❌". So a file passes when the device reported ✅ with no failure marker,
-      # regardless of the host exit code; retries cover genuinely transient
-      # build/boot flakes.
+          xcrun simctl bootstatus 'iPhone 16' -b
+          # Warm simctl spawn + logd before flutter test races `log stream` against `simctl launch`.
+          xcrun simctl spawn 'iPhone 16' log show --last 1s >/dev/null 2>&1 || true
+      # Run all integration tests in one app launch via a temporary _all_test.dart
+      # bundle (same pattern as ci.yaml's macOS integration step) under a
+      # phase-aware process-group supervisor so a simulator handshake hang
+      # fails in 120s instead of burning 15m per file.
       - name: Run integration tests
         working-directory: example
         run: |
           set -o pipefail
-          # A wedged simulator hangs `flutter test` after "Xcode build done."
-          # (device handshake never completes); unbounded, one hang consumed
-          # the whole job timeout and the per-file retries below never ran.
-          # Bound every invocation and recycle the simulator on timeout so a
-          # retry starts from a fresh boot. 900s clears the slowest observed
-          # legit cold run (677s) with margin — 480 sat inside the cold-run
-          # range and killed passing attempts. 124/137 = gtimeout TERM/KILL,
-          # 142 = perl fallback.
-          TEST_BOUND=900
-          TIMEOUT_BIN="$(command -v gtimeout || command -v timeout || true)"
-          echo "per-invocation bound: ${TIMEOUT_BIN:-perl group supervisor}"
+          BUILD_BOUND=720
+          HANDSHAKE_BOUND=120
+          IDLE_BOUND=240
+          TEARDOWN_BOUND=20
+
+          bundle=integration_test/_all_test.dart
+          trap 'rm -f "$bundle"' EXIT
+          {
+            echo "import 'package:flutter_test/flutter_test.dart';"
+            echo "import 'package:integration_test/integration_test.dart';"
+            i=0
+            for t in integration_test/*_test.dart; do
+              [ "$t" = "$bundle" ] && continue
+              echo "import '${t#integration_test/}' as t$i;"
+              i=$((i+1))
+            done
+            echo "void main() {"
+            echo "  IntegrationTestWidgetsFlutterBinding.ensureInitialized();"
+            i=0
+            for t in integration_test/*_test.dart; do
+              [ "$t" = "$bundle" ] && continue
+              echo "  group('${t#integration_test/}', t$i.main);"
+              i=$((i+1))
+            done
+            echo "}"
+          } > "$bundle"
+
           bounded() {
             local secs="$1"; shift
-            if [ -n "$TIMEOUT_BIN" ]; then
-              "$TIMEOUT_BIN" --kill-after=30 "$secs" "$@"
-            else
-              # No coreutils on the runner image (observed: the plain "$@"
-              # fallback here silently ran unbounded and a wedge ate the whole
-              # job cap again). A bare alarm+exec bounds only one process; an
-              # inheritStdio descendant survives, holds the tee pipe, and
-              # stalls the pipeline to the job cap. Fork the command into its
-              # own process group and TERM-then-KILL the group on timeout
-              # (rc 142) so pipe holders and orphaned xcodebuild die too.
-              perl -e 'my $t = shift; my $pid = fork // die "fork: $!"; if (!$pid) { setpgrp(0, 0); exec @ARGV or die "exec failed: $!" } $SIG{ALRM} = sub { kill "TERM", -$pid; sleep 30; kill "KILL", -$pid; exit 142 }; alarm $t; waitpid $pid, 0; exit(($? & 127) ? 128 + ($? & 127) : $? >> 8);' "$secs" "$@"
-            fi
+            perl -e '
+              use POSIX qw(WNOHANG);
+              use Time::HiRes qw(sleep time);
+              my $t = shift;
+              my $pid = fork // die "fork: $!";
+              if (!$pid) {
+                setpgrp(0, 0);
+                exec @ARGV or die "exec failed: $!";
+              }
+              my $deadline = time() + $t;
+              while (1) {
+                my $r = waitpid($pid, WNOHANG);
+                if ($r == $pid) {
+                  exit(($? & 127) ? 128 + ($? & 127) : ($? >> 8));
+                }
+                if (time() >= $deadline) {
+                  kill "TERM", -$pid;
+                  my $kill_at = time() + 15;
+                  while (time() < $kill_at) {
+                    last if waitpid($pid, WNOHANG) == $pid;
+                    sleep 0.2;
+                  }
+                  kill "KILL", -$pid;
+                  waitpid($pid, 0);
+                  exit 142;
+                }
+                sleep 0.25;
+              }
+            ' "$secs" "$@"
           }
+
+          run_supervised() {
+            perl -e '
+              use IO::Select;
+              use POSIX qw(WNOHANG);
+              use Time::HiRes qw(sleep time);
+              $| = 1;
+              $SIG{PIPE} = "IGNORE";
+              my ($build_b, $handshake_b, $idle_b, $teardown_b, @cmd) = @ARGV;
+              pipe(my $rd, my $wr) or die "pipe: $!";
+              my $pid = fork // die "fork: $!";
+              if (!$pid) {
+                setpgrp(0, 0);
+                close $rd;
+                open STDOUT, ">&", $wr or die "dup stdout: $!";
+                open STDERR, ">&", $wr or die "dup stderr: $!";
+                close $wr;
+                exec @cmd or die "exec failed: $!";
+              }
+              close $wr;
+              my $sel = IO::Select->new($rd);
+              my $phase = "BUILD";
+              my $bound = $build_b;
+              my $deadline = time() + $bound;
+              my $buf = "";
+              my ($exited, $status, $drain_deadline) = (0, 0, 0);
+              while (1) {
+                my $now = time();
+                if (!$exited && waitpid($pid, WNOHANG) == $pid) {
+                  $exited = 1;
+                  $status = $?;
+                  $drain_deadline = $now + 1.0;
+                }
+                if ($exited && $now >= $drain_deadline) {
+                  kill "TERM", -$pid;
+                  close $rd;
+                  last;
+                }
+                if (!$exited && $now >= $deadline) {
+                  print STDERR "\n[watchdog] timed out after ${bound}s in phase $phase\n";
+                  kill "TERM", -$pid;
+                  my $kill_at = time() + 15;
+                  while (time() < $kill_at) {
+                    last if waitpid($pid, WNOHANG) == $pid;
+                    sleep 0.2;
+                  }
+                  kill "KILL", -$pid;
+                  waitpid($pid, 0);
+                  close $rd;
+                  exit 142;
+                }
+                my $wait = ($exited ? $drain_deadline : $deadline) - $now;
+                $wait = 0.05 if $wait < 0.05;
+                $wait = 1.0 if $wait > 1.0;
+                if ($sel->can_read($wait)) {
+                  my $chunk = "";
+                  my $n = sysread($rd, $chunk, 8192);
+                  if (defined($n) && $n > 0) {
+                    print STDOUT $chunk;
+                    $buf .= $chunk;
+                    while ($buf =~ s/^([^\r\n]*)[\r\n]+//) {
+                      my $line = $1;
+                      if ($phase eq "BUILD" && $line =~ /Xcode build done\./) {
+                        $phase = "HANDSHAKE";
+                        $bound = $handshake_b;
+                        $deadline = time() + $bound;
+                      } elsif ($line =~ /All tests passed!/) {
+                        $phase = "TEARDOWN";
+                        $bound = $teardown_b;
+                        $deadline = time() + $bound;
+                      } elsif (($line =~ /\d+:\d+\s+\+\d+/ && $line !~ /loading /)
+                               || $line =~ /snapshot-oracle:|leak-oracle/) {
+                        $phase = "RUNNING";
+                        $bound = $idle_b;
+                        $deadline = time() + $bound;
+                      }
+                    }
+                  } else {
+                    close $rd;
+                    last;
+                  }
+                }
+              }
+              if (!$exited) {
+                waitpid($pid, 0);
+                $status = $?;
+              }
+              exit(($status & 127) ? 128 + ($status & 127) : ($status >> 8));
+            ' "$BUILD_BOUND" "$HANDSHAKE_BOUND" "$IDLE_BOUND" "$TEARDOWN_BOUND" "$@"
+          }
+
           recycle_sim() {
             xcrun simctl shutdown 'iPhone 16' || true
             sleep 5
-            # -b boots if needed; bounded so a wedged reboot costs 120s, not
-            # the job cap (bare bootstatus blocks forever on a failed boot).
             bounded 120 xcrun simctl bootstatus 'iPhone 16' -b \
               || echo "::warning::simulator failed to reboot after recycle"
+            xcrun simctl spawn 'iPhone 16' log show --last 1s >/dev/null 2>&1 || true
           }
-          run_one() {
-            local test="$1" out rc
+
+          real_failures=0
+          for attempt in 1 2 3 4; do
             out="$(mktemp)"
             rc=0
-            bounded "$TEST_BOUND" flutter test "$test" -d 'iPhone 16' 2>&1 | tee "$out" || rc=$?
+            run_supervised flutter test -r expanded "$bundle" -d 'iPhone 16' 2>&1 | tee "$out" || rc=$?
             if [ "$rc" -eq 0 ]; then
-              return 0
+              rm -f "$out"
+              exit 0
             fi
-            # Salvage before timeout classification: the on-device verdict is
-            # printed before host teardown, so ✅ with no failure marker is a
-            # pass even when rc is a timeout code — a pass-then-teardown-hang
-            # is a pass, not a hang.
-            if grep -q '✅' "$out" && ! grep -q '❌' "$out" \
-                && ! grep -qiE 'some tests failed' "$out"; then
-              echo "::warning::$test passed on-device (rc=$rc); ignoring host-side failure"
-              if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 142 ]; then
-                recycle_sim  # the killed tree may have wedged the simulator; next file starts fresh
-              fi
-              return 0
+            # Salvage before timeout/failure classification: `-r expanded` prints
+            # `All tests passed!` before host teardown, which can still hang or fail.
+            if grep -qE '\+[1-9][0-9]*([[:space:]]+~[0-9]+)?: All tests passed!' "$out" \
+                && ! grep -qE 'Some tests failed|\[E\]' "$out"; then
+              echo "::warning::integration bundle passed on-device (rc=$rc); ignoring host teardown failure"
+              rm -f "$out"
+              exit 0
             fi
-            if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 142 ]; then
-              echo "::warning::$test hung past ${TEST_BOUND}s (rc=$rc); recycling the simulator"
-              recycle_sim
-              return 1
-            fi
-            return 1
-          }
-          for test in integration_test/*_test.dart; do
-            echo "::group::$test"
-            for attempt in 1 2 3; do
-              if run_one "$test"; then
-                echo "::endgroup::"
-                break
-              elif [ "$attempt" -eq 3 ]; then
-                echo "::error::$test failed after 3 attempts"
-                echo "::endgroup::"
+            if grep -q 'Some tests failed' "$out"; then
+              real_failures=$((real_failures + 1))
+              if [ "$real_failures" -ge 2 ]; then
+                echo "::error::integration bundle failed assertions twice"
+                rm -f "$out"
                 exit 1
-              else
-                echo "::warning::$test attempt $attempt failed; retrying"
               fi
-            done
+              echo "::warning::integration bundle failed assertions on attempt $attempt; recycling and retrying once"
+            elif [ "$rc" -eq 142 ] || grep -q 'Error waiting for a debug connection' "$out"; then
+              echo "::warning::integration bundle stalled or lost simulator debug connection on attempt $attempt (rc=$rc); recycling"
+            else
+              echo "::warning::integration bundle exited rc=$rc on attempt $attempt; recycling"
+            fi
+            rm -f "$out"
+            [ "$attempt" -eq 4 ] && {
+              echo "::error::integration bundle failed after 4 attempts"
+              exit 1
+            }
+            recycle_sim
           done
+
   native-ios:
     runs-on: macos-15
     timeout-minutes: 45
@@ -135,8 +243,18 @@ jobs:
       - run: flutter config --enable-swift-package-manager
       - run: flutter build ios --config-only --simulator
         working-directory: example
-      - run: xcodebuild test -workspace example/ios/Runner.xcworkspace -scheme Runner -destination 'platform=iOS Simulator,name=iPhone 16' -quiet -resultBundlePath "$RUNNER_TEMP/native-ios.xcresult"
+      - name: Boot iOS simulator
+        run: xcrun simctl bootstatus 'iPhone 16' -b
+      - run: xcodebuild test -workspace example/ios/Runner.xcworkspace -scheme Runner -destination 'platform=iOS Simulator,name=iPhone 16' -parallel-testing-enabled NO -quiet -resultBundlePath "$RUNNER_TEMP/native-ios.xcresult"
       # -quiet hides assertion messages; the result bundle keeps them.
+      - name: Print failure summary from xcresult
+        if: failure()
+        run: |
+          if [ -d "$RUNNER_TEMP/native-ios.xcresult" ]; then
+            xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/native-ios.xcresult" || true
+            xcrun xcresulttool get test-results tests --path "$RUNNER_TEMP/native-ios.xcresult" \
+              | jq '.. | objects | select(.result? == "Failed" or .failureMessage? != null) | {name, result, message, failureMessage}' || true
+          fi
       - name: Upload iOS native test results
         if: failure()
         uses: actions/upload-artifact@v7

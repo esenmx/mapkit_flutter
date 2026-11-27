@@ -457,30 +457,62 @@ final class CalloutTests: XCTestCase {
         window.rootViewController = root
         window.makeKeyAndVisible()
         addTeardownBlock { @MainActor in window.isHidden = true }
-        let host = MapKitViewHost(registrar: NoopMessenger(), id: 0)
+        let messenger = NoopMessenger()
+        let host = MapKitViewHost(registrar: messenger, id: messenger.engineIdentifier)
         root.view.addSubview(host.view())
         host.view().frame = root.view.bounds
         host.mapView.frame = root.view.bounds
         host.mapView.setRegion(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
             span: MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)), animated: false)
-        try await Task.sleep(for: .seconds(1))
-        try host.updateAnnotations(toAdd: [titledAnnotation("a", title: "Alpha")], toChange: [], idsToRemove: [])
-        try await Task.sleep(for: .seconds(2))
-
+        let pinCenter = host.mapView.convert(CLLocationCoordinate2D(latitude: 0, longitude: 0), toPointTo: window)
+        let crop = CGRect(x: pinCenter.x - 100, y: pinCenter.y - 70, width: 200, height: 160)
         func render() -> Data? {
-            UIGraphicsImageRenderer(bounds: CGRect(x: 100, y: 330, width: 200, height: 160)).pngData { _ in
+            UIGraphicsImageRenderer(bounds: crop).pngData { _ in
                 window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
             }
         }
-        let before = render()
-        XCTAssertEqual(before, render(), "the map must be settled to compare renders")
+        let empty = render()
+
+        try host.updateAnnotations(toAdd: [titledAnnotation("a", title: "Alpha")], toChange: [], idsToRemove: [])
+        let annotation = try XCTUnwrap(host.annotationsById["a"])
+        var markerCreated = false
+        for _ in 0..<150 {
+            if host.mapView.view(for: annotation) != nil {
+                markerCreated = true
+                break
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertTrue(markerCreated, "MapKit never created a marker view")
+
+        var before: Data?
+        var settled = false
+        for _ in 0..<30 {
+            let first = render()
+            try await Task.sleep(for: .milliseconds(500))
+            let next = render()
+            if let first, first != empty, first == next {
+                before = first
+                settled = true
+                break
+            }
+        }
+        XCTAssertNotNil(before, "the initial render produced no image")
+        XCTAssertTrue(settled, "the map must be settled to compare renders")
 
         try host.updateAnnotations(
             toAdd: [], toChange: [titledAnnotation("a", title: "A much longer title")], idsToRemove: [])
-        try await Task.sleep(for: .seconds(2))
+        var changed = false
+        for _ in 0..<60 {
+            if let after = render(), after != before {
+                changed = true
+                break
+            }
+            try await Task.sleep(for: .milliseconds(250))
+        }
 
-        XCTAssertNotEqual(before, render(), "the label under the pin still shows the old title")
+        XCTAssertTrue(changed, "the label under the pin still shows the old title")
     }
 
     func testAChangedTitleReachesTheVisibleCallout() async throws {
